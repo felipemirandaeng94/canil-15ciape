@@ -1,0 +1,1054 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Canil 15ª Cia PE — Visualizador 3D</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background: #1a1e24;
+    color: #e0e4ea;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 20px;
+    background: #12161b;
+    border-bottom: 2px solid #2e5f9e;
+    flex-shrink: 0;
+  }
+
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .badge {
+    background: #2e5f9e;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    padding: 3px 10px;
+    border-radius: 3px;
+    text-transform: uppercase;
+  }
+
+  h1 {
+    font-size: 15px;
+    font-weight: 600;
+    color: #c8d4e8;
+  }
+
+  .subtitle {
+    font-size: 12px;
+    color: #6b7a94;
+    margin-top: 2px;
+  }
+
+  .controls {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .btn {
+    background: #232b36;
+    border: 1px solid #2e3a4a;
+    color: #a0b0c8;
+    font-size: 12px;
+    padding: 6px 14px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+  }
+
+  .btn:hover { background: #2e5f9e; color: #fff; border-color: #2e5f9e; }
+  .btn.active { background: #2e5f9e; color: #fff; border-color: #2e5f9e; }
+
+  #main {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  #canvas-container {
+    flex: 1;
+    position: relative;
+    background: #1a1e24;
+  }
+
+  canvas {
+    display: block;
+    width: 100% !important;
+    height: 100% !important;
+  }
+
+  #sidebar {
+    width: 240px;
+    background: #12161b;
+    border-left: 1px solid #232b36;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+
+  .sidebar-title {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #2e5f9e;
+    padding: 12px 16px 8px;
+    border-bottom: 1px solid #232b36;
+  }
+
+  #element-info {
+    padding: 14px 16px;
+    font-size: 12px;
+    line-height: 1.7;
+    color: #8a9ab4;
+    flex: 1;
+    overflow-y: auto;
+  }
+
+  #element-info .info-label {
+    color: #4a7abf;
+    font-weight: 600;
+    font-size: 11px;
+    margin-top: 10px;
+    margin-bottom: 2px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  #element-info .info-value {
+    color: #c8d4e8;
+    font-size: 13px;
+  }
+
+  #element-info .placeholder {
+    color: #3a4a5e;
+    font-style: italic;
+    font-size: 12px;
+    margin-top: 20px;
+    text-align: center;
+    line-height: 1.8;
+  }
+
+  #loading {
+    position: absolute;
+    inset: 0;
+    background: #1a1e24;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 18px;
+    z-index: 10;
+  }
+
+  #loading .load-title {
+    font-size: 15px;
+    color: #c8d4e8;
+    font-weight: 600;
+  }
+
+  #loading .load-sub {
+    font-size: 12px;
+    color: #4a5a74;
+  }
+
+  .progress-bar {
+    width: 260px;
+    height: 4px;
+    background: #232b36;
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: #2e5f9e;
+    width: 0%;
+    transition: width 0.3s;
+    border-radius: 2px;
+  }
+
+  #error-box {
+    position: absolute;
+    inset: 0;
+    background: #1a1e24;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    z-index: 10;
+    padding: 40px;
+    text-align: center;
+  }
+
+  #error-box .err-title {
+    font-size: 16px;
+    color: #e05555;
+    font-weight: 700;
+  }
+
+  #error-box .err-msg {
+    font-size: 13px;
+    color: #6b7a94;
+    line-height: 1.8;
+    max-width: 420px;
+  }
+
+  #error-box code {
+    background: #12161b;
+    border: 1px solid #2e3a4a;
+    padding: 10px 18px;
+    border-radius: 4px;
+    font-family: monospace;
+    font-size: 12px;
+    color: #7ab4f5;
+    display: block;
+    margin: 4px 0;
+  }
+
+  .help-row {
+    display: flex;
+    gap: 20px;
+    padding: 8px 20px;
+    background: #12161b;
+    border-top: 1px solid #232b36;
+    flex-shrink: 0;
+  }
+
+  .help-item {
+    font-size: 11px;
+    color: #3a4a5e;
+  }
+
+  .help-item span {
+    color: #2e5f9e;
+    font-weight: 600;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-left">
+    <div class="badge">Exército Brasileiro</div>
+    <div>
+      <h1>Canil 15ª Cia PE — Belém/PA</h1>
+      <div class="subtitle">CONSTRUÇÃO DO CANIL DA 15ª CIA PE · Estudo Preliminar · Cap Felipe Miranda</div>
+    </div>
+  </div>
+  <div class="controls">
+    <button class="btn active" id="btn-perspective" onclick="setPerspective()">Perspectiva</button>
+    <button class="btn" id="btn-ortho" onclick="setOrtho()">Ortogonal</button>
+    <button class="btn" onclick="resetCamera()">Resetar câmera</button>
+  </div>
+</header>
+
+<div id="main">
+  <div id="canvas-container">
+    <div id="loading">
+      <div class="load-title">Carregando modelo IFC...</div>
+      <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+      <div class="load-sub" id="load-status">Inicializando web-ifc...</div>
+    </div>
+    <div id="error-box">
+      <div class="err-title">Arquivo IFC não encontrado</div>
+      <div class="err-msg">
+        Coloque o arquivo <strong>CANIL.ifc</strong> na mesma pasta que este HTML e abra pelo navegador.<br><br>
+        Se estiver usando Chrome, abra via servidor local ou arraste o arquivo para a área abaixo.
+      </div>
+      <div id="drop-area" style="border:2px dashed #2e5f9e;border-radius:6px;padding:24px 40px;margin-top:10px;cursor:pointer;color:#4a7abf;font-size:13px;">
+        Arraste o arquivo CANIL.ifc aqui
+      </div>
+    </div>
+    <canvas id="canvas"></canvas>
+  </div>
+  <div id="sidebar">
+    <div class="sidebar-title">Elemento selecionado</div>
+    <div id="element-info">
+      <div class="placeholder">Clique em um elemento<br>para ver suas propriedades.</div>
+    </div>
+  </div>
+</div>
+
+<div class="help-row">
+  <div class="help-item"><span>Botão esquerdo</span> — Rotacionar</div>
+  <div class="help-item"><span>Botão direito / Scroll</span> — Zoom</div>
+  <div class="help-item"><span>Botão do meio</span> — Pan</div>
+  <div class="help-item"><span>Clique</span> — Selecionar elemento</div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// ─── Configuração Three.js ───────────────────────────────────────────────────
+const canvas = document.getElementById('canvas');
+const container = document.getElementById('canvas-container');
+
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false });
+renderer.setPixelRatio(window.devicePixelRatio);
+renderer.setClearColor(0x1a1e24);
+renderer.shadowMap.enabled = true;
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x1a1e24);
+
+// Câmera
+let camera = new THREE.PerspectiveCamera(45, 1, 0.01, 2000);
+let isOrtho = false;
+let orthoCamera;
+
+// Iluminação
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+scene.add(ambientLight);
+
+const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+dirLight.position.set(50, 80, 50);
+scene.add(dirLight);
+
+const dirLight2 = new THREE.DirectionalLight(0x8ab4e8, 0.3);
+dirLight2.position.set(-30, 40, -30);
+scene.add(dirLight2);
+
+// Grid
+const gridHelper = new THREE.GridHelper(100, 50, 0x2e3a4a, 0x232b36);
+scene.add(gridHelper);
+
+// ─── Controles de órbita (implementação própria, sem importar OrbitControls) ──
+let isDragging = false;
+let isPanning = false;
+let lastMouse = { x: 0, y: 0 };
+let spherical = { theta: -Math.PI / 4, phi: Math.PI / 3, radius: 60 };
+let target = new THREE.Vector3(0, 0, 0);
+
+function updateCamera() {
+  const sinPhi = Math.sin(spherical.phi);
+  const cosPhi = Math.cos(spherical.phi);
+  const sinTheta = Math.sin(spherical.theta);
+  const cosTheta = Math.cos(spherical.theta);
+  camera.position.set(
+    target.x + spherical.radius * sinPhi * cosTheta,
+    target.y + spherical.radius * cosPhi,
+    target.z + spherical.radius * sinPhi * sinTheta
+  );
+  camera.lookAt(target);
+  if (orthoCamera) updateOrthoCamera();
+}
+
+function updateOrthoCamera() {
+  if (!orthoCamera) return;
+  const aspect = container.clientWidth / container.clientHeight;
+  const half = spherical.radius * 0.5;
+  orthoCamera.left = -half * aspect;
+  orthoCamera.right = half * aspect;
+  orthoCamera.top = half;
+  orthoCamera.bottom = -half;
+  orthoCamera.position.copy(camera.position);
+  orthoCamera.lookAt(target);
+  orthoCamera.updateProjectionMatrix();
+}
+
+canvas.addEventListener('mousedown', e => {
+  if (e.button === 0) isDragging = true;
+  if (e.button === 1 || e.button === 2) isPanning = true;
+  lastMouse = { x: e.clientX, y: e.clientY };
+});
+
+canvas.addEventListener('contextmenu', e => e.preventDefault());
+
+window.addEventListener('mouseup', () => { isDragging = false; isPanning = false; });
+
+window.addEventListener('mousemove', e => {
+  const dx = e.clientX - lastMouse.x;
+  const dy = e.clientY - lastMouse.y;
+  if (isDragging) {
+    spherical.theta -= dx * 0.008;
+    spherical.phi = Math.max(0.1, Math.min(Math.PI - 0.1, spherical.phi - dy * 0.008));
+    updateCamera();
+  }
+  if (isPanning) {
+    const right = new THREE.Vector3();
+    const up = new THREE.Vector3();
+    camera.getWorldDirection(new THREE.Vector3());
+    right.crossVectors(camera.getWorldDirection(new THREE.Vector3()), camera.up).normalize();
+    up.copy(camera.up).normalize();
+    const panSpeed = spherical.radius * 0.001;
+    target.addScaledVector(right, -dx * panSpeed);
+    target.addScaledVector(up, dy * panSpeed);
+    updateCamera();
+  }
+  lastMouse = { x: e.clientX, y: e.clientY };
+});
+
+canvas.addEventListener('wheel', e => {
+  e.preventDefault();
+  spherical.radius = Math.max(1, spherical.radius * (1 + e.deltaY * 0.001));
+  updateCamera();
+}, { passive: false });
+
+// Touch
+let lastTouch = null;
+let lastTouchDist = null;
+canvas.addEventListener('touchstart', e => {
+  if (e.touches.length === 1) lastTouch = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+  if (e.touches.length === 2) {
+    const dx = e.touches[0].clientX - e.touches[1].clientX;
+    const dy = e.touches[0].clientY - e.touches[1].clientY;
+    lastTouchDist = Math.sqrt(dx*dx + dy*dy);
+  }
+});
+canvas.addEventListener('touchmove', e => {
+  e.preventDefault();
+  if (e.touches.length === 1 && lastTouch) {
+    const dx = e.touches[0].clientX - lastTouch.x;
+    const dy = e.touches[0].clientY - lastTouch.y;
+    spherical.theta -= dx * 0.01;
+    spherical.phi = Math.max(0.1, Math.min(Math.PI - 0.1, spherical.phi - dy * 0.01));
+    lastTouch = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+    updateCamera();
+  }
+  if (e.touches.length === 2 && lastTouchDist) {
+    const dx = e.touches[0].clientX - e.touches[1].clientX;
+    const dy = e.touches[0].clientY - e.touches[1].clientY;
+    const dist = Math.sqrt(dx*dx + dy*dy);
+    spherical.radius = Math.max(1, spherical.radius * (lastTouchDist / dist));
+    lastTouchDist = dist;
+    updateCamera();
+  }
+}, { passive: false });
+
+// ─── Resize ──────────────────────────────────────────────────────────────────
+function resize() {
+  const w = container.clientWidth;
+  const h = container.clientHeight;
+  renderer.setSize(w, h, false);
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+  if (orthoCamera) updateOrthoCamera();
+}
+window.addEventListener('resize', resize);
+resize();
+
+// ─── Câmera perspectiva / ortogonal ─────────────────────────────────────────
+function setPerspective() {
+  isOrtho = false;
+  document.getElementById('btn-perspective').classList.add('active');
+  document.getElementById('btn-ortho').classList.remove('active');
+}
+function setOrtho() {
+  isOrtho = true;
+  if (!orthoCamera) {
+    orthoCamera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.01, 2000);
+  }
+  updateOrthoCamera();
+  document.getElementById('btn-ortho').classList.add('active');
+  document.getElementById('btn-perspective').classList.remove('active');
+}
+function resetCamera() {
+  spherical = { theta: -Math.PI / 4, phi: Math.PI / 3, radius: 60 };
+  target.set(0, 0, 0);
+  if (modelLoaded) {
+    target.copy(modelCenter);
+    spherical.radius = modelRadius * 2.2;
+  }
+  updateCamera();
+}
+
+// ─── Render loop ─────────────────────────────────────────────────────────────
+let selectedMesh = null;
+let originalMaterial = null;
+const highlightMat = new THREE.MeshLambertMaterial({ color: 0x4a9edf, transparent: true, opacity: 0.85 });
+
+function animate() {
+  requestAnimationFrame(animate);
+  const cam = isOrtho && orthoCamera ? orthoCamera : camera;
+  renderer.render(scene, cam);
+}
+animate();
+updateCamera();
+
+// ─── Raycasting para seleção ─────────────────────────────────────────────────
+const raycaster = new THREE.Raycaster();
+const meshList = [];
+const meshMetaMap = new Map();
+let modelCenter = new THREE.Vector3();
+let modelRadius = 30;
+let modelLoaded = false;
+
+canvas.addEventListener('click', e => {
+  if (!modelLoaded) return;
+  const rect = canvas.getBoundingClientRect();
+  const x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+  const y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+  raycaster.setFromCamera({ x, y }, isOrtho && orthoCamera ? orthoCamera : camera);
+  const hits = raycaster.intersectObjects(meshList, false);
+  if (selectedMesh && originalMaterial) {
+    selectedMesh.material = originalMaterial;
+    selectedMesh = null;
+    originalMaterial = null;
+  }
+  if (hits.length > 0) {
+    selectedMesh = hits[0].object;
+    originalMaterial = selectedMesh.material;
+    selectedMesh.material = highlightMat;
+    const meta = meshMetaMap.get(selectedMesh.uuid) || {};
+    showInfo(meta);
+  } else {
+    document.getElementById('element-info').innerHTML = '<div class="placeholder">Clique em um elemento<br>para ver suas propriedades.</div>';
+  }
+});
+
+function showInfo(meta) {
+  const el = document.getElementById('element-info');
+  let html = '';
+  const fields = [
+    ['Tipo IFC', meta.type],
+    ['Nome', meta.name],
+    ['Nível', meta.storey],
+    ['Material', meta.material],
+    ['Descrição', meta.description],
+  ];
+  for (const [label, val] of fields) {
+    if (val && val !== '$' && val !== 'undefined') {
+      html += `<div class="info-label">${label}</div><div class="info-value">${val}</div>`;
+    }
+  }
+  if (!html) html = '<div class="placeholder">Elemento sem<br>propriedades disponíveis.</div>';
+  el.innerHTML = html;
+}
+
+// ─── Parser IFC mínimo ───────────────────────────────────────────────────────
+// Lê geometria de extrusion (IFCEXTRUDEDAREASOLID) e aplica posicionamentos
+
+function setStatus(msg, pct) {
+  document.getElementById('load-status').textContent = msg;
+  if (pct !== undefined) document.getElementById('progress-fill').style.width = pct + '%';
+}
+
+function showError() {
+  document.getElementById('loading').style.display = 'none';
+  const eb = document.getElementById('error-box');
+  eb.style.display = 'flex';
+}
+
+// Cores por tipo IFC
+const typeColors = {
+  IFCWALL: 0xd4c8b4,
+  IFCWALLSTANDARDCASE: 0xd4c8b4,
+  IFCSLAB: 0xb8b0a0,
+  IFCROOF: 0x8fa8c8,
+  IFCCOLUMN: 0xa0a8b8,
+  IFCBEAM: 0x9090a0,
+  IFCDOOR: 0xa87040,
+  IFCWINDOW: 0x7ab8d8,
+  IFCSTAIR: 0xc0a860,
+  IFCFURNISHINGELEMENT: 0xa0c090,
+  IFCRAILING: 0x808898,
+  IFCPLATE: 0x9898a8,
+  IFCMEMBER: 0x8898a8,
+  IFCFOOTING: 0xa89880,
+  IFCPILE: 0x907860,
+  DEFAULT: 0xb0b8c8
+};
+
+async function loadIFC(text) {
+  setStatus('Analisando estrutura IFC...', 10);
+  await sleep(10);
+
+  const lines = text.split('\n');
+  const entities = new Map();
+
+  setStatus('Indexando entidades...', 20);
+  await sleep(10);
+
+  // Indexar todas as linhas por ID
+  for (const line of lines) {
+    const m = line.match(/^#(\d+)\s*=\s*([A-Z0-9]+)\s*\((.*)\)\s*;?\s*$/s);
+    if (m) entities.set(parseInt(m[1]), { type: m[2], raw: m[3] });
+  }
+
+  setStatus('Lendo posicionamentos...', 35);
+  await sleep(10);
+
+  // Função para resolver ponto cartesiano
+  function getPoint(id) {
+    const e = entities.get(id);
+    if (!e) return null;
+    if (e.type === 'IFCCARTESIANPOINT') {
+      const coords = e.raw.replace(/[()]/g, '').split(',').map(Number);
+      return new THREE.Vector3(coords[0] || 0, coords[2] || 0, -(coords[1] || 0));
+    }
+    return null;
+  }
+
+  function getDirection(id) {
+    const e = entities.get(id);
+    if (!e) return null;
+    if (e.type === 'IFCDIRECTION') {
+      const coords = e.raw.replace(/[()]/g, '').split(',').map(Number);
+      return new THREE.Vector3(coords[0] || 0, coords[2] || 0, -(coords[1] || 0));
+    }
+    return null;
+  }
+
+  // Resolver placement recursivo
+  function getTransform(placementId, depth = 0) {
+    if (!placementId || depth > 10) return new THREE.Matrix4();
+    const e = entities.get(placementId);
+    if (!e) return new THREE.Matrix4();
+
+    if (e.type === 'IFCLOCALPLACEMENT') {
+      const args = parseArgs(e.raw);
+      const parentId = refId(args[0]);
+      const axisId = refId(args[1]);
+      const parentMat = getTransform(parentId, depth + 1);
+      const localMat = getAxis2Placement3D(axisId);
+      return new THREE.Matrix4().multiplyMatrices(parentMat, localMat);
+    }
+    return new THREE.Matrix4();
+  }
+
+  function getAxis2Placement3D(id) {
+    if (!id) return new THREE.Matrix4();
+    const e = entities.get(id);
+    if (!e || e.type !== 'IFCAXIS2PLACEMENT3D') return new THREE.Matrix4();
+    const args = parseArgs(e.raw);
+    const origin = getPoint(refId(args[0])) || new THREE.Vector3();
+    const zDir = getDirection(refId(args[1])) || new THREE.Vector3(0, 1, 0);
+    const xDir = getDirection(refId(args[2])) || new THREE.Vector3(1, 0, 0);
+    const yDir = new THREE.Vector3().crossVectors(zDir, xDir).normalize();
+    const mat = new THREE.Matrix4();
+    mat.set(
+      xDir.x, yDir.x, zDir.x, origin.x,
+      xDir.y, yDir.y, zDir.y, origin.y,
+      xDir.z, yDir.z, zDir.z, origin.z,
+      0, 0, 0, 1
+    );
+    return mat;
+  }
+
+  setStatus('Construindo geometrias...', 50);
+  await sleep(10);
+
+  const group = new THREE.Group();
+  let count = 0;
+
+  // Tipos de elementos construtivos a renderizar
+  const buildingTypes = new Set([
+    'IFCWALL','IFCWALLSTANDARDCASE','IFCSLAB','IFCROOF','IFCCOLUMN','IFCBEAM',
+    'IFCDOOR','IFCWINDOW','IFCSTAIR','IFCFURNISHINGELEMENT','IFCRAILING',
+    'IFCPLATE','IFCMEMBER','IFCFOOTING','IFCPILE','IFCCOVERING','IFCSPACE'
+  ]);
+
+  // Mapear storeys
+  const storeyMap = new Map();
+  for (const [id, e] of entities) {
+    if (e.type === 'IFCBUILDINGSTOREY') {
+      const args = parseArgs(e.raw);
+      storeyMap.set(id, unquote(args[2]) || unquote(args[7]) || 'Pavimento');
+    }
+  }
+
+  // Mapa de elemento -> storey (via IFCRELCONTAINEDINSPATIALSTRUCTURE)
+  const elemStorey = new Map();
+  for (const [id, e] of entities) {
+    if (e.type === 'IFCRELCONTAINEDINSPATIALSTRUCTURE') {
+      const args = parseArgs(e.raw);
+      const spatialId = refId(args[5]);
+      const storeyName = storeyMap.get(spatialId);
+      const relatedStr = args[4];
+      const ids = [...relatedStr.matchAll(/#(\d+)/g)].map(m => parseInt(m[1]));
+      for (const eid of ids) elemStorey.set(eid, storeyName || '');
+    }
+  }
+
+  // Mapa de elemento -> material
+  const elemMaterial = new Map();
+  for (const [id, e] of entities) {
+    if (e.type === 'IFCRELASSOCIATESMATERIAL') {
+      const args = parseArgs(e.raw);
+      const matId = refId(args[5]);
+      const relatedStr = args[4];
+      const ids = [...relatedStr.matchAll(/#(\d+)/g)].map(m => parseInt(m[1]));
+      let matName = '';
+      const matE = entities.get(matId);
+      if (matE) {
+        const margs = parseArgs(matE.raw);
+        matName = unquote(margs[0]) || '';
+        if (matE.type === 'IFCMATERIALLAYERSETUSAGE') {
+          const layerSetId = refId(margs[0]);
+          const lse = entities.get(layerSetId);
+          if (lse) { const la = parseArgs(lse.raw); matName = unquote(la[1]) || ''; }
+        }
+      }
+      for (const eid of ids) if (matName) elemMaterial.set(eid, matName);
+    }
+  }
+
+  // Processar elementos
+  let processed = 0;
+  const totalBldg = [...entities.values()].filter(e => buildingTypes.has(e.type)).length;
+
+  for (const [id, e] of entities) {
+    if (!buildingTypes.has(e.type)) continue;
+    processed++;
+
+    if (processed % 50 === 0) {
+      setStatus(`Geometrias: ${processed} / ${totalBldg}`, 50 + Math.round(45 * processed / Math.max(totalBldg, 1)));
+      await sleep(0);
+    }
+
+    const args = parseArgs(e.raw);
+    const name = unquote(args[2]) || unquote(args[7]) || e.type;
+    const description = unquote(args[3]) || '';
+    const placementId = refId(args[5]);
+    const shapeId = refId(args[6]);
+
+    if (!shapeId) continue;
+    const shapeE = entities.get(shapeId);
+    if (!shapeE) continue;
+
+    const transform = getTransform(placementId);
+    const meshes = buildShape(shapeE, entities, transform);
+
+    const color = typeColors[e.type] || typeColors.DEFAULT;
+    const mat = new THREE.MeshLambertMaterial({ color, transparent: false, opacity: 1.0 });
+
+    for (const geo of meshes) {
+      if (!geo) continue;
+      const mesh = new THREE.Mesh(geo, mat.clone());
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      group.add(mesh);
+      meshList.push(mesh);
+      meshMetaMap.set(mesh.uuid, {
+        type: e.type.replace('IFC', ''),
+        name,
+        description,
+        storey: elemStorey.get(id) || '',
+        material: elemMaterial.get(id) || ''
+      });
+      count++;
+    }
+  }
+
+  setStatus('Finalizando...', 97);
+  await sleep(10);
+
+  if (count === 0) {
+    showError();
+    return;
+  }
+
+  scene.add(group);
+
+  // Centralizar câmera
+  const box = new THREE.Box3().setFromObject(group);
+  modelCenter = box.getCenter(new THREE.Vector3());
+  const size = box.getSize(new THREE.Vector3());
+  modelRadius = Math.max(size.x, size.y, size.z);
+  gridHelper.position.y = box.min.y;
+  target.copy(modelCenter);
+  spherical.radius = modelRadius * 2.2;
+  spherical.phi = Math.PI / 3;
+  spherical.theta = -Math.PI / 4;
+  updateCamera();
+  modelLoaded = true;
+
+  document.getElementById('loading').style.display = 'none';
+  setStatus('Pronto', 100);
+}
+
+// ─── Construção de geometria a partir de IFCSHAPEREPRESENTATION ──────────────
+function buildShape(shapeRepSetE, entities, transform) {
+  const geos = [];
+  if (!shapeRepSetE) return geos;
+
+  // IFCPRODUCTDEFINITIONSHAPE
+  if (shapeRepSetE.type === 'IFCPRODUCTDEFINITIONSHAPE') {
+    const args = parseArgs(shapeRepSetE.raw);
+    const repsStr = args[2];
+    const repIds = [...repsStr.matchAll(/#(\d+)/g)].map(m => parseInt(m[1]));
+    for (const rid of repIds) {
+      const re = entities.get(rid);
+      if (!re) continue;
+      const sub = buildShapeRep(re, entities, transform);
+      geos.push(...sub);
+    }
+  }
+  return geos;
+}
+
+function buildShapeRep(shapeRepE, entities, transform) {
+  const geos = [];
+  if (!shapeRepE || shapeRepE.type !== 'IFCSHAPEREPRESENTATION') return geos;
+  const args = parseArgs(shapeRepE.raw);
+  const itemsStr = args[3];
+  const itemIds = [...itemsStr.matchAll(/#(\d+)/g)].map(m => parseInt(m[1]));
+  for (const iid of itemIds) {
+    const ie = entities.get(iid);
+    if (!ie) continue;
+    const g = buildItem(ie, entities, transform);
+    if (g) geos.push(g);
+  }
+  return geos;
+}
+
+function buildItem(ie, entities, transform) {
+  if (ie.type === 'IFCEXTRUDEDAREASOLID') {
+    return buildExtruded(ie, entities, transform);
+  }
+  if (ie.type === 'IFCBOOLEANCLIPPINGRESULT' || ie.type === 'IFCBOOLEANRESULT') {
+    // Usar operando A
+    const args = parseArgs(ie.raw);
+    const aId = refId(args[1]);
+    const ae = entities.get(aId);
+    if (ae) return buildItem(ae, entities, transform);
+  }
+  if (ie.type === 'IFCMAPPEDITEM') {
+    const args = parseArgs(ie.raw);
+    const sourceId = refId(args[0]);
+    const se = entities.get(sourceId);
+    if (!se) return null;
+    const targetArgs = parseArgs(se.raw);
+    const repId = refId(targetArgs[1]);
+    const re = entities.get(repId);
+    if (!re) return null;
+    const sub = buildShapeRep(re, entities, transform);
+    return sub.length > 0 ? sub[0] : null;
+  }
+  return null;
+}
+
+function buildExtruded(ie, entities, transform) {
+  const args = parseArgs(ie.raw);
+  const profileId = refId(args[0]);
+  const posId = refId(args[1]);
+  const dirId = refId(args[2]);
+  const depth = parseFloat(args[3]) || 0;
+  if (depth <= 0) return null;
+
+  const pe = entities.get(profileId);
+  if (!pe) return null;
+
+  const shape2D = buildProfile(pe, entities);
+  if (!shape2D) return null;
+
+  const dirE = entities.get(dirId);
+  let extDir = new THREE.Vector3(0, 1, 0);
+  if (dirE && dirE.type === 'IFCDIRECTION') {
+    const dc = dirE.raw.replace(/[()]/g, '').split(',').map(Number);
+    extDir.set(dc[0] || 0, dc[2] || 0, -(dc[1] || 0)).normalize();
+  }
+
+  // Posicionamento local do sólido
+  const posE = entities.get(posId);
+  let localMat = new THREE.Matrix4();
+  if (posE && posE.type === 'IFCAXIS2PLACEMENT3D') {
+    const pargs = parseArgs(posE.raw);
+    const origin = getPoint3D(refId(pargs[0]), entities) || new THREE.Vector3();
+    const zDir = getDir3D(refId(pargs[1]), entities) || new THREE.Vector3(0, 1, 0);
+    const xDir = getDir3D(refId(pargs[2]), entities) || new THREE.Vector3(1, 0, 0);
+    const yDir = new THREE.Vector3().crossVectors(zDir, xDir).normalize();
+    localMat.set(
+      xDir.x, yDir.x, zDir.x, origin.x,
+      xDir.y, yDir.y, zDir.y, origin.y,
+      xDir.z, yDir.z, zDir.z, origin.z,
+      0, 0, 0, 1
+    );
+  }
+
+  const extVec = extDir.clone().multiplyScalar(depth);
+  const geo = new THREE.ExtrudeGeometry(shape2D, {
+    depth: depth,
+    bevelEnabled: false,
+    extrudePath: undefined
+  });
+
+  // Reorientar extrusion no eixo certo
+  // THREE.ExtrudeGeometry extruded no eixo Z por padrão
+  const alignMat = new THREE.Matrix4();
+  if (Math.abs(extDir.y) > 0.9) {
+    alignMat.makeRotationX(-Math.PI / 2);
+  } else if (Math.abs(extDir.x) > 0.9) {
+    alignMat.makeRotationY(Math.PI / 2);
+  }
+
+  geo.applyMatrix4(alignMat);
+  geo.applyMatrix4(localMat);
+  geo.applyMatrix4(transform);
+
+  return geo;
+}
+
+function buildProfile(pe, entities) {
+  if (!pe) return null;
+
+  if (pe.type === 'IFCRECTANGLEPROFILEDEF') {
+    const args = parseArgs(pe.raw);
+    const w = parseFloat(args[3]) || 0.1;
+    const h = parseFloat(args[4]) || 0.1;
+    const shape = new THREE.Shape();
+    shape.moveTo(-w / 2, -h / 2);
+    shape.lineTo(w / 2, -h / 2);
+    shape.lineTo(w / 2, h / 2);
+    shape.lineTo(-w / 2, h / 2);
+    shape.closePath();
+    return shape;
+  }
+
+  if (pe.type === 'IFCCIRCLEPROFILEDEF') {
+    const args = parseArgs(pe.raw);
+    const r = parseFloat(args[3]) || 0.05;
+    const shape = new THREE.Shape();
+    shape.absarc(0, 0, r, 0, Math.PI * 2, false);
+    return shape;
+  }
+
+  if (pe.type === 'IFCARBITRARYCLOSEDPROFILEDEF' || pe.type === 'IFCARBITRARYPROFILEDEFWITHVOIDS') {
+    const args = parseArgs(pe.raw);
+    const curveId = refId(args[2]);
+    const curveE = entities.get(curveId);
+    if (!curveE) return null;
+    const pts = getPolylinePoints2D(curveE, entities);
+    if (pts.length < 3) return null;
+    const shape = new THREE.Shape();
+    shape.moveTo(pts[0].x, pts[0].y);
+    for (let i = 1; i < pts.length; i++) shape.lineTo(pts[i].x, pts[i].y);
+    shape.closePath();
+    return shape;
+  }
+
+  if (pe.type === 'IFCCOMPOSITEPROFILEDEF') {
+    // Usar primeiro perfil
+    const args = parseArgs(pe.raw);
+    const profilesStr = args[1];
+    const pids = [...profilesStr.matchAll(/#(\d+)/g)].map(m => parseInt(m[1]));
+    if (pids.length > 0) {
+      const firstPE = entities.get(pids[0]);
+      return buildProfile(firstPE, entities);
+    }
+  }
+
+  if (pe.type === 'IFCISHAPEPROFILEDEF' || pe.type === 'IFCCSHAPEPROFILEDEF') {
+    const args = parseArgs(pe.raw);
+    const w = parseFloat(args[3]) || 0.1;
+    const h = parseFloat(args[4]) || 0.2;
+    const shape = new THREE.Shape();
+    shape.moveTo(-w / 2, -h / 2);
+    shape.lineTo(w / 2, -h / 2);
+    shape.lineTo(w / 2, h / 2);
+    shape.lineTo(-w / 2, h / 2);
+    shape.closePath();
+    return shape;
+  }
+
+  return null;
+}
+
+function getPolylinePoints2D(curveE, entities) {
+  const pts = [];
+  if (!curveE) return pts;
+  if (curveE.type === 'IFCPOLYLINE') {
+    const args = parseArgs(curveE.raw);
+    const ptsStr = args[0];
+    const pids = [...ptsStr.matchAll(/#(\d+)/g)].map(m => parseInt(m[1]));
+    for (const pid of pids) {
+      const pe = entities.get(pid);
+      if (!pe || pe.type !== 'IFCCARTESIANPOINT') continue;
+      const coords = pe.raw.replace(/[()]/g, '').split(',').map(Number);
+      pts.push(new THREE.Vector2(coords[0] || 0, coords[1] || 0));
+    }
+  }
+  return pts;
+}
+
+function getPoint3D(id, entities) {
+  if (!id) return null;
+  const e = entities.get(id);
+  if (!e || e.type !== 'IFCCARTESIANPOINT') return null;
+  const c = e.raw.replace(/[()]/g, '').split(',').map(Number);
+  return new THREE.Vector3(c[0] || 0, c[2] || 0, -(c[1] || 0));
+}
+
+function getDir3D(id, entities) {
+  if (!id) return null;
+  const e = entities.get(id);
+  if (!e || e.type !== 'IFCDIRECTION') return null;
+  const c = e.raw.replace(/[()]/g, '').split(',').map(Number);
+  return new THREE.Vector3(c[0] || 0, c[2] || 0, -(c[1] || 0)).normalize();
+}
+
+// ─── Helpers de parse IFC ─────────────────────────────────────────────────────
+function parseArgs(raw) {
+  const args = [];
+  let depth = 0, start = 0;
+  for (let i = 0; i <= raw.length; i++) {
+    const c = raw[i];
+    if (c === '(' || c === "'") depth++;
+    else if (c === ')' || (c === "'" && depth > 0)) depth--;
+    else if ((c === ',' || i === raw.length) && depth === 0) {
+      args.push(raw.substring(start, i).trim());
+      start = i + 1;
+    }
+  }
+  return args;
+}
+
+function refId(str) {
+  if (!str) return null;
+  const m = str.match(/#(\d+)/);
+  return m ? parseInt(m[1]) : null;
+}
+
+function unquote(str) {
+  if (!str) return '';
+  return str.replace(/^'|'$/g, '').replace(/\\X\\[0-9A-F]{2}/g, '').replace(/\\X2\\[0-9A-F]{4}\\X0\\/g, '').trim();
+}
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+// ─── Drag & drop ─────────────────────────────────────────────────────────────
+const dropArea = document.getElementById('drop-area');
+if (dropArea) {
+  dropArea.addEventListener('dragover', e => e.preventDefault());
+  dropArea.addEventListener('drop', e => {
+    e.preventDefault();
+    const file = e.dataTransfer.files[0];
+    if (!file) return;
+    document.getElementById('error-box').style.display = 'none';
+    document.getElementById('loading').style.display = 'flex';
+    const reader = new FileReader();
+    reader.onload = ev => loadIFC(ev.target.result);
+    reader.readAsText(file);
+  });
+}
+
+// ─── Carregar arquivo ─────────────────────────────────────────────────────────
+fetch('https://raw.githubusercontent.com/felipemirandaeng94/canil-15ciape/main/CANIL.ifc')
+  .then(r => {
+    if (!r.ok) throw new Error('not found');
+    return r.text();
+  })
+  .then(text => loadIFC(text))
+  .catch(() => showError());
+</script>
+</body>
+</html>
