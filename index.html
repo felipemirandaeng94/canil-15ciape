@@ -212,7 +212,7 @@ wrap.addEventListener('drop', async e=>{
   if(!f||!f.name.endsWith('.ifc')) return;
   errBox.style.display='none';
   statusEl.style.display='flex';
-  await loadText(await f.text());
+  await loadText(await readFileText(f));
 });
 document.getElementById('file-input').addEventListener('change', async e=>{
   const f=e.target.files[0]; if(!f) return;
@@ -559,7 +559,7 @@ async function loadText(text){
   for(const [id,e] of ents){
     if(e.type==='IFCBUILDINGSTOREY'){
       const t=tokenize(e.args);
-      storeyNames.set(id, decodeStr(t[7]||t[2]||''));
+      storeyNames.set(id, decodeStr(t[2]||''));
     }
   }
 
@@ -615,7 +615,7 @@ async function loadText(text){
       if(!rep||rep.type!=='IFCSHAPEREPRESENTATION') continue;
       const rt=tokenize(rep.args);
       const repType=rt[1]||'';
-      if(!repType.includes('Body')&&!repType.includes("'Body'")) continue;
+      if(decodeStr(repType).toUpperCase()!=='BODY') continue;
       const itemsStr=rt[3]||'';
       const im=itemsStr.match(/^\((.*)\)$/s); if(!im) continue;
       const itemIds=im[1].split(',').map(s=>refId(s.trim())).filter(x=>x!=null);
