@@ -40,7 +40,7 @@
   #info{position:absolute;bottom:12px;left:12px;background:#111820dd;border:1px solid #21262d;border-radius:6px;padding:10px 14px;font-size:12px;line-height:1.7;max-width:260px;backdrop-filter:blur(8px);display:none;z-index:5}
   .i-title{font-weight:700;color:#58a6ff;margin-bottom:3px;font-size:13px}
   .i-row{color:#6e7681}.i-row span{color:#c9d1d9}
-  #hint{position:absolute;bottom:12px;right:12px;background:#111820aa;border:1px solid #21262d;border-radius:6px;padding:8px 12px;font-size:11px;color:#484f58;line-height:1.9;backdrop-filter:blur(4px)}
+  #hint{position:absolute;bottom:12px;right:12px;background:#111820aa;border:1px solid #21262d;border-radius:6px;padding:8px 12px;font-size:11px;color:#c9d1d9;line-height:1.9;backdrop-filter:blur(4px)}
   #toolbar{position:absolute;top:12px;left:12px;display:flex;flex-direction:column;gap:5px;z-index:5}
   .tb{width:34px;height:34px;background:#111820;border:1px solid #21262d;border-radius:6px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:15px;color:#6e7681;transition:all .15s;user-select:none;title:attr(title)}
   .tb:hover{background:#1a2030;color:#c9d1d9;border-color:#30363d}
@@ -79,6 +79,8 @@
       <div class="tb"     id="btn-side"  title="Vista lateral">&#9641;</div>
       <div class="tb"     id="btn-wire"  title="Wireframe">&#9638;</div>
       <button class="tb" id="btn-walk" style="width:86px;font-size:12px" title="Andar em primeira pessoa" aria-pressed="false">Andar 3D</button>
+      <button class="tb" id="btn-speed" style="width:108px;font-size:12px;display:none" title="Alternar velocidade: 1×, 2× e 4×" aria-label="Velocidade de caminhada 1×">Velocidade: 1×</button>
+      <button class="tb" id="btn-grid" style="width:86px;font-size:12px" aria-pressed="false" title="Mostrar grade de referência">Grade</button>
     </div>
     <div id="info"></div>
     <div id="hint">
@@ -164,6 +166,7 @@ self.onmessage=async ({data})=>{
 </script>
 <script type="module">
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
+import { RoomEnvironment } from 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/environments/RoomEnvironment.js';
 
 
 clearTimeout(window.viewerBootTimer);
@@ -197,7 +200,11 @@ const errBox  = document.getElementById('err-box');
 const infoEl  = document.getElementById('info');
 
 const scene    = new THREE.Scene();
-scene.background = new THREE.Color(0x0d1117);
+const skyCanvas=document.createElement('canvas');skyCanvas.width=16;skyCanvas.height=256;
+const skyContext=skyCanvas.getContext('2d'),skyGradient=skyContext.createLinearGradient(0,0,0,256);
+skyGradient.addColorStop(0,'#aebfcd');skyGradient.addColorStop(1,'#eef1ed');
+skyContext.fillStyle=skyGradient;skyContext.fillRect(0,0,16,256);
+const skyTexture=new THREE.CanvasTexture(skyCanvas);skyTexture.colorSpace=THREE.SRGBColorSpace;scene.background=skyTexture;
 // web-ifc supplies Three.js-compatible transforms including axis and unit conversion.
 
 let W = wrap.clientWidth, H = wrap.clientHeight;
@@ -207,11 +214,17 @@ renderer.setPixelRatio(Math.min(devicePixelRatio,2));
 renderer.setSize(W, H);
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.outputColorSpace=THREE.SRGBColorSpace;
+renderer.toneMapping=THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure=0.85;
+const environmentScene=new RoomEnvironment(renderer),pmrem=new THREE.PMREMGenerator(renderer);
+const environmentTarget=pmrem.fromScene(environmentScene,0.04);
+scene.environment=environmentTarget.texture;environmentScene.dispose();pmrem.dispose();
 
 // Luzes
-const amb = new THREE.AmbientLight(0xffffff, 0.55);
+const amb = new THREE.AmbientLight(0xffffff, 0.15);
 scene.add(amb);
-const sun = new THREE.DirectionalLight(0xfff8e7, 1.2);
+const sun = new THREE.DirectionalLight(0xfff5df, 2.0);
 sun.position.set(15, 25, 10);
 sun.castShadow = true;
 sun.shadow.mapSize.set(2048,2048);
@@ -224,16 +237,35 @@ sun.shadow.camera.right = 50;
 sun.shadow.camera.top = 50;
 sun.shadow.camera.bottom = -50;
 scene.add(sun);
-const fill = new THREE.DirectionalLight(0x8bbcee, 0.3);
+const fill = new THREE.DirectionalLight(0xc5d9ed, 0.45);
 fill.position.set(-10, 5, -10);
 scene.add(fill);
-scene.add(new THREE.HemisphereLight(0x87ceeb, 0x3d2b1f, 0.35));
+scene.add(new THREE.HemisphereLight(0xcbdfee, 0x77715b, 0.65));
+scene.add(sun.target);
+const stage=new THREE.Mesh(new THREE.PlaneGeometry(2000,2000),new THREE.MeshStandardMaterial({color:0xd4d9d5,roughness:1,envMapIntensity:0.15}));
+stage.rotation.x=-Math.PI/2;stage.position.y=-0.06;stage.receiveShadow=true;scene.add(stage);
 
 // Grid
 const grid = new THREE.GridHelper(60, 60, 0x1a2332, 0x1a2332);
 grid.material.opacity = 0.5;
 grid.material.transparent = true;
 scene.add(grid);
+grid.visible=false;grid.position.y=-0.04;
+document.getElementById('btn-grid').addEventListener('click',function(){grid.visible=!grid.visible;this.classList.toggle('on',grid.visible);this.setAttribute('aria-pressed',String(grid.visible));});
+
+// Subtle reusable surface grain; all textures are generated inside this HTML.
+function surfaceGrain(){
+  const c=document.createElement('canvas');c.width=c.height=256;const ctx=c.getContext('2d'),pixels=ctx.createImageData(256,256);
+  let seed=1729;
+  for(let i=0;i<pixels.data.length;i+=4){seed=(Math.imul(seed,1664525)+1013904223)>>>0;const v=215+(seed%40);pixels.data[i]=pixels.data[i+1]=pixels.data[i+2]=v;pixels.data[i+3]=255;}
+  ctx.putImageData(pixels,0,0);const texture=new THREE.CanvasTexture(c);texture.wrapS=texture.wrapT=THREE.RepeatWrapping;texture.anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy());return texture;
+}
+const grainTexture=surfaceGrain();
+function surfaceUV(geometry,scale){
+  const p=geometry.getAttribute('position'),n=geometry.getAttribute('normal'),uv=new Float32Array(p.count*2);
+  for(let i=0;i<p.count;i++){const x=Math.abs(n.getX(i)),y=Math.abs(n.getY(i)),z=Math.abs(n.getZ(i));uv[i*2]=(x>y&&x>z?p.getZ(i):p.getX(i))/scale;uv[i*2+1]=(y>=x&&y>=z?p.getZ(i):p.getY(i))/scale;}
+  geometry.setAttribute('uv',new THREE.BufferAttribute(uv,2));
+}
 
 // Câmera órbita
 let phi = Math.PI/4, theta = Math.PI/4, radius = 25;
@@ -248,7 +280,9 @@ function camUpdate(){
 }
 camUpdate();
 
-let walking=false,walkYaw=0,walkPitch=0;
+let walking=false,walkYaw=0,walkPitch=0,walkSpeedIndex=0;
+const walkSpeeds=[1,2,4],speedButton=document.getElementById('btn-speed');
+speedButton.addEventListener('click',()=>{walkSpeedIndex=(walkSpeedIndex+1)%walkSpeeds.length;const label='Velocidade: '+walkSpeeds[walkSpeedIndex]+'×';speedButton.textContent=label;speedButton.setAttribute('aria-label','Velocidade de caminhada '+walkSpeeds[walkSpeedIndex]+'×');});
 const movementKeys=new Set();
 const navigationHint=document.getElementById('hint');
 const orbitHint=navigationHint.innerHTML;
@@ -257,6 +291,7 @@ function walkLook(){
   camera.lookAt(camera.position.clone().add(new THREE.Vector3(-Math.sin(walkYaw)*Math.cos(walkPitch),Math.sin(walkPitch),-Math.cos(walkYaw)*Math.cos(walkPitch))));
 }
 function leaveWalk(){
+  speedButton.style.display='none';
   walking=false;movementKeys.clear();walkButton.classList.remove('on');
   walkButton.textContent='Andar 3D';walkButton.setAttribute('aria-pressed','false');navigationHint.innerHTML=orbitHint;
 }
@@ -267,6 +302,7 @@ function toggleWalk(){
   const center=box.getCenter(new THREE.Vector3());
   camera.position.set(center.x,box.min.y+1.7,box.max.z+2);
   walkYaw=0;walkPitch=0;walking=true;movementKeys.clear();walkLook();
+  speedButton.style.display='flex';
   walkButton.classList.add('on');walkButton.textContent='Voltar à órbita';walkButton.setAttribute('aria-pressed','true');
   navigationHint.textContent='W/A/S/D ou setas: andar • Arrastar: olhar • Shift: acelerar • Q/E: descer/subir • Esc: órbita';
 }
@@ -287,7 +323,7 @@ function stepWalk(dt){
   const delta=new THREE.Vector3(-Math.sin(walkYaw)*forward+Math.cos(walkYaw)*side,up,-Math.cos(walkYaw)*forward-Math.sin(walkYaw)*side);
   if(delta.lengthSq()){
     const fast=movementKeys.has('ShiftLeft')||movementKeys.has('ShiftRight');
-    camera.position.addScaledVector(delta.normalize(),dt*(fast?6:2));
+    camera.position.addScaledVector(delta.normalize(),dt*2*walkSpeeds[walkSpeedIndex]*(fast?3:1));
     camera.position.y=Math.max(0.15,camera.position.y);walkLook();
   }
 }
@@ -357,12 +393,12 @@ document.getElementById('btn-side').addEventListener('click', ()=>{leaveWalk();p
 document.getElementById('btn-wire').addEventListener('click', function(){
   wireframe=!wireframe;
   this.classList.toggle('on', wireframe);
-  scene.traverse(o=>{ if(o.isMesh&&o.material) o.material.wireframe=wireframe; });
+  for(const mesh of meshMeta.keys())mesh.material.wireframe=wireframe;
 });
 function fitView(){
   leaveWalk();
   const box=new THREE.Box3();
-  scene.traverse(o=>{ if(o.isMesh) box.expandByObject(o); });
+  for(const mesh of meshMeta.keys())box.expandByObject(mesh);
   if(box.isEmpty()) return;
   const center=box.getCenter(new THREE.Vector3());
   const size=box.getSize(new THREE.Vector3());
@@ -464,7 +500,11 @@ async function loadBuffer(buf,fileName='CANIL.ifc'){
           const isGrass=/grama|grass|relva/i.test(data.meta.name);
           const color=isGrass?new THREE.Color(0x91a65d):(c?new THREE.Color().setRGB(c.x,c.y,c.z,THREE.LinearSRGBColorSpace):new THREE.Color(COLORS[data.meta.type]||COLORS.DEFAULT));
           const opacity=c?Math.max(0.15,Math.min(1,c.w)):1;
-          const material=new THREE.MeshLambertMaterial({color,opacity,transparent:opacity<1,depthWrite:opacity>=1,side:THREE.DoubleSide,wireframe});
+          const isMetal=/IFCRAILING|IFCMEMBER|IFCFLOWSEGMENT|IFCFLOWFITTING/.test(data.meta.type);
+          const isWall=/IFCWALL/.test(data.meta.type),isGlass=opacity<1;
+          if(isMetal&&Math.max(color.r,color.g,color.b)<0.035)color.setRGB(0.035,0.04,0.045);
+          const material=new THREE.MeshStandardMaterial({color,opacity,transparent:isGlass,depthWrite:!isGlass,side:THREE.DoubleSide,wireframe,roughness:isGlass?0.15:isMetal?0.42:isGrass?1:0.88,metalness:isMetal?0.55:0,envMapIntensity:isMetal?0.8:0.35});
+          if(isGrass||isWall){surfaceUV(geometry,isGrass?2:1);material.bumpMap=grainTexture;material.bumpScale=isGrass?0.012:0.002;material.roughnessMap=grainTexture;}
           const mesh=new THREE.Mesh(geometry,material);mesh.castShadow=opacity>=1;mesh.receiveShadow=true;
           meshMeta.set(mesh,data.meta);ensureLayer(data.meta.type).add(mesh);
         }
@@ -476,6 +516,9 @@ async function loadBuffer(buf,fileName='CANIL.ifc'){
         const box=new THREE.Box3();for(const mesh of meshMeta.keys())box.expandByObject(mesh);
         const center=box.getCenter(new THREE.Vector3()),offset=new THREE.Vector3(-center.x,-box.min.y,-center.z);
         for(const mesh of meshMeta.keys())mesh.position.copy(offset);
+        const modelSize=box.getSize(new THREE.Vector3()),shadowExtent=Math.max(modelSize.x,modelSize.z)*0.7+5;
+        sun.target.position.set(0,modelSize.y*0.25,0);sun.position.set(-shadowExtent*0.65,shadowExtent*1.2,shadowExtent*0.85);
+        Object.assign(sun.shadow.camera,{left:-shadowExtent,right:shadowExtent,top:shadowExtent,bottom:-shadowExtent,near:0.1,far:shadowExtent*5});sun.shadow.camera.updateProjectionMatrix();
         fitView();statusEl.style.display='none';
         const total=Object.values(data.rendered).reduce((a,b)=>a+b,0);
         document.querySelector('#header .title p').textContent=total+' elementos • '+fileName+' • '+((performance.now()-started)/1000).toFixed(1)+' s de processamento';
