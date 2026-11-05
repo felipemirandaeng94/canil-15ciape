@@ -1045,7 +1045,7 @@ if (dropArea) {
 fetch('https://raw.githubusercontent.com/felipemirandaeng94/canil-15ciape/main/CANIL.ifc')
   .then(r => {
     if (!r.ok) throw new Error('not found');
-    return r.text();
+    return r.arrayBuffer().then(b => new TextDecoder('utf-8').decode(new Uint8Array(b)));
   })
   .then(text => loadIFC(text))
   .catch(() => showError());
