@@ -26,7 +26,6 @@
   #err-box p{color:#8b949e;font-size:13px;text-align:center;max-width:380px;line-height:1.6}
   #err-box label{background:#1a3a2f;border:1px solid #2d6a4f;color:#56d364;padding:10px 22px;border-radius:6px;cursor:pointer;font-size:13px;font-weight:600;transition:background .2s}
   #err-box label:hover{background:#22543d}
-  #file-input{display:none}
   #sidebar{width:240px;background:#111820;border-left:1px solid #21262d;overflow-y:auto;display:flex;flex-direction:column;flex-shrink:0}
   #sidebar h2{padding:10px 14px;font-size:11px;font-weight:700;color:#58a6ff;text-transform:uppercase;letter-spacing:.7px;border-bottom:1px solid #21262d;background:#0d1117;position:sticky;top:0}
   .li{display:flex;align-items:center;gap:8px;padding:8px 12px;border-bottom:1px solid #161b22;cursor:default;font-size:12px;transition:background .1s}
@@ -46,6 +45,33 @@
   .tb:hover{background:#1a2030;color:#c9d1d9;border-color:#30363d}
   .tb.on{background:#1a3a2f;border-color:#2d6a4f;color:#56d364}
   #drop-hint{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;color:#484f58;font-size:13px;pointer-events:none;display:none}
+
+  :root{--border:#293b45;--muted:#96a9b5;--panel:#111c25;--accent:#75dfab}
+  button,input{font:inherit} button{cursor:pointer} button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+  #header{height:66px;background:#101d28;border-bottom:1px solid var(--border);padding:0 22px;gap:16px}
+  #header .title h1{color:#eef5f8;font-size:14px;letter-spacing:.5px} #header .title p{color:var(--muted);font-size:12px;margin-top:5px}
+  #header .badge{border-radius:5px;letter-spacing:1px} #sidebar{width:310px;background:#101923;border-color:var(--border)}
+  #sidebar h2{position:static;background:none;border:0;color:#dbe9f1;font-size:11px;padding:20px 18px 10px;letter-spacing:1.6px}
+  #toolbar{padding:9px;background:#101c27ed;border:1px solid var(--border);border-radius:12px;gap:4px;box-shadow:0 8px 30px #0005}
+  #toolbar .tb{width:140px!important;height:36px;border:0;border-radius:7px;justify-content:flex-start;padding:0 10px;gap:9px;color:#c4d1db;font-size:12px!important;background:transparent}
+  #toolbar .tb:hover{background:#243746;color:white} #toolbar .tb.on{background:#224e3f;color:#a1f2bf}
+  .tool-section{font-size:9px;letter-spacing:1.8px;color:#8094a5;padding:8px 10px 4px} .icon{width:18px;height:18px;flex-shrink:0}
+  .action{border:1px solid #375063;background:#192c3b;color:#dfebf4;padding:9px 12px;border-radius:7px;font-size:12px} .action:hover{background:#294457}
+  .action.primary{background:#286b50;border-color:#358465;color:white} .action:disabled{opacity:.45;cursor:default}
+  .model-card{margin:8px 12px;border:1px solid var(--border);border-radius:10px;background:#15222d;overflow:hidden}
+  .model-head{display:flex;gap:8px;align-items:center;padding:13px 12px;font-size:13px;font-weight:600}
+  .model-head input{accent-color:#65dba3} .model-status{font-size:11px;color:#a6b8c4;padding:0 12px 12px;line-height:1.5}
+  .model-controls{display:flex;gap:7px;padding:0 12px 12px;align-items:center}.model-controls input{width:86px;accent-color:#65dba3}
+  .model-controls button{font-size:11px;padding:5px 9px}.model-card details{border-top:1px solid #283a46}.model-card summary{cursor:pointer;padding:9px 12px;color:#9db2c0;font-size:11px}
+  .li{font-size:11px;border-color:#21313c;padding:8px 12px;gap:7px}.li-name{text-transform:none;color:#b9cbd7}.li input{accent-color:#65dba3}.li-cnt{color:#91a9b9}
+  .panel-note{margin:8px 16px 14px;font-size:11px;line-height:1.6;color:#8fa5b5} #hint{color:#cbd8e2;border-color:#293d4c;max-width:calc(100% - 190px)}
+  #info{left:178px;max-width:340px;border-color:#446576;background:#111d29ee} #pdf-list{padding:0 12px 16px;display:grid;gap:7px}
+  .pdf-link{text-align:left;overflow-wrap:anywhere} dialog{color:#e6edf3;background:#13212c;border:1px solid #416078;border-radius:14px;padding:24px;margin:auto;width:min(520px,94vw);box-shadow:0 30px 100px #0009}
+  dialog::backdrop{background:#030a12bb;backdrop-filter:blur(4px)} dialog h2{font-size:20px;margin:0 0 10px} dialog p{font-size:12px;color:#a9becd;line-height:1.6;margin-bottom:14px}
+  dialog input:not([type=checkbox]){display:block;width:100%;padding:10px;margin:7px 0 14px;background:#0d1821;border:1px solid #3c5365;border-radius:6px;color:white} dialog label{font-size:12px}
+  .dialog-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:18px} [hidden]{display:none!important} #upload-result{font-size:12px;white-space:pre-wrap;color:#9ee6bd;margin:12px 0}
+  #pdf-dialog{width:92vw;height:90vh;max-width:1300px} #pdf-frame{width:100%;height:calc(100% - 70px);border:0;background:white;margin-top:12px} .pdf-bar{display:flex;align-items:center;gap:10px}.pdf-bar strong{flex:1;overflow:hidden;text-overflow:ellipsis}
+  @media(max-width:800px){#sidebar{width:240px}#toolbar .tb{width:112px!important}#info{left:12px;bottom:75px}#header{padding:0 10px}#header .title h1{font-size:11px}.badge{display:none}#hint{font-size:10px;max-width:90%}}
 </style>
 </head>
 <body>
@@ -56,7 +82,7 @@
     <h1>CONSTRUÇÃO DO CANIL DA 15ª CIA PE</h1>
     <p>Exército Brasileiro — Belém / PA</p>
   </div>
-  <div class="badge">BIM 3D</div>
+  <div class="badge">COORDENAÇÃO BIM</div><button class="action" id="btn-admin">Gerenciar PDFs</button>
 </div>
 
 <div id="main">
@@ -69,19 +95,10 @@
     </div>
     <div id="err-box">
       <h2>Arquivo IFC não encontrado</h2>
-      <p>O modelo <strong>CANIL.ifc</strong> não foi localizado automaticamente.<br>Arraste o arquivo para cá ou use o botão abaixo.</p>
-      <label>&#128194; Selecionar CANIL.ifc<input type="file" id="file-input" accept=".ifc"></label>
+      <p>O modelo <strong>CANIL.ifc</strong> não foi localizado automaticamente.<br>Publique o arquivo junto ao index.html no GitHub.</p>
+
     </div>
-    <div id="toolbar">
-      <div class="tb on"  id="btn-fit"   title="Encaixar vista">&#10021;</div>
-      <div class="tb"     id="btn-top"   title="Vista superior">&#8613;</div>
-      <div class="tb"     id="btn-front" title="Vista frontal">&#9636;</div>
-      <div class="tb"     id="btn-side"  title="Vista lateral">&#9641;</div>
-      <div class="tb"     id="btn-wire"  title="Wireframe">&#9638;</div>
-      <button class="tb" id="btn-walk" style="width:86px;font-size:12px" title="Andar em primeira pessoa" aria-pressed="false">Andar 3D</button>
-      <button class="tb" id="btn-speed" style="width:108px;font-size:12px;display:none" title="Alternar velocidade: 1×, 2× e 4×" aria-label="Velocidade de caminhada 1×">Velocidade: 1×</button>
-      <button class="tb" id="btn-grid" style="width:86px;font-size:12px" aria-pressed="false" title="Mostrar grade de referência">Grade</button>
-    </div>
+    <nav id="toolbar" aria-label="Ferramentas 3D"><span class="tool-section">VISUALIZAÇÃO</span><button class="tb" id="btn-fit" title="Enquadrar modelo"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 8V3h5m8 0h5v5M3 16v5h5m8 0h5v-5"/></svg>Enquadrar modelo</button><button class="tb" id="btn-top" title="Vista superior"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 4h16v16H4zM4 10h16M10 4v16"/></svg>Vista superior</button><button class="tb" id="btn-front" title="Vista frontal"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 20V8l8-5 8 5v12H4zM9 20v-8h6v8"/></svg>Vista frontal</button><button class="tb" id="btn-side" title="Vista lateral"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 20V5h14v15zM5 11h14"/></svg>Vista lateral</button><button class="tb" id="btn-wire" title="Linhas do modelo"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m12 2 9 5v10l-9 5-9-5V7zM3 7l9 5 9-5M12 12v10"/></svg>Linhas do modelo</button><span class="tool-section">NAVEGAÇÃO</span><button class="tb" id="btn-walk" aria-pressed="false">Andar 3D</button><button class="tb" id="btn-speed" style="display:none" title="Alternar velocidade: 1×, 2× e 4×">Velocidade: 1×</button><button class="tb" id="btn-grid" aria-pressed="false">Grade de referência</button></nav>
     <div id="info"></div>
     <div id="hint">
       Girar: arrastar &nbsp;|&nbsp; Zoom: scroll<br>
@@ -89,11 +106,12 @@
     </div>
   </div>
   <div id="sidebar">
-    <h2>Camadas</h2>
-    <div id="layers"></div>
+    <h2>DISCIPLINAS</h2><p class="panel-note">Sobreponha os modelos, isole disciplinas e ajuste a transparência para inspeção visual.</p><div id="layers"></div><p class="panel-note">Exporte todos os IFCs com as mesmas coordenadas. A sobreposição visual não substitui uma análise automática de interferências.</p><h2>PLANTAS · PDF</h2><div id="pdf-list">Consultando plantas...</div><button class="action" id="refresh-pdfs" style="margin:0 12px 20px">Atualizar plantas</button>
   </div>
 </div>
 
+<dialog id="admin-dialog"><h2>Publicar plantas</h2><p>Envie PDFs para a pasta <b>plantas</b> do projeto. Os arquivos ficarão públicos.</p><form id="pin-form"><label>Senha do painel<input id="admin-pin" type="password" inputmode="numeric" autocomplete="off" required></label><button class="action primary">Abrir painel</button></form><form id="upload-form" hidden><p>A senha abre este painel; a autorização de gravação é feita pelo GitHub. Use um token restrito a este repositório com permissão <b>Contents: read and write</b>. O token será apagado do campo ao enviar e não será salvo.</p><label>Token GitHub<input id="github-token" type="password" autocomplete="off" required></label><label>Plantas PDF (até 20 MB cada)<input id="pdf-files" type="file" accept=".pdf,application/pdf" multiple required></label><label><input id="replace-pdfs" type="checkbox"> Substituir PDFs existentes com o mesmo nome</label><div class="dialog-actions"><button class="action primary" id="send-pdfs">Enviar ao GitHub</button></div></form><div id="upload-result" role="status" aria-live="polite"></div><div class="dialog-actions"><button class="action" id="close-admin">Fechar</button></div></dialog>
+<dialog id="pdf-dialog"><div class="pdf-bar"><strong id="pdf-title">Planta</strong><a class="action" id="pdf-download" download>Baixar PDF</a><button class="action" id="close-pdf">Fechar</button></div><iframe id="pdf-frame" title="Visualização da planta PDF"></iframe></dialog>
 <script type="importmap">
 {"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"}}
 </script>
@@ -119,7 +137,7 @@ self.onmessage=async ({data})=>{
     api.SetWasmPath('https://cdn.jsdelivr.net/npm/web-ifc@0.0.78/',true);
     await api.Init(undefined,true);
     self.postMessage({kind:'progress',text:'Interpretando sólidos e recortes IFC...',pct:12});
-    model=api.OpenModel(new Uint8Array(data),{COORDINATE_TO_ORIGIN:true,CIRCLE_SEGMENTS:24});
+    model=api.OpenModel(new Uint8Array(data),{COORDINATE_TO_ORIGIN:false,CIRCLE_SEGMENTS:24});
     if(model<0) throw new Error('O motor IFC não conseguiu abrir o arquivo.');
     const storeys=new Map(), parents=new Map();
     const list=(type)=>{const v=api.GetLineIDsWithType(model,type); const a=Array.from({length:v.size()},(_,i)=>v.get(i));v.delete?.();return a;};
@@ -137,7 +155,7 @@ self.onmessage=async ({data})=>{
       const id=products.get(i),type=api.GetLineType(model,id);
       if(type===WebIFC.IFCSPACE||type===WebIFC.IFCOPENINGELEMENT)continue;
       const row=api.GetLine(model,id);
-      if(row.Representation) candidates.push({id,type:api.GetNameFromTypeCode(type).toUpperCase(),name:row.Name?.value||'Elemento',storey:storeyFor(id)});
+      if(row.Representation) candidates.push({id,type:api.GetNameFromTypeCode(type).toUpperCase(),name:row.Name?.value||'Elemento',role:row.PredefinedType?.value||'',storey:storeyFor(id)});
     }
     products.delete?.();
     const rendered={},missing=[];
@@ -360,26 +378,6 @@ window.addEventListener('resize',  ()=>{
   renderer.setSize(W,H);
 });
 
-let manualLoad=false;
-// Drag-over visual
-wrap.addEventListener('dragover',  e=>e.preventDefault());
-wrap.addEventListener('drop', async e=>{
-  e.preventDefault();
-  const f=e.dataTransfer.files[0];
-  if(!f||!f.name.toLowerCase().endsWith('.ifc')) return;
-  manualLoad=true;
-  errBox.style.display='none';
-  statusEl.style.display='flex';
-  try { await loadBuffer(await f.arrayBuffer(),f.name); } catch(error) { window.showViewerError(error); }
-});
-document.getElementById('file-input').addEventListener('change', async e=>{
-  const f=e.target.files[0]; if(!f) return;
-  manualLoad=true;
-  errBox.style.display='none';
-  statusEl.style.display='flex';
-  try { await loadBuffer(await f.arrayBuffer(),f.name); } catch(error) { window.showViewerError(error); }
-});
-
 // ── TOOLBAR ──────────────────────────────────────────────────────────────────
 let wireframe=false;
 document.getElementById('btn-fit').addEventListener('click', fitView);
@@ -426,57 +424,62 @@ canvas.addEventListener('click', e=>{
   const m = meshMeta.get(selected)||{};
   infoEl.style.display='block';
   infoEl.replaceChildren();
-  for(const [label,value] of [['Nome',m.name||'Elemento'],['Tipo',m.type],['Pavimento',m.storey||'Não informado']]){
+  for(const [label,value] of [['Nome',m.name||'Elemento'],['Disciplina',m.disciplineLabel||'Arquitetura'],['Tipo',m.type],['Pavimento',m.storey||'Não informado']]){
     const row=document.createElement('div'); row.textContent=`${label}: ${value}`; infoEl.appendChild(row);
   }
 });
 
 // ── CAMADAS ──────────────────────────────────────────────────────────────────
-const layerMap = new Map(); // type → {group, visible}
-function ensureLayer(type){
-  if(layerMap.has(type)) return layerMap.get(type).group;
-  const group=new THREE.Group(); group.name=type; scene.add(group);
-  layerMap.set(type,{group,visible:true});
-
-  const color=COLORS[type]||COLORS.DEFAULT;
-  const hex=color.toString(16).padStart(6,'0');
-  const labels={IFCWALLSTANDARDCASE:'Paredes',IFCWALL:'Paredes',IFCSLAB:'Pisos e coberturas',IFCROOF:'Telhados',IFCDOOR:'Portas e portões',IFCWINDOW:'Janelas',IFCRAILING:'Cercamentos',IFCFLOWTERMINAL:'Terminais de instalações',IFCFLOWSEGMENT:'Tubulações',IFCFLOWFITTING:'Conexões',IFCBUILDINGELEMENTPROXY:'Outras famílias'};
-  const label=labels[type]||type.replace('IFC','');
-  const div=document.createElement('div');
-  div.className='li';
-  div.innerHTML=`<div class="dot" style="background:#${hex}"></div>
-    <div class="li-name">${label}</div>
-    <div class="eye" data-t="${type}">&#128065;</div>`;
-  div.querySelector('.eye').addEventListener('click', e=>{
-    const t=e.currentTarget.dataset.t;
-    const l=layerMap.get(t); if(!l) return;
-    l.visible=!l.visible;
-    l.group.visible=l.visible;
-    if(selected?.parent===l.group&&!l.visible){selected.material.emissive.set(0);selected=null;infoEl.style.display='none';}
-    e.currentTarget.classList.toggle('off',!l.visible);
-  });
-  document.getElementById('layers').appendChild(div);
-  return group;
+const layerMap=new Map();
+const modelDefs=[{id:'ARQ',label:'Arquitetura',file:'CANIL.ifc',color:'#75dfab'},{id:'EST',label:'Estrutural',file:'ESTRUTURAL.ifc',color:'#a6b8d0'},{id:'HID',label:'Hidráulico',file:'HIDRAULICO.ifc',color:'#62b8ed'},{id:'ESG',label:'Esgoto',file:'ESGOTO.IFC',color:'#e4a16c'}];
+let sharedAnchor=null,loadingQueue=Promise.resolve();
+function enqueueLoad(buf,name){const def=modelDefs.find(d=>d.file.toUpperCase()===name.toUpperCase());if(!def)throw new Error('Use um dos nomes: '+modelDefs.map(d=>d.file).join(', '));loadingQueue=loadingQueue.catch(()=>{}).then(()=>loadBuffer(buf,def.file));return loadingQueue;}
+function updateModelVisibility(def){for(const [key,l] of layerMap)if(l.model===def.id){l.group.visible=def.visible&&l.visible;for(const mesh of l.group.children){mesh.material.opacity=mesh.userData.baseOpacity*def.opacity;mesh.material.transparent=mesh.material.opacity<1;mesh.material.depthWrite=mesh.material.opacity>=1;}}if(selected&&!selected.parent.visible){selected.material.emissive.set(0);selected=null;infoEl.style.display='none';}}
+for(const d of modelDefs){
+ d.visible=true;d.opacity=1;d.count=0;
+ const card=document.createElement('section');card.className='model-card';
+ const head=document.createElement('label');head.className='model-head';const check=document.createElement('input');check.type='checkbox';check.checked=true;check.setAttribute('aria-label','Exibir '+d.label);head.append(check,document.createTextNode(d.label));head.style.borderLeft='3px solid '+d.color;
+ const status=document.createElement('p');status.className='model-status';status.textContent=d.file+' · Aguardando';d.status=status;
+ const controls=document.createElement('div');controls.className='model-controls';const isolate=document.createElement('button');isolate.className='action';isolate.textContent='Isolar';
+ isolate.onclick=()=>{const alone=modelDefs.every(o=>o===d||!o.visible);for(const o of modelDefs){o.visible=alone||o===d;o.check.checked=o.visible;updateModelVisibility(o);}};
+ const opacity=document.createElement('input');opacity.type='range';opacity.min='10';opacity.max='100';opacity.value='100';opacity.title='Opacidade de '+d.label;opacity.setAttribute('aria-label',opacity.title);opacity.oninput=()=>{d.opacity=Number(opacity.value)/100;updateModelVisibility(d);};
+ controls.append(isolate,opacity);const details=document.createElement('details');const summary=document.createElement('summary');summary.textContent='Categorias do modelo';details.append(summary);const rows=document.createElement('div');details.append(rows);d.rows=rows;
+ check.onchange=()=>{d.visible=check.checked;updateModelVisibility(d);};d.check=check;card.append(head,status,controls,details);document.getElementById('layers').append(card);
 }
+function ensureLayer(type,def){
+ const key=def.id+':'+type;if(layerMap.has(key))return layerMap.get(key).group;
+ const group=new THREE.Group();scene.add(group);group.visible=def.visible;const layer={group,visible:true,model:def.id};layerMap.set(key,layer);
+ const row=document.createElement('label');row.className='li';const check=document.createElement('input');check.type='checkbox';check.checked=true;check.onchange=()=>{layer.visible=check.checked;updateModelVisibility(def);};
+ const label=document.createElement('span');label.className='li-name';label.textContent=({IFCWALLSTANDARDCASE:'Paredes',IFCSLAB:'Pisos e coberturas',IFCDOOR:'Portas e portões',IFCWINDOW:'Janelas',IFCRAILING:'Cercamentos'})[type]||type.replace('IFC','');
+ const count=document.createElement('span');count.className='li-cnt';layer.count=count;row.append(check,label,count);def.rows.append(row);return group;
+}
+const hatchCanvas=document.createElement('canvas');hatchCanvas.width=hatchCanvas.height=128;const hatch=hatchCanvas.getContext('2d');hatch.fillStyle='#eeeeee';hatch.fillRect(0,0,128,128);hatch.strokeStyle='#8c969f';hatch.lineWidth=1.5;for(let x=-128;x<256;x+=32){hatch.beginPath();hatch.moveTo(x,0);hatch.lineTo(x+128,128);hatch.stroke();}const roofTexture=new THREE.CanvasTexture(hatchCanvas);roofTexture.wrapS=roofTexture.wrapT=THREE.RepeatWrapping;roofTexture.colorSpace=THREE.SRGBColorSpace;roofTexture.anisotropy=8;
 
 // Full IFC geometry is processed in a worker so boolean operations do not freeze navigation.
 let activeWorker=null, activeLoad=0;
 async function loadBuffer(buf,fileName='CANIL.ifc'){
+  const def=modelDefs.find(d=>d.file===fileName);
+  return new Promise((resolve,reject)=>{
+  def.status.textContent=fileName+' · Carregando...';
   const header=new TextDecoder('utf-8').decode(new Uint8Array(buf,0,Math.min(buf.byteLength,80)));
   if(!header.startsWith('ISO-10303'))throw new Error('O arquivo não é um IFC válido (ISO-10303 ausente).');
   const generation=++activeLoad;
   leaveWalk();
   activeWorker?.terminate();activeWorker=null;
   selected=null;infoEl.style.display='none';errBox.style.display='none';statusEl.style.display='flex';
-  for(const mesh of meshMeta.keys()){mesh.geometry.dispose();mesh.material.dispose();}
-  for(const {group} of layerMap.values())scene.remove(group);
-  meshMeta.clear();layerMap.clear();document.getElementById('layers').replaceChildren();
+  for(const [mesh,meta] of meshMeta)if(meta.discipline===def.id){mesh.geometry.dispose();mesh.material.dispose();meshMeta.delete(mesh);}
+  for(const [key,l] of layerMap)if(l.model===def.id){scene.remove(l.group);layerMap.delete(key);}def.rows.replaceChildren();
   setStatus('Preparando leitor IFC completo...',5);
   const url=URL.createObjectURL(new Blob([document.getElementById('ifc-worker').textContent],{type:'text/javascript'}));
   const worker=new Worker(url);URL.revokeObjectURL(url);activeWorker=worker;
   const started=performance.now();
   let timer;
-  const fail=(error)=>{clearTimeout(timer);worker.terminate();if(generation===activeLoad){activeWorker=null;window.showViewerError(error);}};
+  const fail=(error)=>{clearTimeout(timer);worker.terminate();if(generation===activeLoad){
+    activeWorker=null;def.count=0;
+    for(const [mesh,meta] of meshMeta)if(meta.discipline===def.id){mesh.geometry.dispose();mesh.material.dispose();meshMeta.delete(mesh);}
+    for(const [key,l] of layerMap)if(l.model===def.id){scene.remove(l.group);layerMap.delete(key);}
+    def.rows.replaceChildren();def.status.textContent=fileName+' · '+error.message;statusEl.style.display='none';reject(error);
+  }};
   timer=setTimeout(()=>fail(new Error('A leitura excedeu 3 minutos. Tente novamente ou verifique a conexão.')),180000);
   worker.onerror=e=>fail(new Error(e.message||'Falha ao iniciar o leitor IFC.'));
   worker.onmessage=({data})=>{
@@ -491,43 +494,50 @@ async function loadBuffer(buf,fileName='CANIL.ifc'){
           geometry.setAttribute('position',new THREE.InterleavedBufferAttribute(vertex,3,0));
           geometry.setAttribute('normal',new THREE.InterleavedBufferAttribute(vertex,3,3));
           geometry.setIndex(new THREE.BufferAttribute(part.indices,1));
-          geometry.applyMatrix4(new THREE.Matrix4().fromArray(part.matrix));
+          const matrix=new THREE.Matrix4().fromArray(part.matrix);
+          if(!sharedAnchor)sharedAnchor=new THREE.Vector3().setFromMatrixPosition(matrix);
+          matrix.elements[12]-=sharedAnchor.x;matrix.elements[13]-=sharedAnchor.y;matrix.elements[14]-=sharedAnchor.z;
+          geometry.applyMatrix4(matrix);
           const c=part.color;
           const isGrass=/grama|grass|relva/i.test(data.meta.name);
+          const isRoof=data.meta.type==='IFCROOF'||data.meta.role==='ROOF'||/telhado|roof/i.test(data.meta.name);
+          const isGate=data.meta.type==='IFCRAILING'||/port[aã]o|gradil|alambrado|cercamento/i.test(data.meta.name);
           const color=isGrass?new THREE.Color(0x91a65d):(c?new THREE.Color().setRGB(c.x,c.y,c.z,THREE.LinearSRGBColorSpace):new THREE.Color(COLORS[data.meta.type]||COLORS.DEFAULT));
+          if(isRoof)color.set(0x49535e);
+          if(isGate)color.set(0x101216);
           const opacity=c?Math.max(0.15,Math.min(1,c.w)):1;
           const isMetal=/IFCRAILING|IFCMEMBER|IFCFLOWSEGMENT|IFCFLOWFITTING/.test(data.meta.type);
           const isWall=/IFCWALL/.test(data.meta.type),isGlass=opacity<1;
-          if(isMetal&&Math.max(color.r,color.g,color.b)<0.035)color.setRGB(0.035,0.04,0.045);
+          if(isMetal&&!isGate&&Math.max(color.r,color.g,color.b)<0.035)color.setRGB(0.035,0.04,0.045);
           const material=new THREE.MeshStandardMaterial({color,opacity,transparent:isGlass,depthWrite:!isGlass,side:THREE.DoubleSide,wireframe,roughness:isGlass?0.15:isMetal?0.42:isGrass?1:0.88,metalness:isMetal?0.55:0,envMapIntensity:isMetal?0.8:0.35});
+          if(isRoof){surfaceUV(geometry,1.5);material.map=roofTexture;material.roughness=0.8;}
           if(isGrass||isWall){surfaceUV(geometry,isGrass?2:1);material.bumpMap=grainTexture;material.bumpScale=isGrass?0.012:0.002;material.roughnessMap=grainTexture;}
           const mesh=new THREE.Mesh(geometry,material);mesh.castShadow=opacity>=1;mesh.receiveShadow=true;
-          meshMeta.set(mesh,data.meta);ensureLayer(data.meta.type).add(mesh);
+          mesh.userData.baseOpacity=opacity;
+          meshMeta.set(mesh,{...data.meta,discipline:def.id,disciplineLabel:def.label});ensureLayer(data.meta.type,def).add(mesh);
         }
         return;
       }
       if(data.kind==='done'){
         clearTimeout(timer);worker.terminate();activeWorker=null;
         if(!meshMeta.size)throw new Error('O IFC não contém geometria renderizável.');
-        const box=new THREE.Box3();for(const mesh of meshMeta.keys())box.expandByObject(mesh);
+        const box=new THREE.Box3();for(const mesh of meshMeta.keys()){mesh.position.set(0,0,0);mesh.updateMatrixWorld(true);box.expandByObject(mesh);}
         const center=box.getCenter(new THREE.Vector3()),offset=new THREE.Vector3(-center.x,-box.min.y,-center.z);
         for(const mesh of meshMeta.keys())mesh.position.copy(offset);
         const modelSize=box.getSize(new THREE.Vector3()),shadowExtent=Math.max(modelSize.x,modelSize.z)*0.7+5;
         sun.target.position.set(0,modelSize.y*0.25,0);sun.position.set(-shadowExtent*0.65,shadowExtent*1.2,shadowExtent*0.85);
         Object.assign(sun.shadow.camera,{left:-shadowExtent,right:shadowExtent,top:shadowExtent,bottom:-shadowExtent,near:0.1,far:shadowExtent*5});sun.shadow.camera.updateProjectionMatrix();
         fitView();statusEl.style.display='none';
-        const total=Object.values(data.rendered).reduce((a,b)=>a+b,0);
-        document.querySelector('#header .title p').textContent=total+' elementos • '+fileName+' • '+((performance.now()-started)/1000).toFixed(1)+' s de processamento';
-        for(const [type,count] of Object.entries(data.rendered)){
-          const row=document.querySelector('[data-t="'+type+'"]').parentElement;
-          const label=document.createElement('span');label.className='li-cnt';label.textContent=count;row.appendChild(label);
-        }
-        if(data.missing.length){const note=document.createElement('p');note.style.cssText='padding:14px;color:#e3b341;font-size:12px';note.textContent=data.missing.length+' produtos com representação não geraram malhas. Consulte o console para detalhes.';document.getElementById('layers').appendChild(note);console.warn('IFC sem malha',data.missing);}
+        def.count=Object.values(data.rendered).reduce((a,b)=>a+b,0);def.status.textContent=fileName+' · '+def.count+' elementos'+(data.missing.length?' · '+data.missing.length+' sem malha':'');
+        document.querySelector('#header .title p').textContent=modelDefs.reduce((n,d)=>n+d.count,0)+' elementos · '+modelDefs.filter(d=>d.count).length+' disciplina(s) carregada(s)';
+        for(const [type,count] of Object.entries(data.rendered))layerMap.get(def.id+':'+type).count.textContent=count;
+        updateModelVisibility(def);resolve();
         console.info('IFC carregado',data.rendered);
       }
     }catch(error){fail(error);}
   };
   worker.postMessage(buf,[buf]);
+  });
 }
 
 function setStatus(msg,pct){
@@ -538,27 +548,98 @@ function tick(){ return new Promise(r=>setTimeout(r,0)); }
 
 // ── FETCH REMOTO ──────────────────────────────────────────────────────────────
 async function tryFetch(){
-  setStatus('Baixando CANIL.ifc...',2);
-  const controller=new AbortController();
-  const timeout=setTimeout(()=>controller.abort(),90000);
-  let buf;
-  try{
-    const response=await fetch(new URL('./CANIL.ifc',location.href),{cache:'no-store',signal:controller.signal});
-    if(!response.ok) throw new Error(`CANIL.ifc: HTTP ${response.status}. Coloque o arquivo junto ao index.html no GitHub.`);
-    buf=await response.arrayBuffer();
-  }catch(error){
-    if(error.name==='AbortError') throw new Error('O download excedeu 90 segundos. Verifique a conexão ou selecione o IFC manualmente.');
-    throw error;
-  }finally{clearTimeout(timeout);}
-  if(!manualLoad) await loadBuffer(buf);
+  for(const def of modelDefs){
+
+    const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),90000);
+    try{
+      setStatus('Buscando '+def.file+'...',2);
+      const response=await fetch(new URL('./'+def.file,location.href),{cache:'no-store',signal:controller.signal});
+      if(response.status===404){def.status.textContent=def.file+' · Ainda não publicado';continue;}
+      if(!response.ok)throw new Error('HTTP '+response.status);
+      const buf=await response.arrayBuffer();clearTimeout(timer);
+      await enqueueLoad(buf,def.file);
+    }catch(error){def.status.textContent=def.file+' · Falha: '+error.message;console.warn(def.file,error.message);}
+    finally{clearTimeout(timer);}
+  }
+  statusEl.style.display='none';
+  if(!meshMeta.size)window.showViewerError(new Error('Nenhum IFC disponível. Publique os modelos no GitHub com os nomes indicados no painel.'));
 }
 
 // ── RENDER LOOP ───────────────────────────────────────────────────────────────
 const frameClock=new THREE.Clock();
 (function loop(){ requestAnimationFrame(loop);stepWalk(Math.min(frameClock.getDelta(),0.05)); renderer.render(scene,camera); })();
 
+const REPO_API='https://api.github.com/repos/felipemirandaeng94/canil-15ciape/contents/';
+const admin=document.getElementById('admin-dialog'),pinForm=document.getElementById('pin-form'),uploadForm=document.getElementById('upload-form'),uploadResult=document.getElementById('upload-result');
+let uploadBusy=false,pdfObjectURL=null;
+document.getElementById('btn-admin').onclick=()=>{leaveWalk();admin.showModal();document.getElementById('admin-pin').focus();};
+pinForm.onsubmit=e=>{e.preventDefault();const pin=document.getElementById('admin-pin');if(pin.value==='8246'){pinForm.hidden=true;uploadForm.hidden=false;uploadResult.textContent='';document.getElementById('github-token').focus();}else uploadResult.textContent='Senha incorreta.';pin.value='';};
+function closeAdmin(){if(uploadBusy)return;admin.close();}
+document.getElementById('close-admin').onclick=closeAdmin;
+admin.addEventListener('cancel',e=>{if(uploadBusy)e.preventDefault();});
+admin.addEventListener('close',()=>{pinForm.reset();uploadForm.reset();pinForm.hidden=false;uploadForm.hidden=true;uploadResult.textContent='';});
+async function publishPdf(file,token,replace,request=fetch){
+  if(!/\.pdf$/i.test(file.name)||file.size>20*1024*1024)throw new Error('Escolha um PDF de até 20 MB: '+file.name);
+  const bytes=new Uint8Array(await file.arrayBuffer());
+  if(new TextDecoder().decode(bytes.slice(0,5))!=='%PDF-')throw new Error('Conteúdo inválido: '+file.name);
+  const name=file.name.normalize('NFC').replace(/[^\p{L}\p{N}._ -]/gu,'_');
+  const url=REPO_API+'plantas/'+encodeURIComponent(name);
+  const headers={Accept:'application/vnd.github+json',Authorization:'Bearer '+token,'X-GitHub-Api-Version':'2022-11-28'};
+  const current=await request(url+'?ref=main',{headers,cache:'no-store',signal:AbortSignal.timeout(30000)});
+  let sha;
+  if(current.ok){if(!replace)throw new Error(name+' já existe. Marque a opção de substituição para atualizar.');sha=(await current.json()).sha;}
+  else if(current.status!==404)throw new Error('GitHub HTTP '+current.status+'. Confira o token e a permissão Contents: read and write.');
+  let binary='';for(let i=0;i<bytes.length;i+=32768)binary+=String.fromCharCode(...bytes.subarray(i,i+32768));
+  const response=await request(url,{method:'PUT',headers:{...headers,'Content-Type':'application/json'},signal:AbortSignal.timeout(90000),body:JSON.stringify({message:(sha?'Atualiza':'Adiciona')+' planta '+name,content:btoa(binary),branch:'main',...(sha?{sha}:{})})});
+  if(!response.ok)throw new Error('Envio não concluído: GitHub HTTP '+response.status+(response.status===409?'. O arquivo mudou; atualize e tente novamente.':'. Confira as permissões do token.'));
+  return name;
+}
+uploadForm.onsubmit=async e=>{
+  e.preventDefault();if(uploadBusy)return;
+  let token=document.getElementById('github-token').value.trim();document.getElementById('github-token').value='';
+  const files=Array.from(document.getElementById('pdf-files').files),replace=document.getElementById('replace-pdfs').checked;
+  if(!token||!files.length){uploadResult.textContent='Informe o token e selecione os PDFs.';return;}
+  uploadBusy=true;document.getElementById('send-pdfs').disabled=true;document.getElementById('close-admin').disabled=true;
+  let completed=[];
+  try{
+    for(const file of files){uploadResult.textContent=completed.map(n=>'Enviado: '+n).join('\n')+'\nEnviando '+file.name+'...';completed.push(await publishPdf(file,token,replace));}
+    uploadResult.textContent=completed.map(n=>'Enviado: '+n).join('\n')+'\nOs PDFs já estão no GitHub. A publicação no Pages pode levar alguns minutos.';
+    document.getElementById('pdf-files').value='';await listPdfs();
+  }catch(error){uploadResult.textContent=completed.map(n=>'Enviado: '+n).join('\n')+'\n'+error.message;}
+  finally{token='';uploadBusy=false;document.getElementById('send-pdfs').disabled=false;document.getElementById('close-admin').disabled=false;}
+};
+const pdfDialog=document.getElementById('pdf-dialog');
+document.getElementById('close-pdf').onclick=()=>pdfDialog.close();
+pdfDialog.addEventListener('close',()=>{document.getElementById('pdf-frame').src='about:blank';if(pdfObjectURL)URL.revokeObjectURL(pdfObjectURL);pdfObjectURL=null;});
+async function viewPdf(name,button){
+  button.disabled=true;
+  try{
+    const response=await fetch(REPO_API+'plantas/'+encodeURIComponent(name)+'?ref=main',{headers:{Accept:'application/vnd.github.raw+json'},signal:AbortSignal.timeout(60000)});
+    if(!response.ok)throw new Error('PDF indisponível: HTTP '+response.status);
+    const data=await response.arrayBuffer();if(new TextDecoder().decode(new Uint8Array(data,0,Math.min(5,data.byteLength)))!=='%PDF-')throw new Error('O arquivo recebido não é PDF.');
+    if(pdfObjectURL)URL.revokeObjectURL(pdfObjectURL);pdfObjectURL=URL.createObjectURL(new Blob([data],{type:'application/pdf'}));
+    document.getElementById('pdf-title').textContent=name;document.getElementById('pdf-frame').src=pdfObjectURL;
+    const download=document.getElementById('pdf-download');download.href=pdfObjectURL;download.download=name;
+    leaveWalk();pdfDialog.showModal();
+  }catch(error){button.textContent=name+' — '+error.message;}
+  finally{button.disabled=false;}
+}
+async function listPdfs(){
+  const list=document.getElementById('pdf-list');list.textContent='Consultando plantas...';
+  try{
+    const response=await fetch(REPO_API+'plantas?ref=main',{cache:'no-store',signal:AbortSignal.timeout(30000)});
+    if(response.status===404){list.textContent='Nenhuma planta publicada ainda.';return;}
+    if(!response.ok)throw new Error('Consulta indisponível (HTTP '+response.status+'). Use Atualizar plantas para tentar novamente.');
+    const entries=(await response.json()).filter(e=>e.type==='file'&&/\.pdf$/i.test(e.name)).sort((a,b)=>a.name.localeCompare(b.name,'pt-BR'));
+    list.replaceChildren();if(!entries.length){list.textContent='Nenhuma planta publicada ainda.';return;}
+    for(const entry of entries){const button=document.createElement('button');button.className='action pdf-link';button.textContent=entry.name;button.onclick=()=>viewPdf(entry.name,button);list.appendChild(button);}
+  }catch(error){list.textContent=error.message;}
+}
+document.getElementById('refresh-pdfs').onclick=listPdfs;
+listPdfs();
+
 // ── BOOT ──────────────────────────────────────────────────────────────────────
-tryFetch().catch(error=>{if(!manualLoad)window.showViewerError(error);});
+tryFetch().catch(window.showViewerError);
 </script>
 </body>
 </html>
