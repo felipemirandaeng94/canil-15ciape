@@ -91,10 +91,27 @@
   </div>
 </div>
 
+<script type="importmap">
+{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"}}
+</script>
+<script>
+// This handler runs even if ES module resolution or WebGL initialization fails.
+window.showViewerError = function(error){
+  document.getElementById('status').style.display='none';
+  const box=document.getElementById('err-box');
+  box.style.display='flex';
+  box.querySelector('h2').textContent='Não foi possível abrir o modelo';
+  box.querySelector('p').textContent=error?.message||String(error);
+};
+window.addEventListener('error',e=>window.showViewerError(e.error||e.message));
+window.addEventListener('unhandledrejection',e=>window.showViewerError(e.reason));
+window.viewerBootTimer=setTimeout(()=>window.showViewerError(new Error('A biblioteca 3D não iniciou. Verifique sua conexão e recarregue a página.')),30000);
+</script>
 <script type="module">
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
 import { mergeGeometries } from 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/utils/BufferGeometryUtils.js';
 
+clearTimeout(window.viewerBootTimer);
 // ── CONSTANTES DE COR ────────────────────────────────────────────────────────
 const COLORS = {
   IFCWALLSTANDARDCASE: 0xd4b483,
@@ -107,7 +124,6 @@ const COLORS = {
   IFCBEAM:             0x888888,
   IFCSTAIR:            0xaa8833,
   IFCFURNISHINGELEMENT:0x6b8e6b,
-  IFCSPACE:            0x2244aa,
   DEFAULT:             0x607080,
 };
 const ELEM_TYPES = Object.keys(COLORS).filter(k=>k!=='DEFAULT');
@@ -123,7 +139,7 @@ const infoEl  = document.getElementById('info');
 
 const scene    = new THREE.Scene();
 scene.background = new THREE.Color(0x0d1117);
-scene.fog = new THREE.FogExp2(0x0d1117, 0.012);
+// IFC uses Z-up; geometry is converted to Three.js Y-up when loaded.
 
 let W = wrap.clientWidth, H = wrap.clientHeight;
 const camera = new THREE.PerspectiveCamera(45, W/H, 0.01, 1000);
@@ -140,6 +156,7 @@ const sun = new THREE.DirectionalLight(0xfff8e7, 1.2);
 sun.position.set(15, 25, 10);
 sun.castShadow = true;
 sun.shadow.mapSize.set(2048,2048);
+sun.shadow.normalBias=0.025;
 sun.shadow.camera.near = 0.1;
 sun.shadow.camera.far = 200;
 sun.shadow.camera.left = -50;
@@ -172,13 +189,14 @@ function camUpdate(){
 camUpdate();
 
 // ── CONTROLES ────────────────────────────────────────────────────────────────
-let dragging=false, shifting=false, lx=0, ly=0;
-canvas.addEventListener('mousedown',  e=>{dragging=true; lx=e.clientX; ly=e.clientY;});
+let dragging=false, shifting=false, lx=0, ly=0, dragDistance=0;
+canvas.addEventListener('mousedown',  e=>{dragging=true; dragDistance=0; lx=e.clientX; ly=e.clientY;});
 canvas.addEventListener('mouseup',    ()=>dragging=false);
 canvas.addEventListener('mouseleave', ()=>dragging=false);
 canvas.addEventListener('mousemove',  e=>{
   if(!dragging) return;
   const dx=e.clientX-lx, dy=e.clientY-ly;
+  dragDistance+=Math.abs(dx)+Math.abs(dy);
   lx=e.clientX; ly=e.clientY;
   if(shifting||e.buttons===4){
     const r=new THREE.Vector3().crossVectors(camera.getWorldDirection(new THREE.Vector3()),camera.up).normalize();
@@ -192,7 +210,7 @@ canvas.addEventListener('mousemove',  e=>{
 });
 canvas.addEventListener('wheel', e=>{
   e.preventDefault();
-  radius *= 1 + e.deltaY*0.0008;
+  radius *= Math.exp(Math.max(-1,Math.min(1,e.deltaY*0.001)));
   radius = Math.max(0.5, Math.min(500, radius));
   camUpdate();
 }, {passive:false});
@@ -209,16 +227,16 @@ wrap.addEventListener('dragover',  e=>e.preventDefault());
 wrap.addEventListener('drop', async e=>{
   e.preventDefault();
   const f=e.dataTransfer.files[0];
-  if(!f||!f.name.endsWith('.ifc')) return;
+  if(!f||!f.name.toLowerCase().endsWith('.ifc')) return;
   errBox.style.display='none';
   statusEl.style.display='flex';
-  await loadText(await readFileText(f));
+  try { await loadText(await readFileText(f)); } catch(error) { window.showViewerError(error); }
 });
 document.getElementById('file-input').addEventListener('change', async e=>{
   const f=e.target.files[0]; if(!f) return;
   errBox.style.display='none';
   statusEl.style.display='flex';
-  await loadText(await readFileText(f));
+  try { await loadText(await readFileText(f)); } catch(error) { window.showViewerError(error); }
 });
 
 // ── TOOLBAR ──────────────────────────────────────────────────────────────────
@@ -239,7 +257,10 @@ function fitView(){
   const center=box.getCenter(new THREE.Vector3());
   const size=box.getSize(new THREE.Vector3());
   target.copy(center);
-  radius = Math.max(size.x,size.y,size.z)*1.6;
+  const sphereRadius=size.length()/2;
+  const halfFov=Math.min(THREE.MathUtils.degToRad(camera.fov/2),Math.atan(Math.tan(THREE.MathUtils.degToRad(camera.fov/2))*camera.aspect));
+  radius=Math.max(1,sphereRadius/Math.sin(halfFov)*1.1);
+  camera.far=Math.max(1000,radius*10);camera.updateProjectionMatrix();
   phi=Math.PI/4; theta=Math.PI/4;
   camUpdate();
 }
@@ -249,11 +270,12 @@ const raycaster = new THREE.Raycaster();
 const meshMeta  = new Map(); // mesh → meta
 let selected = null;
 canvas.addEventListener('click', e=>{
+  if(dragDistance>4) return;
   const rect = canvas.getBoundingClientRect();
   const mx = ((e.clientX-rect.left)/rect.width)*2-1;
   const my = -((e.clientY-rect.top)/rect.height)*2+1;
   raycaster.setFromCamera(new THREE.Vector2(mx,my), camera);
-  const hits = raycaster.intersectObjects([...meshMeta.keys()]);
+  const hits = raycaster.intersectObjects([...meshMeta.keys()].filter(m=>m.parent.visible));
   if(selected){ selected.material.emissive?.set(0); selected=null; }
   infoEl.style.display='none';
   if(!hits.length) return;
@@ -261,9 +283,10 @@ canvas.addEventListener('click', e=>{
   selected.material.emissive?.set(0x2244aa);
   const m = meshMeta.get(selected)||{};
   infoEl.style.display='block';
-  infoEl.innerHTML=`<div class="i-title">${m.name||m.type||'Elemento'}</div>
-    <div class="i-row">Tipo: <span>${(m.type||'').replace('IFC','').replace('STANDARDCASE',' Standard')}</span></div>
-    ${m.storey?`<div class="i-row">Pavimento: <span>${m.storey}</span></div>`:''}`;
+  infoEl.replaceChildren();
+  for(const [label,value] of [['Nome',m.name||'Elemento'],['Tipo',m.type],['Pavimento',m.storey||'Não informado']]){
+    const row=document.createElement('div'); row.textContent=`${label}: ${value}`; infoEl.appendChild(row);
+  }
 });
 
 // ── CAMADAS ──────────────────────────────────────────────────────────────────
@@ -286,6 +309,7 @@ function ensureLayer(type){
     const l=layerMap.get(t); if(!l) return;
     l.visible=!l.visible;
     l.group.visible=l.visible;
+    if(selected?.parent===l.group&&!l.visible){selected.material.emissive.set(0);selected=null;infoEl.style.display='none';}
     e.currentTarget.classList.toggle('off',!l.visible);
   });
   document.getElementById('layers').appendChild(div);
@@ -302,7 +326,9 @@ async function readFileText(file){
 
 function decodeStr(s){
   if(!s||s==='$') return '';
-  s=s.replace(/^'|'$/g,'');
+  s=s.replace(/^'|'$/g,'').replace(/''/g,"'");
+  s=s.replace(/\\X2\\([0-9a-f]+)\\X0\\/gi,(_,h)=>h.match(/.{4}/g).map(v=>String.fromCharCode(parseInt(v,16))).join(''));
+  s=s.replace(/\\X4\\([0-9a-f]+)\\X0\\/gi,(_,h)=>h.match(/.{8}/g).map(v=>String.fromCodePoint(parseInt(v,16))).join(''));
   return s.replace(/\\X\\([0-9A-Fa-f]{2})/gi,(_,h)=>String.fromCharCode(parseInt(h,16)));
 }
 
@@ -312,7 +338,7 @@ function tokenize(s){
   for(let i=0;i<s.length;i++){
     const c=s[i];
     if(c==="'"&&!q){q=true;cur+=c;continue;}
-    if(c==="'"&&q){q=false;cur+=c;continue;}
+    if(c==="'"&&q){if(s[i+1]==="'"){cur+="''";i++;continue;}q=false;cur+=c;continue;}
     if(q){cur+=c;continue;}
     if(c==='('){d++;cur+=c;continue;}
     if(c===')'){d--;cur+=c;continue;}
@@ -384,7 +410,7 @@ function getPlacement3D(ents,id){
 }
 
 // Cache para localplacements para evitar recalcular
-const placementCache=new Map();
+const placementCache=new Map(), placementActive=new Set(), geometryActive=new Set();
 function getGlobalMat(ents,id){
   if(id==null) return new THREE.Matrix4();
   if(placementCache.has(id)) return placementCache.get(id);
@@ -393,6 +419,8 @@ function getGlobalMat(ents,id){
     placementCache.set(id,new THREE.Matrix4());
     return new THREE.Matrix4();
   }
+  if(placementActive.has(id)) throw new Error('Ciclo em IFCLOCALPLACEMENT #'+id);
+  placementActive.add(id);
   const t=tokenize(e.args);
   const parentId=refId(t[0]);
   const relId=refId(t[1]);
@@ -400,6 +428,7 @@ function getGlobalMat(ents,id){
   const result = parentId!=null
     ? getGlobalMat(ents,parentId).clone().multiply(local)
     : local;
+  placementActive.delete(id);
   placementCache.set(id,result);
   return result;
 }
@@ -430,8 +459,13 @@ function getProfile2D(ents,id){
   if(e.type==='IFCCIRCLEPROFILEDEF'){
     const t=tokenize(e.args);
     const r=parseFloat(t[3]||0.1);
-    const N=16;
-    return Array.from({length:N},(_,i)=>({x:r*Math.cos(2*Math.PI*i/N),y:r*Math.sin(2*Math.PI*i/N)}));
+    const N=32;
+    const placement=ents.get(refId(t[2]));
+    const pt=placement?tokenize(placement.args):[];
+    const origin=getPoint(ents,refId(pt[0]));
+    const direction=pt[1]&&pt[1]!=='$'?getDir(ents,refId(pt[1])):[1,0,0];
+    const angle=Math.atan2(direction[1],direction[0]);
+    return Array.from({length:N},(_,i)=>({x:origin[0]+r*Math.cos(2*Math.PI*i/N+angle),y:origin[1]+r*Math.sin(2*Math.PI*i/N+angle)}));
   }
   if(e.type==='IFCARBITRARYCLOSEDPROFILEDEF'){
     const t=tokenize(e.args);
@@ -469,6 +503,14 @@ function buildExtruded(ents,id,globalMat){
     for(let i=1;i<pts.length;i++) shape.lineTo(pts[i].x,pts[i].y);
     shape.closePath();
     const geo=new THREE.ExtrudeGeometry(shape,{depth,bevelEnabled:false});
+    // Extrusion is a translation along the specified vector, preserving the base profile.
+    const direction=new THREE.Vector3(...getDir(ents,refId(t[2]))).normalize();
+    const position=geo.getAttribute('position');
+    for(let i=0;i<position.count;i++){
+      const z=position.getZ(i);
+      position.setXYZ(i,position.getX(i)+z*direction.x,position.getY(i)+z*direction.y,z*direction.z);
+    }
+    geo.deleteAttribute('uv');
     geo.applyMatrix4(combined);
     geo.computeVertexNormals();
     return geo;
@@ -488,12 +530,13 @@ function buildFacetedBrep(ents,id,globalMat){
     const boundsM=face.args.match(/^\((.*)\)$/s); if(!boundsM) continue;
     const boundIds=boundsM[1].split(',').map(s=>refId(s.trim())).filter(x=>x!=null);
     if(!boundIds.length) continue;
-    const outerBound=ents.get(boundIds[0]); if(!outerBound) continue;
+    const outerBound=boundIds.map(b=>ents.get(b)).find(b=>b?.type==='IFCFACEOUTERBOUND')||ents.get(boundIds[0]); if(!outerBound) continue;
     const lt=tokenize(outerBound.args);
     const loopId=refId(lt[0]);
     const loop=ents.get(loopId); if(!loop||loop.type!=='IFCPOLYLOOP') continue;
     const ptListM=loop.args.match(/^\((.*)\)$/s); if(!ptListM) continue;
     const pts=ptListM[1].split(',').map(s=>getPoint(ents,refId(s.trim())));
+    if(lt[1]==='.F.') pts.reverse();
     for(let i=1;i<pts.length-1;i++){
       positions.push(...pts[0],...pts[i],...pts[i+1]);
     }
@@ -525,14 +568,14 @@ function buildMappedItem(ents,id,globalMat){
       const ax1=ot[0]&&ot[0]!=='$'?getDir(ents,refId(ot[0])):[1,0,0];
       const ax2=ot[1]&&ot[1]!=='$'?getDir(ents,refId(ot[1])):[0,1,0];
       const origin=getPoint(ents,refId(ot[2]));
-      const scale=parseFloat(ot[3]||1);
+      const scale=ot[3]&&ot[3]!=='$'?parseFloat(ot[3]):1;
       const vX=new THREE.Vector3(...ax1).normalize().multiplyScalar(scale);
       const vY=new THREE.Vector3(...ax2).normalize().multiplyScalar(scale);
-      const vZ=new THREE.Vector3().crossVectors(vX,vY).normalize().multiplyScalar(scale);
+      const vZ=(ot[4]&&ot[4]!=='$'?new THREE.Vector3(...getDir(ents,refId(ot[4]))):new THREE.Vector3().crossVectors(vX,vY)).normalize().multiplyScalar(scale);
       targetMat.set(vX.x,vY.x,vZ.x,origin[0],vX.y,vY.y,vZ.y,origin[1],vX.z,vY.z,vZ.z,origin[2],0,0,0,1);
     }
   }
-  const finalMat=globalMat.clone().multiply(targetMat).multiply(mapMat);
+  const finalMat=globalMat.clone().multiply(targetMat).multiply(mapMat.clone().invert());
   const mapRep=ents.get(mapRepId); if(!mapRep) return null;
   const mt=tokenize(mapRep.args);
   const itemsStr=mt[3]||'';
@@ -545,19 +588,32 @@ function buildMappedItem(ents,id,globalMat){
   }
   if(!geos.length) return null;
   if(geos.length===1) return geos[0];
-  try{ return mergeGeometries(geos,false); }catch(ex){ return geos[0]; }
+  const merged=mergeGeometries(geos,false);
+  geos.forEach(g=>g.dispose());
+  if(!merged) throw new Error('Falha ao combinar geometria mapeada #'+id);
+  return merged;
 }
 
 function buildGeomItem(ents,id,globalMat){
   const e=ents.get(id); if(!e) return null;
   if(e.type==='IFCEXTRUDEDAREASOLID') return buildExtruded(ents,id,globalMat);
   if(e.type==='IFCFACETEDBREP')       return buildFacetedBrep(ents,id,globalMat);
-  if(e.type==='IFCMAPPEDITEM')        return buildMappedItem(ents,id,globalMat);
+  if(e.type==='IFCMAPPEDITEM'){
+    if(geometryActive.has(id)) throw new Error('Ciclo em IFCMAPPEDITEM #'+id);
+    geometryActive.add(id);
+    try{return buildMappedItem(ents,id,globalMat);}finally{geometryActive.delete(id);}
+  }
   return null;
 }
 
 // ── CARREGA MODELO ────────────────────────────────────────────────────────────
 async function loadText(text){
+  if(!text.startsWith('ISO-10303')) throw new Error('O arquivo recebido não é um IFC válido (cabeçalho ISO-10303 ausente).');
+  selected=null; infoEl.style.display='none';
+  for(const mesh of meshMeta.keys()){mesh.geometry.dispose();mesh.material.dispose();}
+  for(const {group} of layerMap.values()) scene.remove(group);
+  meshMeta.clear();layerMap.clear();placementCache.clear();placementActive.clear();geometryActive.clear();
+  document.getElementById('layers').replaceChildren();
   setStatus('Analisando IFC...', 5);
   await tick();
 
@@ -605,13 +661,14 @@ async function loadText(text){
   await tick();
 
   let done=0;
+  const bodyProducts=new Set();
   for(const prod of products){
     done++;
     if(done%15===0){
       setStatus(`Construindo ${done}/${products.length}...`, 30+60*(done/products.length));
       await tick();
     }
-    if(!prod.placeId||!prod.shapeId) continue;
+    if(!prod.shapeId) continue;
     const shapeEnt=ents.get(prod.shapeId);
     if(!shapeEnt||shapeEnt.type!=='IFCPRODUCTDEFINITIONSHAPE') continue;
 
@@ -627,6 +684,7 @@ async function loadText(text){
       const rt=tokenize(rep.args);
       const repType=rt[1]||'';
       if(decodeStr(repType).toUpperCase()!=='BODY') continue;
+      bodyProducts.add(prod.id);
       const itemsStr=rt[3]||'';
       const im=itemsStr.match(/^\((.*)\)$/s); if(!im) continue;
       const itemIds=im[1].split(',').map(s=>refId(s.trim())).filter(x=>x!=null);
@@ -637,20 +695,36 @@ async function loadText(text){
         const color=COLORS[prod.type]||COLORS.DEFAULT;
         const isGlass=prod.type==='IFCWINDOW';
         const mat=new THREE.MeshLambertMaterial({
-          color, transparent:isGlass, opacity:isGlass?0.35:1
+          color, transparent:isGlass, opacity:isGlass?0.35:1, side:THREE.DoubleSide, wireframe, depthWrite:!isGlass
         });
         const mesh=new THREE.Mesh(geo,mat);
         mesh.castShadow=true; mesh.receiveShadow=true;
-        meshMeta.set(mesh,{type:prod.type,name:prod.name,storey:prod.storey});
+        geo.rotateX(-Math.PI/2);
+        meshMeta.set(mesh,{id:prod.id,type:prod.type,name:prod.name,storey:prod.storey});
         ensureLayer(prod.type).add(mesh);
       }
     }
   }
 
+  if(!meshMeta.size) throw new Error('Nenhuma geometria Body compatível foi encontrada neste IFC.');
+  const box=new THREE.Box3();
+  for(const mesh of meshMeta.keys()) box.expandByObject(mesh);
+  const center=box.getCenter(new THREE.Vector3());
+  const offset=new THREE.Vector3(-center.x,-box.min.y,-center.z);
+  for(const mesh of meshMeta.keys()) mesh.position.copy(offset);
   setStatus('Ajustando câmera...', 95);
   await tick();
   fitView();
   statusEl.style.display='none';
+  const rendered=new Set([...meshMeta.values()].map(m=>m.id));
+  const missing=[...bodyProducts].filter(id=>!rendered.has(id));
+  document.getElementById('header').querySelector('.title p').textContent=`${rendered.size} elementos carregados • ${missing.length?missing.length+' sem geometria compatível':'CANIL.ifc'}`;
+  if(missing.length){
+    const note=document.createElement('p');note.style.cssText='padding:14px;font-size:12px;line-height:1.6;color:#e3b341';
+    note.textContent=`Visualização parcial: ${missing.length} elementos usam geometrias fora do suporte deste visualizador. Para um modelo completo, exporte sólidos BRep/tesselados ou use um visualizador com parser IFC completo.`;
+    document.getElementById('layers').appendChild(note);
+    console.warn('Produtos IFC não renderizados:',missing);
+  }
 }
 
 function setStatus(msg,pct){
@@ -661,40 +735,27 @@ function tick(){ return new Promise(r=>setTimeout(r,0)); }
 
 // ── FETCH REMOTO ──────────────────────────────────────────────────────────────
 async function tryFetch(){
-  const urls=['./CANIL.ifc',
-    'https://felipemirandaeng94.github.io/canil-15ciape/CANIL.ifc'];
-  for(const url of urls){
-    try{
-      setStatus('Buscando modelo...', 2);
-      const r=await fetch(url,{cache:'no-cache'});
-      if(!r.ok) continue;
-      const buf=await r.arrayBuffer();
-      const text=new TextDecoder('utf-8').decode(new Uint8Array(buf));
-      if(text.startsWith('ISO-10303')){
-        await loadText(text); return true;
-      }
-    }catch(_){ continue; }
-  }
-  return false;
+  setStatus('Baixando CANIL.ifc...',2);
+  const controller=new AbortController();
+  const timeout=setTimeout(()=>controller.abort(),90000);
+  let text;
+  try{
+    const response=await fetch(new URL('./CANIL.ifc',location.href),{cache:'no-store',signal:controller.signal});
+    if(!response.ok) throw new Error(`CANIL.ifc: HTTP ${response.status}. Coloque o arquivo junto ao index.html no GitHub.`);
+    const buf=await response.arrayBuffer();
+    text=new TextDecoder('utf-8').decode(new Uint8Array(buf));
+  }catch(error){
+    if(error.name==='AbortError') throw new Error('O download excedeu 90 segundos. Verifique a conexão ou selecione o IFC manualmente.');
+    throw error;
+  }finally{clearTimeout(timeout);}
+  await loadText(text);
 }
 
 // ── RENDER LOOP ───────────────────────────────────────────────────────────────
 (function loop(){ requestAnimationFrame(loop); renderer.render(scene,camera); })();
 
 // ── BOOT ──────────────────────────────────────────────────────────────────────
-tryFetch().then(ok=>{
-  if(!ok){
-    statusEl.style.display='none';
-    errBox.style.display='flex';
-  }
-}).catch(error=>{
-  statusEl.style.display='none';
-  errBox.style.display='flex';
-  const heading=errBox.querySelector('h2');
-  const message=errBox.querySelector('p');
-  heading.textContent='Não foi possível carregar o modelo';
-  message.textContent=`${error?.message||'Erro inesperado.'} Arraste o CANIL.ifc para cá ou selecione o arquivo manualmente.`;
-});
+tryFetch().catch(window.showViewerError);
 </script>
 </body>
 </html>
