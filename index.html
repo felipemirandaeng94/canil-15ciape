@@ -328,11 +328,11 @@ function refId(s){
   return parseInt(s.slice(1));
 }
 
-function parseIFC(text){
+async function parseIFC(text){
   const ents=new Map();
-  // regex para linhas bem formadas
-  const lineRe=/^#(\d+)\s*=\s*([A-Z0-9_]+)\s*\((.+?)\)\s*;?\s*$/;
-  for(const raw of text.split('\n')){
+  const lines=text.split(/\r?\n/);
+  for(let i=0;i<lines.length;i++){
+    const raw=lines[i];
     const line=raw.trim();
     if(!line.startsWith('#')) continue;
     // Extrai id, type e args usando split simples
@@ -347,6 +347,10 @@ function parseIFC(text){
     const closing=rest.lastIndexOf(');')>=0?rest.lastIndexOf(');'):rest.lastIndexOf(')');
     const args=rest.slice(paren+1, closing);
     if(!isNaN(id)&&type) ents.set(id,{type,args});
+    if(i%12000===0){
+      setStatus(`Lendo entidades IFC... ${Math.round(i/lines.length*100)}%`,5+15*i/lines.length);
+      await tick();
+    }
   }
   return ents;
 }
@@ -557,7 +561,7 @@ async function loadText(text){
   setStatus('Analisando IFC...', 5);
   await tick();
 
-  const ents=parseIFC(text);
+  const ents=await parseIFC(text);
   setStatus(`Entidades: ${ents.size} carregadas`, 20);
   await tick();
 
@@ -683,6 +687,13 @@ tryFetch().then(ok=>{
     statusEl.style.display='none';
     errBox.style.display='flex';
   }
+}).catch(error=>{
+  statusEl.style.display='none';
+  errBox.style.display='flex';
+  const heading=errBox.querySelector('h2');
+  const message=errBox.querySelector('p');
+  heading.textContent='Não foi possível carregar o modelo';
+  message.textContent=`${error?.message||'Erro inesperado.'} Arraste o CANIL.ifc para cá ou selecione o arquivo manualmente.`;
 });
 </script>
 </body>
