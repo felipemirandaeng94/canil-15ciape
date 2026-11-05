@@ -218,7 +218,7 @@ document.getElementById('file-input').addEventListener('change', async e=>{
   const f=e.target.files[0]; if(!f) return;
   errBox.style.display='none';
   statusEl.style.display='flex';
-  await loadText(await f.text());
+  await loadText(await readFileText(f));
 });
 
 // ── TOOLBAR ──────────────────────────────────────────────────────────────────
@@ -293,6 +293,13 @@ function ensureLayer(type){
 }
 
 // ── IFC PARSER ───────────────────────────────────────────────────────────────
+async function readFileText(file){
+  const buf=await file.arrayBuffer();
+  const text=new TextDecoder('utf-8').decode(new Uint8Array(buf));
+  if(!text.startsWith('ISO-10303')) throw new Error('Arquivo inválido: cabeçalho ISO-10303 ausente.');
+  return text;
+}
+
 function decodeStr(s){
   if(!s||s==='$') return '';
   s=s.replace(/^'|'$/g,'');
