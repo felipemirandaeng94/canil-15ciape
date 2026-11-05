@@ -200,11 +200,7 @@ const errBox  = document.getElementById('err-box');
 const infoEl  = document.getElementById('info');
 
 const scene    = new THREE.Scene();
-const skyCanvas=document.createElement('canvas');skyCanvas.width=16;skyCanvas.height=256;
-const skyContext=skyCanvas.getContext('2d'),skyGradient=skyContext.createLinearGradient(0,0,0,256);
-skyGradient.addColorStop(0,'#aebfcd');skyGradient.addColorStop(1,'#eef1ed');
-skyContext.fillStyle=skyGradient;skyContext.fillRect(0,0,16,256);
-const skyTexture=new THREE.CanvasTexture(skyCanvas);skyTexture.colorSpace=THREE.SRGBColorSpace;scene.background=skyTexture;
+scene.background=new THREE.Color(0x0d1117);
 // web-ifc supplies Three.js-compatible transforms including axis and unit conversion.
 
 let W = wrap.clientWidth, H = wrap.clientHeight;
@@ -242,7 +238,7 @@ fill.position.set(-10, 5, -10);
 scene.add(fill);
 scene.add(new THREE.HemisphereLight(0xcbdfee, 0x77715b, 0.65));
 scene.add(sun.target);
-const stage=new THREE.Mesh(new THREE.PlaneGeometry(2000,2000),new THREE.MeshStandardMaterial({color:0xd4d9d5,roughness:1,envMapIntensity:0.15}));
+const stage=new THREE.Mesh(new THREE.PlaneGeometry(2000,2000),new THREE.ShadowMaterial({opacity:0.2}));
 stage.rotation.x=-Math.PI/2;stage.position.y=-0.06;stage.receiveShadow=true;scene.add(stage);
 
 // Grid
