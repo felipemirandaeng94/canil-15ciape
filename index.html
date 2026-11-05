@@ -107,9 +107,63 @@ window.addEventListener('error',e=>window.showViewerError(e.error||e.message));
 window.addEventListener('unhandledrejection',e=>window.showViewerError(e.reason));
 window.viewerBootTimer=setTimeout(()=>window.showViewerError(new Error('A biblioteca 3D não iniciou. Verifique sua conexão e recarregue a página.')),30000);
 </script>
+<script id="ifc-worker" type="text/plain">
+self.onmessage=async ({data})=>{
+  let api, model;
+  try {
+    const WebIFC=await import('https://cdn.jsdelivr.net/npm/web-ifc@0.0.78/web-ifc-api.js');
+    api=new WebIFC.IfcAPI();
+    api.SetWasmPath('https://cdn.jsdelivr.net/npm/web-ifc@0.0.78/',true);
+    await api.Init(undefined,true);
+    self.postMessage({kind:'progress',text:'Interpretando sólidos e recortes IFC...',pct:12});
+    model=api.OpenModel(new Uint8Array(data),{COORDINATE_TO_ORIGIN:true,CIRCLE_SEGMENTS:24});
+    if(model<0) throw new Error('O motor IFC não conseguiu abrir o arquivo.');
+    const storeys=new Map(), parents=new Map();
+    const list=(type)=>{const v=api.GetLineIDsWithType(model,type); const a=Array.from({length:v.size()},(_,i)=>v.get(i));v.delete?.();return a;};
+    for(const id of list(WebIFC.IFCBUILDINGSTOREY)){const row=api.GetLine(model,id);storeys.set(id,row.Name?.value||row.LongName?.value||'Pavimento');}
+    for(const type of [WebIFC.IFCRELCONTAINEDINSPATIALSTRUCTURE,WebIFC.IFCRELAGGREGATES]){
+      for(const id of list(type)){
+        const rel=api.GetLine(model,id), parent=(rel.RelatingStructure||rel.RelatingObject)?.value;
+        for(const child of rel.RelatedElements||rel.RelatedObjects||[]) parents.set(child.value,parent);
+      }
+    }
+    const storeyFor=(id)=>{const seen=new Set();while(id&&!seen.has(id)){if(storeys.has(id))return storeys.get(id);seen.add(id);id=parents.get(id);}return '';};
+    const products=api.GetLineIDsWithType(model,WebIFC.IFCPRODUCT,true);
+    const candidates=[];
+    for(let i=0;i<products.size();i++){
+      const id=products.get(i),type=api.GetLineType(model,id);
+      if(type===WebIFC.IFCSPACE||type===WebIFC.IFCOPENINGELEMENT)continue;
+      const row=api.GetLine(model,id);
+      if(row.Representation) candidates.push({id,type:api.GetNameFromTypeCode(type).toUpperCase(),name:row.Name?.value||'Elemento',storey:storeyFor(id)});
+    }
+    products.delete?.();
+    const rendered={},missing=[];
+    for(let i=0;i<candidates.length;i++){
+      const meta=candidates[i],flat=api.GetFlatMesh(model,meta.id),parts=[],transfer=[];
+      try {
+        for(let j=0;j<flat.geometries.size();j++){
+          const part=flat.geometries.get(j),g=api.GetGeometry(model,part.geometryExpressID);
+          try{
+            const vertices=api.GetVertexArray(g.GetVertexData(),g.GetVertexDataSize()).slice();
+            const indices=api.GetIndexArray(g.GetIndexData(),g.GetIndexDataSize()).slice();
+            if(!vertices.length||!indices.length)continue;
+            parts.push({vertices,indices,matrix:Array.from(part.flatTransformation),color:part.color});
+            transfer.push(vertices.buffer,indices.buffer);
+          }finally{g.delete();}
+        }
+      }finally{flat.geometries.delete?.();flat.delete?.();}
+      if(parts.length){rendered[meta.type]=(rendered[meta.type]||0)+1;self.postMessage({kind:'product',meta,parts},transfer);}
+      else missing.push(meta);
+      if(i%8===0){self.postMessage({kind:'progress',text:'Montando elementos: '+(i+1)+'/'+candidates.length,pct:20+75*(i+1)/candidates.length});await new Promise(r=>setTimeout(r,0));}
+    }
+    self.postMessage({kind:'done',rendered,missing,candidates:candidates.length});
+  }catch(error){self.postMessage({kind:'error',message:error.message||String(error)});}
+  finally{if(api&&model!==undefined&&model>=0)api.CloseModel(model);}
+};
+</script>
 <script type="module">
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
-import { mergeGeometries } from 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/utils/BufferGeometryUtils.js';
+
 
 clearTimeout(window.viewerBootTimer);
 // ── CONSTANTES DE COR ────────────────────────────────────────────────────────
@@ -124,9 +178,13 @@ const COLORS = {
   IFCBEAM:             0x888888,
   IFCSTAIR:            0xaa8833,
   IFCFURNISHINGELEMENT:0x6b8e6b,
+  IFCRAILING: 0x999999,
+  IFCBUILDINGELEMENTPROXY: 0xaaaaaa,
+  IFCMEMBER: 0xaaaaaa,
+  IFCPLATE: 0xaaaaaa,
   DEFAULT:             0x607080,
 };
-const ELEM_TYPES = Object.keys(COLORS).filter(k=>k!=='DEFAULT');
+
 
 // ── THREE SETUP ──────────────────────────────────────────────────────────────
 const canvas  = document.getElementById('c');
@@ -139,7 +197,7 @@ const infoEl  = document.getElementById('info');
 
 const scene    = new THREE.Scene();
 scene.background = new THREE.Color(0x0d1117);
-// IFC uses Z-up; geometry is converted to Three.js Y-up when loaded.
+// web-ifc supplies Three.js-compatible transforms including axis and unit conversion.
 
 let W = wrap.clientWidth, H = wrap.clientHeight;
 const camera = new THREE.PerspectiveCamera(45, W/H, 0.01, 1000);
@@ -222,21 +280,24 @@ window.addEventListener('resize',  ()=>{
   renderer.setSize(W,H);
 });
 
+let manualLoad=false;
 // Drag-over visual
 wrap.addEventListener('dragover',  e=>e.preventDefault());
 wrap.addEventListener('drop', async e=>{
   e.preventDefault();
   const f=e.dataTransfer.files[0];
   if(!f||!f.name.toLowerCase().endsWith('.ifc')) return;
+  manualLoad=true;
   errBox.style.display='none';
   statusEl.style.display='flex';
-  try { await loadText(await readFileText(f)); } catch(error) { window.showViewerError(error); }
+  try { await loadBuffer(await f.arrayBuffer(),f.name); } catch(error) { window.showViewerError(error); }
 });
 document.getElementById('file-input').addEventListener('change', async e=>{
   const f=e.target.files[0]; if(!f) return;
+  manualLoad=true;
   errBox.style.display='none';
   statusEl.style.display='flex';
-  try { await loadText(await readFileText(f)); } catch(error) { window.showViewerError(error); }
+  try { await loadBuffer(await f.arrayBuffer(),f.name); } catch(error) { window.showViewerError(error); }
 });
 
 // ── TOOLBAR ──────────────────────────────────────────────────────────────────
@@ -298,7 +359,8 @@ function ensureLayer(type){
 
   const color=COLORS[type]||COLORS.DEFAULT;
   const hex=color.toString(16).padStart(6,'0');
-  const label=type.replace('IFC','').replace('STANDARDCASE',' Std').toLowerCase();
+  const labels={IFCWALLSTANDARDCASE:'Paredes',IFCWALL:'Paredes',IFCSLAB:'Pisos e coberturas',IFCROOF:'Telhados',IFCDOOR:'Portas e portões',IFCWINDOW:'Janelas',IFCRAILING:'Cercamentos',IFCFLOWTERMINAL:'Terminais de instalações',IFCFLOWSEGMENT:'Tubulações',IFCFLOWFITTING:'Conexões',IFCBUILDINGELEMENTPROXY:'Outras famílias'};
+  const label=labels[type]||type.replace('IFC','');
   const div=document.createElement('div');
   div.className='li';
   div.innerHTML=`<div class="dot" style="background:#${hex}"></div>
@@ -316,415 +378,66 @@ function ensureLayer(type){
   return group;
 }
 
-// ── IFC PARSER ───────────────────────────────────────────────────────────────
-async function readFileText(file){
-  const buf=await file.arrayBuffer();
-  const text=new TextDecoder('utf-8').decode(new Uint8Array(buf));
-  if(!text.startsWith('ISO-10303')) throw new Error('Arquivo inválido: cabeçalho ISO-10303 ausente.');
-  return text;
-}
-
-function decodeStr(s){
-  if(!s||s==='$') return '';
-  s=s.replace(/^'|'$/g,'').replace(/''/g,"'");
-  s=s.replace(/\\X2\\([0-9a-f]+)\\X0\\/gi,(_,h)=>h.match(/.{4}/g).map(v=>String.fromCharCode(parseInt(v,16))).join(''));
-  s=s.replace(/\\X4\\([0-9a-f]+)\\X0\\/gi,(_,h)=>h.match(/.{8}/g).map(v=>String.fromCodePoint(parseInt(v,16))).join(''));
-  return s.replace(/\\X\\([0-9A-Fa-f]{2})/gi,(_,h)=>String.fromCharCode(parseInt(h,16)));
-}
-
-function tokenize(s){
-  if(!s) return [];
-  const toks=[]; let d=0,cur='',q=false;
-  for(let i=0;i<s.length;i++){
-    const c=s[i];
-    if(c==="'"&&!q){q=true;cur+=c;continue;}
-    if(c==="'"&&q){if(s[i+1]==="'"){cur+="''";i++;continue;}q=false;cur+=c;continue;}
-    if(q){cur+=c;continue;}
-    if(c==='('){d++;cur+=c;continue;}
-    if(c===')'){d--;cur+=c;continue;}
-    if(c===','&&d===0){toks.push(cur.trim());cur='';continue;}
-    cur+=c;
-  }
-  if(cur.trim()) toks.push(cur.trim());
-  return toks;
-}
-
-function refId(s){
-  if(!s||!s.startsWith('#')) return null;
-  return parseInt(s.slice(1));
-}
-
-async function parseIFC(text){
-  const ents=new Map();
-  const lines=text.split(/\r?\n/);
-  for(let i=0;i<lines.length;i++){
-    const raw=lines[i];
-    const line=raw.trim();
-    if(!line.startsWith('#')) continue;
-    // Extrai id, type e args usando split simples
-    const eq=line.indexOf('=');
-    if(eq<0) continue;
-    const id=parseInt(line.slice(1,eq).trim());
-    const rest=line.slice(eq+1).trim();
-    const paren=rest.indexOf('(');
-    if(paren<0) continue;
-    const type=rest.slice(0,paren).trim();
-    // args: tudo entre o primeiro ( e o ; do final
-    const closing=rest.lastIndexOf(');')>=0?rest.lastIndexOf(');'):rest.lastIndexOf(')');
-    const args=rest.slice(paren+1, closing);
-    if(!isNaN(id)&&type) ents.set(id,{type,args});
-    if(i%12000===0){
-      setStatus(`Lendo entidades IFC... ${Math.round(i/lines.length*100)}%`,5+15*i/lines.length);
-      await tick();
-    }
-  }
-  return ents;
-}
-
-function getPoint(ents,id){
-  const e=ents.get(id); if(!e||e.type!=='IFCCARTESIANPOINT') return [0,0,0];
-  const ns=e.args.replace(/[()]/g,'').split(',').map(Number);
-  return [ns[0]||0,ns[1]||0,ns[2]||0];
-}
-function getDir(ents,id){
-  const e=ents.get(id); if(!e) return [0,0,1];
-  const ns=e.args.replace(/[()]/g,'').split(',').map(Number);
-  return [ns[0]||0,ns[1]||0,ns[2]||0];
-}
-
-function getPlacement3D(ents,id){
-  const e=ents.get(id);
-  if(!e||e.type!=='IFCAXIS2PLACEMENT3D') return new THREE.Matrix4();
-  const t=tokenize(e.args);
-  const loc=getPoint(ents,refId(t[0]));
-  let Z=[0,0,1], X=[1,0,0];
-  if(t[1]&&t[1]!=='$') Z=getDir(ents,refId(t[1]));
-  if(t[2]&&t[2]!=='$') X=getDir(ents,refId(t[2]));
-  const vZ=new THREE.Vector3(...Z).normalize();
-  const vX=new THREE.Vector3(...X).normalize();
-  const vY=new THREE.Vector3().crossVectors(vZ,vX).normalize();
-  vX.crossVectors(vY,vZ);
-  const m=new THREE.Matrix4();
-  m.set(vX.x,vY.x,vZ.x,loc[0], vX.y,vY.y,vZ.y,loc[1], vX.z,vY.z,vZ.z,loc[2], 0,0,0,1);
-  return m;
-}
-
-// Cache para localplacements para evitar recalcular
-const placementCache=new Map(), placementActive=new Set(), geometryActive=new Set();
-function getGlobalMat(ents,id){
-  if(id==null) return new THREE.Matrix4();
-  if(placementCache.has(id)) return placementCache.get(id);
-  const e=ents.get(id);
-  if(!e||e.type!=='IFCLOCALPLACEMENT'){
-    placementCache.set(id,new THREE.Matrix4());
-    return new THREE.Matrix4();
-  }
-  if(placementActive.has(id)) throw new Error('Ciclo em IFCLOCALPLACEMENT #'+id);
-  placementActive.add(id);
-  const t=tokenize(e.args);
-  const parentId=refId(t[0]);
-  const relId=refId(t[1]);
-  const local=getPlacement3D(ents,relId);
-  const result = parentId!=null
-    ? getGlobalMat(ents,parentId).clone().multiply(local)
-    : local;
-  placementActive.delete(id);
-  placementCache.set(id,result);
-  return result;
-}
-
-function getProfile2D(ents,id){
-  const e=ents.get(id); if(!e) return [];
-  if(e.type==='IFCRECTANGLEPROFILEDEF'){
-    const t=tokenize(e.args);
-    const xd=parseFloat(t[3]||0)/2, yd=parseFloat(t[4]||0)/2;
-    let cx=0,cy=0,ang=0;
-    const pid=refId(t[2]);
-    if(pid){
-      const pe=ents.get(pid);
-      if(pe&&pe.type==='IFCAXIS2PLACEMENT2D'){
-        const pt=tokenize(pe.args);
-        const p=getPoint(ents,refId(pt[0]));
-        cx=p[0]; cy=p[1];
-        if(pt[1]&&pt[1]!=='$'){
-          const d=getDir(ents,refId(pt[1]));
-          ang=Math.atan2(d[1],d[0]);
-        }
-      }
-    }
-    const ca=Math.cos(ang), sa=Math.sin(ang);
-    return [[-xd,-yd],[xd,-yd],[xd,yd],[-xd,yd]].map(([px,py])=>
-      ({x:cx+px*ca-py*sa, y:cy+px*sa+py*ca}));
-  }
-  if(e.type==='IFCCIRCLEPROFILEDEF'){
-    const t=tokenize(e.args);
-    const r=parseFloat(t[3]||0.1);
-    const N=32;
-    const placement=ents.get(refId(t[2]));
-    const pt=placement?tokenize(placement.args):[];
-    const origin=getPoint(ents,refId(pt[0]));
-    const direction=pt[1]&&pt[1]!=='$'?getDir(ents,refId(pt[1])):[1,0,0];
-    const angle=Math.atan2(direction[1],direction[0]);
-    return Array.from({length:N},(_,i)=>({x:origin[0]+r*Math.cos(2*Math.PI*i/N+angle),y:origin[1]+r*Math.sin(2*Math.PI*i/N+angle)}));
-  }
-  if(e.type==='IFCARBITRARYCLOSEDPROFILEDEF'){
-    const t=tokenize(e.args);
-    const curveId=refId(t[2]);
-    return getPolyPts2D(ents,curveId);
-  }
-  return [];
-}
-
-function getPolyPts2D(ents,id){
-  const e=ents.get(id); if(!e) return [];
-  if(e.type==='IFCPOLYLINE'){
-    const m=e.args.match(/^\((.*)\)$/s); if(!m) return [];
-    return m[1].split(',').map(tok=>{
-      const p=getPoint(ents,refId(tok.trim()));
-      return {x:p[0],y:p[1]};
-    });
-  }
-  return [];
-}
-
-function buildExtruded(ents,id,globalMat){
-  const e=ents.get(id); if(!e||e.type!=='IFCEXTRUDEDAREASOLID') return null;
-  const t=tokenize(e.args);
-  const profileId=refId(t[0]);
-  const localPlaceId=refId(t[1]);
-  const depth=parseFloat(t[3]||1);
-  const pts=getProfile2D(ents,profileId);
-  if(pts.length<3) return null;
-  const localMat=getPlacement3D(ents,localPlaceId);
-  const combined=globalMat.clone().multiply(localMat);
-  try{
-    const shape=new THREE.Shape();
-    shape.moveTo(pts[0].x,pts[0].y);
-    for(let i=1;i<pts.length;i++) shape.lineTo(pts[i].x,pts[i].y);
-    shape.closePath();
-    const geo=new THREE.ExtrudeGeometry(shape,{depth,bevelEnabled:false});
-    // Extrusion is a translation along the specified vector, preserving the base profile.
-    const direction=new THREE.Vector3(...getDir(ents,refId(t[2]))).normalize();
-    const position=geo.getAttribute('position');
-    for(let i=0;i<position.count;i++){
-      const z=position.getZ(i);
-      position.setXYZ(i,position.getX(i)+z*direction.x,position.getY(i)+z*direction.y,z*direction.z);
-    }
-    geo.deleteAttribute('uv');
-    geo.applyMatrix4(combined);
-    geo.computeVertexNormals();
-    return geo;
-  }catch(ex){return null;}
-}
-
-function buildFacetedBrep(ents,id,globalMat){
-  const e=ents.get(id); if(!e||e.type!=='IFCFACETEDBREP') return null;
-  const t=tokenize(e.args);
-  const shellId=refId(t[0]);
-  const shell=ents.get(shellId); if(!shell) return null;
-  const faceListM=shell.args.match(/^\((.*)\)$/s); if(!faceListM) return null;
-  const faceIds=faceListM[1].split(',').map(s=>refId(s.trim())).filter(x=>x!=null);
-  const positions=[];
-  for(const fid of faceIds){
-    const face=ents.get(fid); if(!face||face.type!=='IFCFACE') continue;
-    const boundsM=face.args.match(/^\((.*)\)$/s); if(!boundsM) continue;
-    const boundIds=boundsM[1].split(',').map(s=>refId(s.trim())).filter(x=>x!=null);
-    if(!boundIds.length) continue;
-    const outerBound=boundIds.map(b=>ents.get(b)).find(b=>b?.type==='IFCFACEOUTERBOUND')||ents.get(boundIds[0]); if(!outerBound) continue;
-    const lt=tokenize(outerBound.args);
-    const loopId=refId(lt[0]);
-    const loop=ents.get(loopId); if(!loop||loop.type!=='IFCPOLYLOOP') continue;
-    const ptListM=loop.args.match(/^\((.*)\)$/s); if(!ptListM) continue;
-    const pts=ptListM[1].split(',').map(s=>getPoint(ents,refId(s.trim())));
-    if(lt[1]==='.F.') pts.reverse();
-    for(let i=1;i<pts.length-1;i++){
-      positions.push(...pts[0],...pts[i],...pts[i+1]);
-    }
-  }
-  if(!positions.length) return null;
-  const geo=new THREE.BufferGeometry();
-  geo.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));
-  geo.computeVertexNormals();
-  geo.applyMatrix4(globalMat);
-  return geo;
-}
-
-function buildMappedItem(ents,id,globalMat){
-  const e=ents.get(id); if(!e||e.type!=='IFCMAPPEDITEM') return null;
-  const t=tokenize(e.args);
-  const srcId=refId(t[0]);
-  const src=ents.get(srcId); if(!src||src.type!=='IFCREPRESENTATIONMAP') return null;
-  const st=tokenize(src.args);
-  const mapPlaceId=refId(st[0]);
-  const mapRepId=refId(st[1]);
-  const mapMat=getPlacement3D(ents,mapPlaceId);
-  // Target operator
-  let targetMat=new THREE.Matrix4();
-  if(t[1]&&t[1]!=='$'){
-    const opId=refId(t[1]);
-    const op=ents.get(opId);
-    if(op&&op.type==='IFCCARTESIANTRANSFORMATIONOPERATOR3D'){
-      const ot=tokenize(op.args);
-      const ax1=ot[0]&&ot[0]!=='$'?getDir(ents,refId(ot[0])):[1,0,0];
-      const ax2=ot[1]&&ot[1]!=='$'?getDir(ents,refId(ot[1])):[0,1,0];
-      const origin=getPoint(ents,refId(ot[2]));
-      const scale=ot[3]&&ot[3]!=='$'?parseFloat(ot[3]):1;
-      const vX=new THREE.Vector3(...ax1).normalize().multiplyScalar(scale);
-      const vY=new THREE.Vector3(...ax2).normalize().multiplyScalar(scale);
-      const vZ=(ot[4]&&ot[4]!=='$'?new THREE.Vector3(...getDir(ents,refId(ot[4]))):new THREE.Vector3().crossVectors(vX,vY)).normalize().multiplyScalar(scale);
-      targetMat.set(vX.x,vY.x,vZ.x,origin[0],vX.y,vY.y,vZ.y,origin[1],vX.z,vY.z,vZ.z,origin[2],0,0,0,1);
-    }
-  }
-  const finalMat=globalMat.clone().multiply(targetMat).multiply(mapMat.clone().invert());
-  const mapRep=ents.get(mapRepId); if(!mapRep) return null;
-  const mt=tokenize(mapRep.args);
-  const itemsStr=mt[3]||'';
-  const itemsM=itemsStr.match(/^\((.*)\)$/s); if(!itemsM) return null;
-  const itemIds=itemsM[1].split(',').map(s=>refId(s.trim())).filter(x=>x!=null);
-  const geos=[];
-  for(const iid of itemIds){
-    const g=buildGeomItem(ents,iid,finalMat);
-    if(g) geos.push(g);
-  }
-  if(!geos.length) return null;
-  if(geos.length===1) return geos[0];
-  const merged=mergeGeometries(geos,false);
-  geos.forEach(g=>g.dispose());
-  if(!merged) throw new Error('Falha ao combinar geometria mapeada #'+id);
-  return merged;
-}
-
-function buildGeomItem(ents,id,globalMat){
-  const e=ents.get(id); if(!e) return null;
-  if(e.type==='IFCEXTRUDEDAREASOLID') return buildExtruded(ents,id,globalMat);
-  if(e.type==='IFCFACETEDBREP')       return buildFacetedBrep(ents,id,globalMat);
-  if(e.type==='IFCMAPPEDITEM'){
-    if(geometryActive.has(id)) throw new Error('Ciclo em IFCMAPPEDITEM #'+id);
-    geometryActive.add(id);
-    try{return buildMappedItem(ents,id,globalMat);}finally{geometryActive.delete(id);}
-  }
-  return null;
-}
-
-// ── CARREGA MODELO ────────────────────────────────────────────────────────────
-async function loadText(text){
-  if(!text.startsWith('ISO-10303')) throw new Error('O arquivo recebido não é um IFC válido (cabeçalho ISO-10303 ausente).');
-  selected=null; infoEl.style.display='none';
+// Full IFC geometry is processed in a worker so boolean operations do not freeze navigation.
+let activeWorker=null, activeLoad=0;
+async function loadBuffer(buf,fileName='CANIL.ifc'){
+  const header=new TextDecoder('utf-8').decode(new Uint8Array(buf,0,Math.min(buf.byteLength,80)));
+  if(!header.startsWith('ISO-10303'))throw new Error('O arquivo não é um IFC válido (ISO-10303 ausente).');
+  const generation=++activeLoad;
+  activeWorker?.terminate();activeWorker=null;
+  selected=null;infoEl.style.display='none';errBox.style.display='none';statusEl.style.display='flex';
   for(const mesh of meshMeta.keys()){mesh.geometry.dispose();mesh.material.dispose();}
-  for(const {group} of layerMap.values()) scene.remove(group);
-  meshMeta.clear();layerMap.clear();placementCache.clear();placementActive.clear();geometryActive.clear();
-  document.getElementById('layers').replaceChildren();
-  setStatus('Analisando IFC...', 5);
-  await tick();
-
-  const ents=await parseIFC(text);
-  setStatus(`Entidades: ${ents.size} carregadas`, 20);
-  await tick();
-
-  // Storey names
-  const storeyNames=new Map();
-  for(const [id,e] of ents){
-    if(e.type==='IFCBUILDINGSTOREY'){
-      const t=tokenize(e.args);
-      storeyNames.set(id, decodeStr(t[2]||''));
-    }
-  }
-
-  // Product → storey
-  const productStorey=new Map();
-  for(const [,e] of ents){
-    if(e.type!=='IFCRELCONTAINEDINSPATIALSTRUCTURE') continue;
-    const t=tokenize(e.args);
-    const spaceId=refId(t[5]);
-    const sName=storeyNames.get(spaceId)||'';
-    const rm=(t[4]||'').match(/^\((.*)\)$/s);
-    if(rm){
-      for(const ref of rm[1].split(',').map(s=>refId(s.trim())).filter(x=>x!=null))
-        productStorey.set(ref,sName);
-    }
-  }
-
-  // Coleta produtos relevantes
-  const products=[];
-  for(const [id,e] of ents){
-    if(!ELEM_TYPES.includes(e.type)) continue;
-    const t=tokenize(e.args);
-    products.push({id, type:e.type,
-      name: decodeStr(t[2]||''),
-      placeId: refId(t[5]),
-      shapeId: refId(t[6]),
-      storey: productStorey.get(id)||''
-    });
-  }
-
-  setStatus(`Construindo ${products.length} elementos...`, 30);
-  await tick();
-
-  let done=0;
-  const bodyProducts=new Set();
-  for(const prod of products){
-    done++;
-    if(done%15===0){
-      setStatus(`Construindo ${done}/${products.length}...`, 30+60*(done/products.length));
-      await tick();
-    }
-    if(!prod.shapeId) continue;
-    const shapeEnt=ents.get(prod.shapeId);
-    if(!shapeEnt||shapeEnt.type!=='IFCPRODUCTDEFINITIONSHAPE') continue;
-
-    // Obter representações Body
-    const repListM=shapeEnt.args.match(/\(([^()]*)\)\s*$/);
-    if(!repListM) continue;
-    const repIds=repListM[1].split(',').map(s=>refId(s.trim())).filter(x=>x!=null);
-    const globalMat=getGlobalMat(ents,prod.placeId);
-
-    for(const rid of repIds){
-      const rep=ents.get(rid);
-      if(!rep||rep.type!=='IFCSHAPEREPRESENTATION') continue;
-      const rt=tokenize(rep.args);
-      const repType=rt[1]||'';
-      if(decodeStr(repType).toUpperCase()!=='BODY') continue;
-      bodyProducts.add(prod.id);
-      const itemsStr=rt[3]||'';
-      const im=itemsStr.match(/^\((.*)\)$/s); if(!im) continue;
-      const itemIds=im[1].split(',').map(s=>refId(s.trim())).filter(x=>x!=null);
-
-      for(const iid of itemIds){
-        const geo=buildGeomItem(ents,iid,globalMat);
-        if(!geo) continue;
-        const color=COLORS[prod.type]||COLORS.DEFAULT;
-        const isGlass=prod.type==='IFCWINDOW';
-        const mat=new THREE.MeshLambertMaterial({
-          color, transparent:isGlass, opacity:isGlass?0.35:1, side:THREE.DoubleSide, wireframe, depthWrite:!isGlass
-        });
-        const mesh=new THREE.Mesh(geo,mat);
-        mesh.castShadow=true; mesh.receiveShadow=true;
-        geo.rotateX(-Math.PI/2);
-        meshMeta.set(mesh,{id:prod.id,type:prod.type,name:prod.name,storey:prod.storey});
-        ensureLayer(prod.type).add(mesh);
+  for(const {group} of layerMap.values())scene.remove(group);
+  meshMeta.clear();layerMap.clear();document.getElementById('layers').replaceChildren();
+  setStatus('Preparando leitor IFC completo...',5);
+  const url=URL.createObjectURL(new Blob([document.getElementById('ifc-worker').textContent],{type:'text/javascript'}));
+  const worker=new Worker(url);URL.revokeObjectURL(url);activeWorker=worker;
+  const started=performance.now();
+  let timer;
+  const fail=(error)=>{clearTimeout(timer);worker.terminate();if(generation===activeLoad){activeWorker=null;window.showViewerError(error);}};
+  timer=setTimeout(()=>fail(new Error('A leitura excedeu 3 minutos. Tente novamente ou verifique a conexão.')),180000);
+  worker.onerror=e=>fail(new Error(e.message||'Falha ao iniciar o leitor IFC.'));
+  worker.onmessage=({data})=>{
+    if(generation!==activeLoad)return;
+    try{
+      if(data.kind==='error'){fail(new Error(data.message));return;}
+      if(data.kind==='progress'){setStatus(data.text,data.pct);return;}
+      if(data.kind==='product'){
+        for(const part of data.parts){
+          const geometry=new THREE.BufferGeometry();
+          const vertex=new THREE.InterleavedBuffer(part.vertices,6);
+          geometry.setAttribute('position',new THREE.InterleavedBufferAttribute(vertex,3,0));
+          geometry.setAttribute('normal',new THREE.InterleavedBufferAttribute(vertex,3,3));
+          geometry.setIndex(new THREE.BufferAttribute(part.indices,1));
+          geometry.applyMatrix4(new THREE.Matrix4().fromArray(part.matrix));
+          const c=part.color;
+          const color=c?new THREE.Color().setRGB(c.x,c.y,c.z,THREE.LinearSRGBColorSpace):new THREE.Color(COLORS[data.meta.type]||COLORS.DEFAULT);
+          const opacity=c?Math.max(0.15,Math.min(1,c.w)):1;
+          const material=new THREE.MeshLambertMaterial({color,opacity,transparent:opacity<1,depthWrite:opacity>=1,side:THREE.DoubleSide,wireframe});
+          const mesh=new THREE.Mesh(geometry,material);mesh.castShadow=opacity>=1;mesh.receiveShadow=true;
+          meshMeta.set(mesh,data.meta);ensureLayer(data.meta.type).add(mesh);
+        }
+        return;
       }
-    }
-  }
-
-  if(!meshMeta.size) throw new Error('Nenhuma geometria Body compatível foi encontrada neste IFC.');
-  const box=new THREE.Box3();
-  for(const mesh of meshMeta.keys()) box.expandByObject(mesh);
-  const center=box.getCenter(new THREE.Vector3());
-  const offset=new THREE.Vector3(-center.x,-box.min.y,-center.z);
-  for(const mesh of meshMeta.keys()) mesh.position.copy(offset);
-  setStatus('Ajustando câmera...', 95);
-  await tick();
-  fitView();
-  statusEl.style.display='none';
-  const rendered=new Set([...meshMeta.values()].map(m=>m.id));
-  const missing=[...bodyProducts].filter(id=>!rendered.has(id));
-  document.getElementById('header').querySelector('.title p').textContent=`${rendered.size} elementos carregados • ${missing.length?missing.length+' sem geometria compatível':'CANIL.ifc'}`;
-  if(missing.length){
-    const note=document.createElement('p');note.style.cssText='padding:14px;font-size:12px;line-height:1.6;color:#e3b341';
-    note.textContent=`Visualização parcial: ${missing.length} elementos usam geometrias fora do suporte deste visualizador. Para um modelo completo, exporte sólidos BRep/tesselados ou use um visualizador com parser IFC completo.`;
-    document.getElementById('layers').appendChild(note);
-    console.warn('Produtos IFC não renderizados:',missing);
-  }
+      if(data.kind==='done'){
+        clearTimeout(timer);worker.terminate();activeWorker=null;
+        if(!meshMeta.size)throw new Error('O IFC não contém geometria renderizável.');
+        const box=new THREE.Box3();for(const mesh of meshMeta.keys())box.expandByObject(mesh);
+        const center=box.getCenter(new THREE.Vector3()),offset=new THREE.Vector3(-center.x,-box.min.y,-center.z);
+        for(const mesh of meshMeta.keys())mesh.position.copy(offset);
+        fitView();statusEl.style.display='none';
+        const total=Object.values(data.rendered).reduce((a,b)=>a+b,0);
+        document.querySelector('#header .title p').textContent=total+' elementos • '+fileName+' • '+((performance.now()-started)/1000).toFixed(1)+' s de processamento';
+        for(const [type,count] of Object.entries(data.rendered)){
+          const row=document.querySelector('[data-t="'+type+'"]').parentElement;
+          const label=document.createElement('span');label.className='li-cnt';label.textContent=count;row.appendChild(label);
+        }
+        if(data.missing.length){const note=document.createElement('p');note.style.cssText='padding:14px;color:#e3b341;font-size:12px';note.textContent=data.missing.length+' produtos com representação não geraram malhas. Consulte o console para detalhes.';document.getElementById('layers').appendChild(note);console.warn('IFC sem malha',data.missing);}
+        console.info('IFC carregado',data.rendered);
+      }
+    }catch(error){fail(error);}
+  };
+  worker.postMessage(buf,[buf]);
 }
 
 function setStatus(msg,pct){
@@ -738,24 +451,23 @@ async function tryFetch(){
   setStatus('Baixando CANIL.ifc...',2);
   const controller=new AbortController();
   const timeout=setTimeout(()=>controller.abort(),90000);
-  let text;
+  let buf;
   try{
     const response=await fetch(new URL('./CANIL.ifc',location.href),{cache:'no-store',signal:controller.signal});
     if(!response.ok) throw new Error(`CANIL.ifc: HTTP ${response.status}. Coloque o arquivo junto ao index.html no GitHub.`);
-    const buf=await response.arrayBuffer();
-    text=new TextDecoder('utf-8').decode(new Uint8Array(buf));
+    buf=await response.arrayBuffer();
   }catch(error){
     if(error.name==='AbortError') throw new Error('O download excedeu 90 segundos. Verifique a conexão ou selecione o IFC manualmente.');
     throw error;
   }finally{clearTimeout(timeout);}
-  await loadText(text);
+  if(!manualLoad) await loadBuffer(buf);
 }
 
 // ── RENDER LOOP ───────────────────────────────────────────────────────────────
 (function loop(){ requestAnimationFrame(loop); renderer.render(scene,camera); })();
 
 // ── BOOT ──────────────────────────────────────────────────────────────────────
-tryFetch().catch(window.showViewerError);
+tryFetch().catch(error=>{if(!manualLoad)window.showViewerError(error);});
 </script>
 </body>
 </html>
