@@ -8,7 +8,9 @@
   *{margin:0;padding:0;box-sizing:border-box}
   body{background:#0d1117;color:#e6edf3;font-family:'Segoe UI',system-ui,sans-serif;overflow:hidden;height:100vh;display:flex;flex-direction:column}
   #header{background:linear-gradient(90deg,#0f1f33 0%,#1a3a5c 50%,#0f1f33 100%);border-bottom:2px solid #2d6a4f;padding:0 16px;height:52px;display:flex;align-items:center;gap:12px;flex-shrink:0}
-  #header .brasao{width:36px;height:36px;background:#1a3a2f;border:1.5px solid #2d6a4f;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
+  #header .institution-marks{height:56px;display:flex;align-items:center;gap:8px;flex-shrink:0}
+  #header .institution-mark{width:42px;height:54px;display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0}
+  #header .institution-mark img{height:52px;width:auto;max-width:none;display:block;filter:drop-shadow(0 2px 3px #0008)}
   #header .title{flex:1;min-width:0}
   #header .title h1{font-size:13px;font-weight:700;color:#58a6ff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   #header .title p{font-size:11px;color:#6e7681;margin-top:1px}
@@ -71,16 +73,19 @@
   dialog input:not([type=checkbox]){display:block;width:100%;padding:10px;margin:7px 0 14px;background:#0d1821;border:1px solid #3c5365;border-radius:6px;color:white} dialog label{font-size:12px}
   .dialog-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:18px} [hidden]{display:none!important} #upload-result{font-size:12px;white-space:pre-wrap;color:#9ee6bd;margin:12px 0}
   #pdf-dialog{width:92vw;height:90vh;max-width:1300px} #pdf-frame{width:100%;height:calc(100% - 70px);border:0;background:white;margin-top:12px} .pdf-bar{display:flex;align-items:center;gap:10px}.pdf-bar strong{flex:1;overflow:hidden;text-overflow:ellipsis}
-  @media(max-width:800px){#sidebar{width:240px}#toolbar .tb{width:112px!important}#info{left:12px;bottom:75px}#header{padding:0 10px}#header .title h1{font-size:11px}.badge{display:none}#hint{font-size:10px;max-width:90%}}
+  @media(max-width:800px){#sidebar{width:240px}#toolbar .tb{width:112px!important}#info{left:12px;bottom:75px}#header{padding:0 8px;gap:8px}#header .institution-marks{gap:3px}#header .institution-mark{width:31px}#header .institution-mark img{height:43px}#header .title h1{font-size:11px}.badge{display:none}#hint{font-size:10px;max-width:90%}}
 </style>
 </head>
 <body>
 
 <div id="header">
-  <div class="brasao">&#9733;</div>
+  <div class="institution-marks" aria-label="Símbolos institucionais">
+    <span class="institution-mark"><img src="./assets/brasao-15cia-pe.png" alt="Brasão da 15ª Companhia de Polícia do Exército"></span>
+    <span class="institution-mark"><img src="./assets/brasao-ime.png" alt="Brasão do Instituto Militar de Engenharia"></span>
+  </div>
   <div class="title">
-    <h1>CONSTRUÇÃO DO CANIL DA 15ª CIA PE</h1>
-    <p>Exército Brasileiro — Belém / PA</p>
+    <h1>OP RICARDO FRANCO — EXTENSÃO DO CANIL DA 15ª CIA PE</h1>
+    <p>CONTEXTO GERAL</p>
   </div>
   <div class="badge">COORDENAÇÃO BIM</div><button class="action" id="btn-admin">Gerenciar PDFs</button>
 </div>
