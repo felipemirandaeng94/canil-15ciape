@@ -63,7 +63,7 @@
   .model-head input{accent-color:#65dba3} .model-status{font-size:11px;color:#a6b8c4;padding:0 12px 12px;line-height:1.5}
   .model-controls{display:flex;gap:7px;padding:0 12px 12px;align-items:center}.model-controls input{width:86px;accent-color:#65dba3}
   .model-controls button{font-size:11px;padding:5px 9px}.model-card details{border-top:1px solid #283a46}.model-card summary{cursor:pointer;padding:9px 12px;color:#9db2c0;font-size:11px}
-  .li{font-size:11px;border-color:#21313c;padding:8px 12px;gap:7px}.li-name{text-transform:none;color:#b9cbd7}.li input{accent-color:#65dba3}.li-cnt{color:#91a9b9}
+  .li{font-size:11px;border-color:#21313c;padding:8px 12px;gap:7px}.li-name{text-transform:none;color:#b9cbd7;white-space:normal;line-height:1.45}.li input{accent-color:#65dba3}.li-cnt{color:#91a9b9}
   .panel-note{margin:8px 16px 14px;font-size:11px;line-height:1.6;color:#8fa5b5} #hint{color:#cbd8e2;border-color:#293d4c;max-width:calc(100% - 190px)}
   #info{left:178px;max-width:340px;border-color:#446576;background:#111d29ee} #pdf-list{padding:0 12px 16px;display:grid;gap:7px}
   .pdf-link{text-align:left;overflow-wrap:anywhere} dialog{color:#e6edf3;background:#13212c;border:1px solid #416078;border-radius:14px;padding:24px;margin:auto;width:min(520px,94vw);box-shadow:0 30px 100px #0009}
@@ -101,8 +101,8 @@
     <nav id="toolbar" aria-label="Ferramentas 3D"><span class="tool-section">VISUALIZAÇÃO</span><button class="tb" id="btn-fit" title="Enquadrar modelo"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 8V3h5m8 0h5v5M3 16v5h5m8 0h5v-5"/></svg>Enquadrar modelo</button><button class="tb" id="btn-top" title="Vista superior"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 4h16v16H4zM4 10h16M10 4v16"/></svg>Vista superior</button><button class="tb" id="btn-front" title="Vista frontal"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 20V8l8-5 8 5v12H4zM9 20v-8h6v8"/></svg>Vista frontal</button><button class="tb" id="btn-side" title="Vista lateral"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 20V5h14v15zM5 11h14"/></svg>Vista lateral</button><button class="tb" id="btn-wire" title="Linhas do modelo"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m12 2 9 5v10l-9 5-9-5V7zM3 7l9 5 9-5M12 12v10"/></svg>Linhas do modelo</button><span class="tool-section">NAVEGAÇÃO</span><button class="tb" id="btn-walk" aria-pressed="false">Andar 3D</button><button class="tb" id="btn-speed" style="display:none" title="Alternar velocidade: 1×, 2× e 4×">Velocidade: 1×</button><button class="tb" id="btn-grid" aria-pressed="false">Grade de referência</button></nav>
     <div id="info"></div>
     <div id="hint">
-      Girar: arrastar &nbsp;|&nbsp; Zoom: scroll<br>
-      Pan: shift+arrastar &nbsp;|&nbsp; Selecionar: clique
+      Girar: arrastar &nbsp;|&nbsp; Aproximar: rolar a roda do mouse<br>
+      Deslocar: Shift + arrastar &nbsp;|&nbsp; Selecionar: clique
     </div>
   </div>
   <div id="sidebar">
@@ -110,7 +110,7 @@
   </div>
 </div>
 
-<dialog id="admin-dialog"><h2>Publicar plantas</h2><p>Envie PDFs para a pasta <b>plantas</b> do projeto. Os arquivos ficarão públicos.</p><form id="pin-form"><label>Senha do painel<input id="admin-pin" type="password" inputmode="numeric" autocomplete="off" required></label><button class="action primary">Abrir painel</button></form><form id="upload-form" hidden><p>A senha abre este painel; a autorização de gravação é feita pelo GitHub. Use um token restrito a este repositório com permissão <b>Contents: read and write</b>. O token será apagado do campo ao enviar e não será salvo.</p><label>Token GitHub<input id="github-token" type="password" autocomplete="off" required></label><label>Plantas PDF (até 20 MB cada)<input id="pdf-files" type="file" accept=".pdf,application/pdf" multiple required></label><label><input id="replace-pdfs" type="checkbox"> Substituir PDFs existentes com o mesmo nome</label><div class="dialog-actions"><button class="action primary" id="send-pdfs">Enviar ao GitHub</button></div></form><div id="upload-result" role="status" aria-live="polite"></div><div class="dialog-actions"><button class="action" id="close-admin">Fechar</button></div></dialog>
+<dialog id="admin-dialog"><h2>Publicar plantas</h2><p>Envie PDFs para a pasta <b>plantas</b> do projeto. Os arquivos ficarão públicos.</p><form id="pin-form"><label>Senha do painel<input id="admin-pin" type="password" inputmode="numeric" autocomplete="off" required></label><button class="action primary">Abrir painel</button></form><form id="upload-form" hidden><p>A senha abre este painel; a autorização de gravação é feita pelo GitHub. Use uma chave de acesso restrita a este repositório com permissão <b>Conteúdo: leitura e gravação</b>. A chave será apagada do campo ao enviar e não será salvo.</p><label>Chave de acesso do GitHub<input id="github-token" type="password" autocomplete="off" required></label><label>Plantas PDF (até 20 MB cada)<input id="pdf-files" type="file" accept=".pdf,application/pdf" multiple required></label><label><input id="replace-pdfs" type="checkbox"> Substituir PDFs existentes com o mesmo nome</label><div class="dialog-actions"><button class="action primary" id="send-pdfs">Enviar ao GitHub</button></div></form><div id="upload-result" role="status" aria-live="polite"></div><div class="dialog-actions"><button class="action" id="close-admin">Fechar</button></div></dialog>
 <dialog id="pdf-dialog"><div class="pdf-bar"><strong id="pdf-title">Planta</strong><a class="action" id="pdf-download" download>Baixar PDF</a><button class="action" id="close-pdf">Fechar</button></div><iframe id="pdf-frame" title="Visualização da planta PDF"></iframe></dialog>
 <script type="importmap">
 {"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"}}
@@ -424,12 +424,88 @@ canvas.addEventListener('click', e=>{
   const m = meshMeta.get(selected)||{};
   infoEl.style.display='block';
   infoEl.replaceChildren();
-  for(const [label,value] of [['Nome',m.name||'Elemento'],['Disciplina',m.disciplineLabel||'Arquitetura'],['Tipo',m.type],['Pavimento',m.storey||'Não informado']]){
+  for(const [label,value] of [['Nome',m.name||'Elemento'],['Disciplina',m.disciplineLabel||'Arquitetura'],['Categoria',categoryLabel(m.type)],['Pavimento',m.storey||'Não informado']]){
     const row=document.createElement('div'); row.textContent=`${label}: ${value}`; infoEl.appendChild(row);
   }
 });
 
 // ── CAMADAS ──────────────────────────────────────────────────────────────────
+const CATEGORY_LABELS={
+  "IFCFLOWTERMINAL": "Equipamentos e pontos de utilização",
+  "IFCFLOWSEGMENT": "Trechos de tubulação e dutos",
+  "IFCFLOWFITTING": "Conexões de instalações",
+  "IFCWALL": "Paredes",
+  "IFCWALLSTANDARDCASE": "Paredes",
+  "IFCSLAB": "Pisos e coberturas",
+  "IFCROOF": "Telhados",
+  "IFCDOOR": "Portas e portões",
+  "IFCWINDOW": "Janelas",
+  "IFCRAILING": "Gradis e cercamentos",
+  "IFCBUILDINGELEMENTPROXY": "Outras famílias",
+  "IFCCOLUMN": "Pilares",
+  "IFCBEAM": "Vigas",
+  "IFCMEMBER": "Elementos estruturais",
+  "IFCPLATE": "Chapas e painéis",
+  "IFCFOOTING": "Sapatas e fundações",
+  "IFCPILE": "Estacas",
+  "IFCSTAIR": "Escadas",
+  "IFCSTAIRFLIGHT": "Lances de escada",
+  "IFCRAMP": "Rampas",
+  "IFCRAMPFLIGHT": "Lances de rampa",
+  "IFCCURTAINWALL": "Fachadas-cortina",
+  "IFCCOVERING": "Revestimentos",
+  "IFCFURNISHINGELEMENT": "Mobiliário",
+  "IFCFURNITURE": "Móveis",
+  "IFCBUILDINGELEMENTPART": "Componentes construtivos",
+  "IFCBUILDINGELEMENT": "Elementos construtivos",
+  "IFCELEMENTASSEMBLY": "Conjuntos de elementos",
+  "IFCREINFORCINGBAR": "Barras de armadura",
+  "IFCREINFORCINGMESH": "Telas de armadura",
+  "IFCTENDON": "Cabos de protensão",
+  "IFCTENDONANCHOR": "Ancoragens de protensão",
+  "IFCFASTENER": "Fixadores",
+  "IFCMECHANICALFASTENER": "Fixadores mecânicos",
+  "IFCSANITARYTERMINAL": "Aparelhos sanitários",
+  "IFCWASTETERMINAL": "Pontos de esgoto e drenagem",
+  "IFCPIPESEGMENT": "Trechos de tubulação",
+  "IFCPIPEFITTING": "Conexões de tubulação",
+  "IFCDUCTSEGMENT": "Trechos de dutos",
+  "IFCDUCTFITTING": "Conexões de dutos",
+  "IFCCABLESEGMENT": "Trechos de cabos",
+  "IFCCABLECARRIERSEGMENT": "Eletrodutos e eletrocalhas",
+  "IFCCABLECARRIERFITTING": "Conexões de eletrodutos e eletrocalhas",
+  "IFCFLOWCONTROLLER": "Dispositivos de controle",
+  "IFCVALVE": "Válvulas e registros",
+  "IFCPUMP": "Bombas",
+  "IFCTANK": "Reservatórios",
+  "IFCFLOWSTORAGEDEVICE": "Dispositivos de armazenamento",
+  "IFCFLOWMOVINGDEVICE": "Equipamentos de movimentação de fluidos",
+  "IFCFLOWTREATMENTDEVICE": "Equipamentos de tratamento de fluidos",
+  "IFCENERGYCONVERSIONDEVICE": "Equipamentos de conversão de energia",
+  "IFCDISTRIBUTIONELEMENT": "Elementos de instalações",
+  "IFCDISTRIBUTIONFLOWELEMENT": "Elementos de redes de instalações",
+  "IFCDISTRIBUTIONCONTROLELEMENT": "Controles de instalações",
+  "IFCDISTRIBUTIONCHAMBERELEMENT": "Caixas e câmaras de inspeção",
+  "IFCAIRTERMINAL": "Difusores e grelhas de ar",
+  "IFCFIRESUPPRESSIONTERMINAL": "Dispositivos de combate a incêndio",
+  "IFCLIGHTFIXTURE": "Luminárias",
+  "IFCOUTLET": "Tomadas",
+  "IFCSWITCHINGDEVICE": "Interruptores e dispositivos de manobra",
+  "IFCELECTRICDISTRIBUTIONBOARD": "Quadros elétricos",
+  "IFCSENSOR": "Sensores",
+  "IFCACTUATOR": "Atuadores",
+  "IFCALARM": "Alarmes",
+  "IFCBOILER": "Caldeiras",
+  "IFCFAN": "Ventiladores",
+  "IFCFILTER": "Filtros",
+  "IFCSPACE": "Ambientes",
+  "IFCSITE": "Terreno",
+  "IFCBUILDING": "Edificação",
+  "IFCBUILDINGSTOREY": "Pavimentos",
+  "IFCGEOGRAPHICELEMENT": "Elementos do terreno",
+  "IFCOPENINGELEMENT": "Aberturas"
+};
+function categoryLabel(type){return CATEGORY_LABELS[type]||'Outros elementos';}
 const layerMap=new Map();
 const modelDefs=[{id:'ARQ',label:'Arquitetura',file:'CANIL.ifc',color:'#75dfab'},{id:'EST',label:'Estrutural',file:'ESTRUTURAL.ifc',color:'#a6b8d0'},{id:'HID',label:'Hidráulico',file:'HIDRAULICO.ifc',color:'#62b8ed'},{id:'ESG',label:'Esgoto',file:'ESGOTO.IFC',color:'#e4a16c'}];
 let sharedAnchor=null,loadingQueue=Promise.resolve();
@@ -450,7 +526,7 @@ function ensureLayer(type,def){
  const key=def.id+':'+type;if(layerMap.has(key))return layerMap.get(key).group;
  const group=new THREE.Group();scene.add(group);group.visible=def.visible;const layer={group,visible:true,model:def.id};layerMap.set(key,layer);
  const row=document.createElement('label');row.className='li';const check=document.createElement('input');check.type='checkbox';check.checked=true;check.onchange=()=>{layer.visible=check.checked;updateModelVisibility(def);};
- const label=document.createElement('span');label.className='li-name';label.textContent=({IFCWALLSTANDARDCASE:'Paredes',IFCSLAB:'Pisos e coberturas',IFCDOOR:'Portas e portões',IFCWINDOW:'Janelas',IFCRAILING:'Cercamentos'})[type]||type.replace('IFC','');
+ const label=document.createElement('span');label.className='li-name';label.textContent=categoryLabel(type);
  const count=document.createElement('span');count.className='li-cnt';layer.count=count;row.append(check,label,count);def.rows.append(row);return group;
 }
 const hatchCanvas=document.createElement('canvas');hatchCanvas.width=hatchCanvas.height=128;const hatch=hatchCanvas.getContext('2d');hatch.fillStyle='#eeeeee';hatch.fillRect(0,0,128,128);hatch.strokeStyle='#8c969f';hatch.lineWidth=1.5;for(let x=-128;x<256;x+=32){hatch.beginPath();hatch.moveTo(x,0);hatch.lineTo(x+128,128);hatch.stroke();}const roofTexture=new THREE.CanvasTexture(hatchCanvas);roofTexture.wrapS=roofTexture.wrapT=THREE.RepeatWrapping;roofTexture.colorSpace=THREE.SRGBColorSpace;roofTexture.anisotropy=8;
@@ -528,8 +604,8 @@ async function loadBuffer(buf,fileName='CANIL.ifc'){
         sun.target.position.set(0,modelSize.y*0.25,0);sun.position.set(-shadowExtent*0.65,shadowExtent*1.2,shadowExtent*0.85);
         Object.assign(sun.shadow.camera,{left:-shadowExtent,right:shadowExtent,top:shadowExtent,bottom:-shadowExtent,near:0.1,far:shadowExtent*5});sun.shadow.camera.updateProjectionMatrix();
         fitView();statusEl.style.display='none';
-        def.count=Object.values(data.rendered).reduce((a,b)=>a+b,0);def.status.textContent=fileName+' · '+def.count+' elementos'+(data.missing.length?' · '+data.missing.length+' sem malha':'');
-        document.querySelector('#header .title p').textContent=modelDefs.reduce((n,d)=>n+d.count,0)+' elementos · '+modelDefs.filter(d=>d.count).length+' disciplina(s) carregada(s)';
+        def.count=Object.values(data.rendered).reduce((a,b)=>a+b,0);def.status.textContent=fileName+' · '+def.count+(def.count===1?' elemento':' elementos')+(data.missing.length?' · '+data.missing.length+' sem malha':'');
+        document.querySelector('#header .title p').textContent=modelDefs.reduce((n,d)=>n+d.count,0)+' elementos · '+modelDefs.filter(d=>d.count).length+(modelDefs.filter(d=>d.count).length===1?' disciplina carregada':' disciplinas carregadas');
         for(const [type,count] of Object.entries(data.rendered))layerMap.get(def.id+':'+type).count.textContent=count;
         updateModelVisibility(def);resolve();
         console.info('IFC carregado',data.rendered);
@@ -588,17 +664,17 @@ async function publishPdf(file,token,replace,request=fetch){
   const current=await request(url+'?ref=main',{headers,cache:'no-store',signal:AbortSignal.timeout(30000)});
   let sha;
   if(current.ok){if(!replace)throw new Error(name+' já existe. Marque a opção de substituição para atualizar.');sha=(await current.json()).sha;}
-  else if(current.status!==404)throw new Error('GitHub HTTP '+current.status+'. Confira o token e a permissão Contents: read and write.');
+  else if(current.status!==404)throw new Error('GitHub HTTP '+current.status+'. Confira a chave de acesso e a permissão Conteúdo: leitura e gravação.');
   let binary='';for(let i=0;i<bytes.length;i+=32768)binary+=String.fromCharCode(...bytes.subarray(i,i+32768));
   const response=await request(url,{method:'PUT',headers:{...headers,'Content-Type':'application/json'},signal:AbortSignal.timeout(90000),body:JSON.stringify({message:(sha?'Atualiza':'Adiciona')+' planta '+name,content:btoa(binary),branch:'main',...(sha?{sha}:{})})});
-  if(!response.ok)throw new Error('Envio não concluído: GitHub HTTP '+response.status+(response.status===409?'. O arquivo mudou; atualize e tente novamente.':'. Confira as permissões do token.'));
+  if(!response.ok)throw new Error('Envio não concluído: GitHub HTTP '+response.status+(response.status===409?'. O arquivo mudou; atualize e tente novamente.':'. Confira as permissões da chave de acesso.'));
   return name;
 }
 uploadForm.onsubmit=async e=>{
   e.preventDefault();if(uploadBusy)return;
   let token=document.getElementById('github-token').value.trim();document.getElementById('github-token').value='';
   const files=Array.from(document.getElementById('pdf-files').files),replace=document.getElementById('replace-pdfs').checked;
-  if(!token||!files.length){uploadResult.textContent='Informe o token e selecione os PDFs.';return;}
+  if(!token||!files.length){uploadResult.textContent='Informe a chave de acesso e selecione os PDFs.';return;}
   uploadBusy=true;document.getElementById('send-pdfs').disabled=true;document.getElementById('close-admin').disabled=true;
   let completed=[];
   try{
