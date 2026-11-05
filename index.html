@@ -78,6 +78,7 @@
       <div class="tb"     id="btn-front" title="Vista frontal">&#9636;</div>
       <div class="tb"     id="btn-side"  title="Vista lateral">&#9641;</div>
       <div class="tb"     id="btn-wire"  title="Wireframe">&#9638;</div>
+      <button class="tb" id="btn-walk" style="width:86px;font-size:12px" title="Andar em primeira pessoa" aria-pressed="false">Andar 3D</button>
     </div>
     <div id="info"></div>
     <div id="hint">
@@ -215,6 +216,7 @@ sun.position.set(15, 25, 10);
 sun.castShadow = true;
 sun.shadow.mapSize.set(2048,2048);
 sun.shadow.normalBias=0.025;
+sun.shadow.bias=-0.0004;
 sun.shadow.camera.near = 0.1;
 sun.shadow.camera.far = 200;
 sun.shadow.camera.left = -50;
@@ -246,6 +248,50 @@ function camUpdate(){
 }
 camUpdate();
 
+let walking=false,walkYaw=0,walkPitch=0;
+const movementKeys=new Set();
+const navigationHint=document.getElementById('hint');
+const orbitHint=navigationHint.innerHTML;
+const walkButton=document.getElementById('btn-walk');
+function walkLook(){
+  camera.lookAt(camera.position.clone().add(new THREE.Vector3(-Math.sin(walkYaw)*Math.cos(walkPitch),Math.sin(walkPitch),-Math.cos(walkYaw)*Math.cos(walkPitch))));
+}
+function leaveWalk(){
+  walking=false;movementKeys.clear();walkButton.classList.remove('on');
+  walkButton.textContent='Andar 3D';walkButton.setAttribute('aria-pressed','false');navigationHint.innerHTML=orbitHint;
+}
+function toggleWalk(){
+  if(walking){leaveWalk();fitView();return;}
+  if(!meshMeta.size)return;
+  const box=new THREE.Box3();for(const mesh of meshMeta.keys())box.expandByObject(mesh);
+  const center=box.getCenter(new THREE.Vector3());
+  camera.position.set(center.x,box.min.y+1.7,box.max.z+2);
+  walkYaw=0;walkPitch=0;walking=true;movementKeys.clear();walkLook();
+  walkButton.classList.add('on');walkButton.textContent='Voltar à órbita';walkButton.setAttribute('aria-pressed','true');
+  navigationHint.textContent='W/A/S/D ou setas: andar • Arrastar: olhar • Shift: acelerar • Q/E: descer/subir • Esc: órbita';
+}
+walkButton.addEventListener('click',toggleWalk);
+const walkCodes=new Set(['KeyW','KeyA','KeyS','KeyD','ArrowUp','ArrowDown','ArrowLeft','ArrowRight','KeyQ','KeyE','ShiftLeft','ShiftRight']);
+window.addEventListener('keydown',e=>{
+  if(!walking||e.target.closest?.('input,textarea,select'))return;
+  if(e.code==='Escape'){leaveWalk();fitView();return;}
+  if(walkCodes.has(e.code)){e.preventDefault();movementKeys.add(e.code);}
+});
+window.addEventListener('keyup',e=>movementKeys.delete(e.code));
+window.addEventListener('blur',()=>{movementKeys.clear();dragging=false;});
+function stepWalk(dt){
+  if(!walking)return;
+  const forward=Number(movementKeys.has('KeyW')||movementKeys.has('ArrowUp'))-Number(movementKeys.has('KeyS')||movementKeys.has('ArrowDown'));
+  const side=Number(movementKeys.has('KeyD')||movementKeys.has('ArrowRight'))-Number(movementKeys.has('KeyA')||movementKeys.has('ArrowLeft'));
+  const up=Number(movementKeys.has('KeyE'))-Number(movementKeys.has('KeyQ'));
+  const delta=new THREE.Vector3(-Math.sin(walkYaw)*forward+Math.cos(walkYaw)*side,up,-Math.cos(walkYaw)*forward-Math.sin(walkYaw)*side);
+  if(delta.lengthSq()){
+    const fast=movementKeys.has('ShiftLeft')||movementKeys.has('ShiftRight');
+    camera.position.addScaledVector(delta.normalize(),dt*(fast?6:2));
+    camera.position.y=Math.max(0.15,camera.position.y);walkLook();
+  }
+}
+
 // ── CONTROLES ────────────────────────────────────────────────────────────────
 let dragging=false, shifting=false, lx=0, ly=0, dragDistance=0;
 canvas.addEventListener('mousedown',  e=>{dragging=true; dragDistance=0; lx=e.clientX; ly=e.clientY;});
@@ -256,6 +302,7 @@ canvas.addEventListener('mousemove',  e=>{
   const dx=e.clientX-lx, dy=e.clientY-ly;
   dragDistance+=Math.abs(dx)+Math.abs(dy);
   lx=e.clientX; ly=e.clientY;
+  if(walking){walkYaw-=dx*0.004;walkPitch=Math.max(-1.45,Math.min(1.45,walkPitch-dy*0.004));walkLook();return;}
   if(shifting||e.buttons===4){
     const r=new THREE.Vector3().crossVectors(camera.getWorldDirection(new THREE.Vector3()),camera.up).normalize();
     target.addScaledVector(r,-dx*radius*0.001);
@@ -268,6 +315,7 @@ canvas.addEventListener('mousemove',  e=>{
 });
 canvas.addEventListener('wheel', e=>{
   e.preventDefault();
+  if(walking)return;
   radius *= Math.exp(Math.max(-1,Math.min(1,e.deltaY*0.001)));
   radius = Math.max(0.5, Math.min(500, radius));
   camUpdate();
@@ -303,15 +351,16 @@ document.getElementById('file-input').addEventListener('change', async e=>{
 // ── TOOLBAR ──────────────────────────────────────────────────────────────────
 let wireframe=false;
 document.getElementById('btn-fit').addEventListener('click', fitView);
-document.getElementById('btn-top').addEventListener('click', ()=>{phi=0.02; camUpdate();});
-document.getElementById('btn-front').addEventListener('click', ()=>{phi=Math.PI/2; theta=0; camUpdate();});
-document.getElementById('btn-side').addEventListener('click', ()=>{phi=Math.PI/2; theta=Math.PI/2; camUpdate();});
+document.getElementById('btn-top').addEventListener('click', ()=>{leaveWalk();phi=0.02; camUpdate();});
+document.getElementById('btn-front').addEventListener('click', ()=>{leaveWalk();phi=Math.PI/2; theta=0; camUpdate();});
+document.getElementById('btn-side').addEventListener('click', ()=>{leaveWalk();phi=Math.PI/2; theta=Math.PI/2; camUpdate();});
 document.getElementById('btn-wire').addEventListener('click', function(){
   wireframe=!wireframe;
   this.classList.toggle('on', wireframe);
   scene.traverse(o=>{ if(o.isMesh&&o.material) o.material.wireframe=wireframe; });
 });
 function fitView(){
+  leaveWalk();
   const box=new THREE.Box3();
   scene.traverse(o=>{ if(o.isMesh) box.expandByObject(o); });
   if(box.isEmpty()) return;
@@ -384,6 +433,7 @@ async function loadBuffer(buf,fileName='CANIL.ifc'){
   const header=new TextDecoder('utf-8').decode(new Uint8Array(buf,0,Math.min(buf.byteLength,80)));
   if(!header.startsWith('ISO-10303'))throw new Error('O arquivo não é um IFC válido (ISO-10303 ausente).');
   const generation=++activeLoad;
+  leaveWalk();
   activeWorker?.terminate();activeWorker=null;
   selected=null;infoEl.style.display='none';errBox.style.display='none';statusEl.style.display='flex';
   for(const mesh of meshMeta.keys()){mesh.geometry.dispose();mesh.material.dispose();}
@@ -411,7 +461,8 @@ async function loadBuffer(buf,fileName='CANIL.ifc'){
           geometry.setIndex(new THREE.BufferAttribute(part.indices,1));
           geometry.applyMatrix4(new THREE.Matrix4().fromArray(part.matrix));
           const c=part.color;
-          const color=c?new THREE.Color().setRGB(c.x,c.y,c.z,THREE.LinearSRGBColorSpace):new THREE.Color(COLORS[data.meta.type]||COLORS.DEFAULT);
+          const isGrass=/grama|grass|relva/i.test(data.meta.name);
+          const color=isGrass?new THREE.Color(0x91a65d):(c?new THREE.Color().setRGB(c.x,c.y,c.z,THREE.LinearSRGBColorSpace):new THREE.Color(COLORS[data.meta.type]||COLORS.DEFAULT));
           const opacity=c?Math.max(0.15,Math.min(1,c.w)):1;
           const material=new THREE.MeshLambertMaterial({color,opacity,transparent:opacity<1,depthWrite:opacity>=1,side:THREE.DoubleSide,wireframe});
           const mesh=new THREE.Mesh(geometry,material);mesh.castShadow=opacity>=1;mesh.receiveShadow=true;
@@ -464,7 +515,8 @@ async function tryFetch(){
 }
 
 // ── RENDER LOOP ───────────────────────────────────────────────────────────────
-(function loop(){ requestAnimationFrame(loop); renderer.render(scene,camera); })();
+const frameClock=new THREE.Clock();
+(function loop(){ requestAnimationFrame(loop);stepWalk(Math.min(frameClock.getDelta(),0.05)); renderer.render(scene,camera); })();
 
 // ── BOOT ──────────────────────────────────────────────────────────────────────
 tryFetch().catch(error=>{if(!manualLoad)window.showViewerError(error);});
