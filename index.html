@@ -12,8 +12,9 @@
   #header .institution-mark img{width:auto;max-width:none;display:block;filter:drop-shadow(0 2px 3px #0008)}
   #header .institution-mark.ime img{height:56px}
   #header .institution-mark.cia img{height:76px}
-  #header .header-actions{display:flex;align-items:center;gap:12px;flex-shrink:0}
-  #header .title{flex:1;min-width:0}
+  #header .project-identity{display:flex;align-items:center;gap:10px;min-width:0}
+  #header .header-actions{display:flex;align-items:center;gap:12px;flex-shrink:0;margin-left:auto}
+  #header .title{flex:0 1 auto;min-width:0}
   #header .title h1{font-size:13px;font-weight:700;color:#58a6ff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   #header .title p{font-size:11px;color:#6e7681;margin-top:1px}
   #header .badge{background:#1a3a2f;border:1px solid #2d6a4f;color:#56d364;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:600;white-space:nowrap}
@@ -70,6 +71,7 @@
   .li{font-size:11px;border-color:#21313c;padding:8px 12px;gap:7px}.li-name{text-transform:none;color:#b9cbd7;white-space:normal;line-height:1.45}.li input{accent-color:#65dba3}.li-cnt{color:#91a9b9}
   .panel-note{margin:8px 16px 14px;font-size:11px;line-height:1.6;color:#8fa5b5} #hint{color:#cbd8e2;border-color:#293d4c;max-width:calc(100% - 190px)}
   #info{left:178px;max-width:340px;border-color:#446576;background:#111d29ee} #pdf-list{padding:0 12px 16px;display:grid;gap:7px}
+  #info .element-action{display:block;width:100%;margin-top:10px;background:#573338;border-color:#8c4b52;color:#ffe8e8}#info .element-action:hover{background:#714047}
   .pdf-link{text-align:left;overflow-wrap:anywhere} dialog{color:#e6edf3;background:#13212c;border:1px solid #416078;border-radius:14px;padding:24px;margin:auto;width:min(520px,94vw);box-shadow:0 30px 100px #0009}
   dialog::backdrop{background:#030a12bb;backdrop-filter:blur(4px)} dialog h2{font-size:20px;margin:0 0 10px} dialog p{font-size:12px;color:#a9becd;line-height:1.6;margin-bottom:14px}
   dialog input:not([type=checkbox]){display:block;width:100%;padding:10px;margin:7px 0 14px;background:#0d1821;border:1px solid #3c5365;border-radius:6px;color:white} dialog label{font-size:12px}
@@ -82,14 +84,16 @@
 
 <div id="header">
   <div class="institution-mark ime"><img src="./assets/brasao-ime.png" alt="Brasão do Instituto Militar de Engenharia"></div>
-  <div class="title">
-    <h1>OP RICARDO FRANCO — EXTENSÃO DO CANIL DA 15ª CIA PE</h1>
-    <p>CONTEXTO GERAL</p>
+  <div class="project-identity">
+    <div class="title">
+      <h1>OP RICARDO FRANCO — EXTENSÃO DO CANIL DA 15ª CIA PE</h1>
+      <p>CONTEXTO GERAL</p>
+    </div>
+    <div class="institution-mark cia"><img src="./assets/brasao-15cia-pe.png" alt="Brasão da 15ª Companhia de Polícia do Exército"></div>
   </div>
   <div class="header-actions">
     <div class="badge">COORDENAÇÃO BIM</div>
     <button class="action" id="btn-admin">Gerenciar PDFs</button>
-    <div class="institution-mark cia"><img src="./assets/brasao-15cia-pe.png" alt="Brasão da 15ª Companhia de Polícia do Exército"></div>
   </div>
 </div>
 
@@ -106,7 +110,7 @@
       <p>O modelo <strong>CANIL.ifc</strong> não foi localizado automaticamente.<br>Publique o arquivo junto ao index.html no GitHub.</p>
 
     </div>
-    <nav id="toolbar" aria-label="Ferramentas 3D"><span class="tool-section">VISUALIZAÇÃO</span><button class="tb" id="btn-fit" title="Enquadrar modelo"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 8V3h5m8 0h5v5M3 16v5h5m8 0h5v-5"/></svg>Enquadrar modelo</button><button class="tb" id="btn-top" title="Vista superior"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 4h16v16H4zM4 10h16M10 4v16"/></svg>Vista superior</button><button class="tb" id="btn-front" title="Vista frontal"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 20V8l8-5 8 5v12H4zM9 20v-8h6v8"/></svg>Vista frontal</button><button class="tb" id="btn-side" title="Vista lateral"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 20V5h14v15zM5 11h14"/></svg>Vista lateral</button><button class="tb" id="btn-wire" title="Linhas do modelo"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m12 2 9 5v10l-9 5-9-5V7zM3 7l9 5 9-5M12 12v10"/></svg>Linhas do modelo</button><span class="tool-section">NAVEGAÇÃO</span><button class="tb" id="btn-walk" aria-pressed="false">Andar 3D</button><button class="tb" id="btn-speed" style="display:none" title="Alternar velocidade: 1×, 2× e 4×">Velocidade: 1×</button><button class="tb" id="btn-grid" aria-pressed="false">Grade de referência</button></nav>
+    <nav id="toolbar" aria-label="Ferramentas 3D"><span class="tool-section">VISUALIZAÇÃO</span><button class="tb" id="btn-fit" title="Enquadrar modelo"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 8V3h5m8 0h5v5M3 16v5h5m8 0h5v-5"/></svg>Enquadrar modelo</button><button class="tb" id="btn-top" title="Vista superior"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 4h16v16H4zM4 10h16M10 4v16"/></svg>Vista superior</button><button class="tb" id="btn-front" title="Vista frontal"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 20V8l8-5 8 5v12H4zM9 20v-8h6v8"/></svg>Vista frontal</button><button class="tb" id="btn-side" title="Vista lateral"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 20V5h14v15zM5 11h14"/></svg>Vista lateral</button><button class="tb" id="btn-wire" title="Linhas do modelo"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m12 2 9 5v10l-9 5-9-5V7zM3 7l9 5 9-5M12 12v10"/></svg>Linhas do modelo</button><button class="tb" id="btn-show-hidden" style="display:none" title="Restaurar todos os elementos ocultos"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z"/><circle cx="12" cy="12" r="2.5"/></svg>Restaurar ocultos</button><span class="tool-section">NAVEGAÇÃO</span><button class="tb" id="btn-walk" aria-pressed="false">Andar 3D</button><button class="tb" id="btn-speed" style="display:none" title="Alternar velocidade: 1×, 2× e 4×">Velocidade: 1×</button><button class="tb" id="btn-grid" aria-pressed="false">Grade de referência</button></nav>
     <div id="info"></div>
     <div id="hint">
       Girar: arrastar &nbsp;|&nbsp; Aproximar: rolar a roda do mouse<br>
@@ -400,7 +404,7 @@ document.getElementById('btn-wire').addEventListener('click', function(){
 function fitView(){
   leaveWalk();
   const box=new THREE.Box3();
-  for(const mesh of meshMeta.keys())box.expandByObject(mesh);
+  for(const mesh of meshMeta.keys())if(mesh.visible&&mesh.parent.visible)box.expandByObject(mesh);
   if(box.isEmpty()) return;
   const center=box.getCenter(new THREE.Vector3());
   const size=box.getSize(new THREE.Vector3());
@@ -417,13 +421,29 @@ function fitView(){
 const raycaster = new THREE.Raycaster();
 const meshMeta  = new Map(); // mesh → meta
 let selected = null;
+const hiddenMeshes=new Set();
+const restoreHiddenButton=document.getElementById('btn-show-hidden');
+function updateHiddenButton(){
+  restoreHiddenButton.style.display=hiddenMeshes.size?'flex':'none';
+  restoreHiddenButton.lastChild.textContent=hiddenMeshes.size===1?'Restaurar oculto':`Restaurar ocultos (${hiddenMeshes.size})`;
+}
+function hideSelectedElement(){
+  if(!selected)return;
+  const meta=meshMeta.get(selected);if(!meta)return;
+  for(const [mesh,item] of meshMeta)if(item.id===meta.id&&item.discipline===meta.discipline){mesh.material.emissive?.set(0);mesh.visible=false;hiddenMeshes.add(mesh);}
+  selected=null;infoEl.style.display='none';updateHiddenButton();
+}
+restoreHiddenButton.addEventListener('click',()=>{
+  for(const mesh of hiddenMeshes)if(meshMeta.has(mesh))mesh.visible=true;
+  hiddenMeshes.clear();updateHiddenButton();
+});
 canvas.addEventListener('click', e=>{
   if(dragDistance>4) return;
   const rect = canvas.getBoundingClientRect();
   const mx = ((e.clientX-rect.left)/rect.width)*2-1;
   const my = -((e.clientY-rect.top)/rect.height)*2+1;
   raycaster.setFromCamera(new THREE.Vector2(mx,my), camera);
-  const hits = raycaster.intersectObjects([...meshMeta.keys()].filter(m=>m.parent.visible));
+  const hits = raycaster.intersectObjects([...meshMeta.keys()].filter(m=>m.visible&&m.parent.visible));
   if(selected){ selected.material.emissive?.set(0); selected=null; }
   infoEl.style.display='none';
   if(!hits.length) return;
@@ -435,6 +455,7 @@ canvas.addEventListener('click', e=>{
   for(const [label,value] of [['Nome',m.name||'Elemento'],['Disciplina',m.disciplineLabel||'Arquitetura'],['Categoria',categoryLabel(m.type)],['Pavimento',m.storey||'Não informado']]){
     const row=document.createElement('div'); row.textContent=`${label}: ${value}`; infoEl.appendChild(row);
   }
+  const hideButton=document.createElement('button');hideButton.className='action element-action';hideButton.textContent='Ocultar elemento';hideButton.title='Ocultar este elemento da visualização';hideButton.onclick=hideSelectedElement;infoEl.appendChild(hideButton);
 });
 
 // ── CAMADAS ──────────────────────────────────────────────────────────────────
@@ -551,7 +572,7 @@ async function loadBuffer(buf,fileName='CANIL.ifc'){
   leaveWalk();
   activeWorker?.terminate();activeWorker=null;
   selected=null;infoEl.style.display='none';errBox.style.display='none';statusEl.style.display='flex';
-  for(const [mesh,meta] of meshMeta)if(meta.discipline===def.id){mesh.geometry.dispose();mesh.material.dispose();meshMeta.delete(mesh);}
+  for(const [mesh,meta] of meshMeta)if(meta.discipline===def.id){hiddenMeshes.delete(mesh);mesh.geometry.dispose();mesh.material.dispose();meshMeta.delete(mesh);}updateHiddenButton();
   for(const [key,l] of layerMap)if(l.model===def.id){scene.remove(l.group);layerMap.delete(key);}def.rows.replaceChildren();
   setStatus('Preparando leitor IFC completo...',5);
   const url=URL.createObjectURL(new Blob([document.getElementById('ifc-worker').textContent],{type:'text/javascript'}));
@@ -560,7 +581,7 @@ async function loadBuffer(buf,fileName='CANIL.ifc'){
   let timer;
   const fail=(error)=>{clearTimeout(timer);worker.terminate();if(generation===activeLoad){
     activeWorker=null;def.count=0;
-    for(const [mesh,meta] of meshMeta)if(meta.discipline===def.id){mesh.geometry.dispose();mesh.material.dispose();meshMeta.delete(mesh);}
+    for(const [mesh,meta] of meshMeta)if(meta.discipline===def.id){hiddenMeshes.delete(mesh);mesh.geometry.dispose();mesh.material.dispose();meshMeta.delete(mesh);}updateHiddenButton();
     for(const [key,l] of layerMap)if(l.model===def.id){scene.remove(l.group);layerMap.delete(key);}
     def.rows.replaceChildren();def.status.textContent=fileName+' · '+error.message;statusEl.style.display='none';reject(error);
   }};
