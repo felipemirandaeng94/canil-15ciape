@@ -123,7 +123,7 @@
       <p>O modelo <strong>CANIL.ifc</strong> não foi localizado automaticamente.<br>Publique o arquivo junto ao index.html no GitHub.</p>
 
     </div>
-    <nav id="toolbar" aria-label="Ferramentas 3D"><span class="tool-section">VISUALIZAÇÃO</span><button class="tb" id="btn-fit" title="Enquadrar modelo"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 8V3h5m8 0h5v5M3 16v5h5m8 0h5v-5"/></svg>Enquadrar modelo</button><button class="tb" id="btn-top" title="Vista superior"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 4h16v16H4zM4 10h16M10 4v16"/></svg>Vista superior</button><button class="tb" id="btn-front" title="Vista frontal"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 20V8l8-5 8 5v12H4zM9 20v-8h6v8"/></svg>Vista frontal</button><button class="tb" id="btn-side" title="Vista lateral"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 20V5h14v15zM5 11h14"/></svg>Vista lateral</button><button class="tb" id="btn-wire" title="Linhas do modelo"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m12 2 9 5v10l-9 5-9-5V7zM3 7l9 5 9-5M12 12v10"/></svg>Linhas do modelo</button><button class="tb" id="btn-show-hidden" style="display:none" title="Restaurar todos os elementos ocultos"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z"/><circle cx="12" cy="12" r="2.5"/></svg>Restaurar ocultos</button><span class="tool-section">NAVEGAÇÃO</span><button class="tb" id="btn-walk" aria-pressed="false">Andar 3D</button><button class="tb" id="btn-speed" style="display:none" title="Alternar velocidade: 1×, 2× e 4×">Velocidade: 1×</button><button class="tb" id="btn-grid" aria-pressed="false">Grade de referência</button></nav>
+    <nav id="toolbar" aria-label="Ferramentas 3D"><span class="tool-section">VISUALIZAÇÃO</span><button class="tb" id="btn-fit" title="Enquadrar modelo"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 8V3h5m8 0h5v5M3 16v5h5m8 0h5v-5"/></svg>Enquadrar modelo</button><button class="tb" id="btn-top" title="Vista superior"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 4h16v16H4zM4 10h16M10 4v16"/></svg>Vista superior</button><button class="tb" id="btn-front" title="Vista frontal"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 20V8l8-5 8 5v12H4zM9 20v-8h6v8"/></svg>Vista frontal</button><button class="tb" id="btn-side" title="Vista lateral"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 20V5h14v15zM5 11h14"/></svg>Vista lateral</button><button class="tb" id="btn-wire" title="Linhas do modelo"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m12 2 9 5v10l-9 5-9-5V7zM3 7l9 5 9-5M12 12v10"/></svg>Linhas do modelo</button><button class="tb" id="btn-show-hidden" style="display:none" title="Restaurar todos os elementos ocultos"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z"/><circle cx="12" cy="12" r="2.5"/></svg>Restaurar ocultos</button><span class="tool-section">DESEMPENHO</span><button class="tb" id="btn-quality" title="Alternar qualidade da renderização">Qualidade: Equilibrada</button><span class="tool-section">NAVEGAÇÃO</span><button class="tb" id="btn-walk" aria-pressed="false">Andar 3D</button><button class="tb" id="btn-speed" style="display:none" title="Alternar velocidade: 1×, 2× e 4×">Velocidade: 1×</button><button class="tb" id="btn-grid" aria-pressed="false">Grade de referência</button></nav>
     <button class="mobile-panel-close" id="close-mobile-toolbar">FECHAR <span>×</span></button>
     <div id="info"></div>
     <div id="hint">
@@ -307,6 +307,30 @@ scene.add(sun.target);
 const stage=new THREE.Mesh(new THREE.PlaneGeometry(2000,2000),new THREE.ShadowMaterial({opacity:0.2}));
 stage.rotation.x=-Math.PI/2;stage.position.y=-0.06;stage.receiveShadow=true;scene.add(stage);
 
+const QUALITY_MODES=[
+  {label:'Leve',pixelRatio:1,shadowSize:0,textures:false},
+  {label:'Equilibrada',pixelRatio:1.35,shadowSize:1024,textures:true},
+  {label:'Alta',pixelRatio:2,shadowSize:2048,textures:true}
+];
+let qualityIndex=Number.parseInt(localStorage.getItem('canil-render-quality')??(mobileQuery.matches?'0':'1'),10);
+if(!QUALITY_MODES[qualityIndex])qualityIndex=1;
+const qualityButton=document.getElementById('btn-quality');
+function applyQualityMode(updateMaterials=true){
+  const mode=QUALITY_MODES[qualityIndex];
+  renderer.setPixelRatio(Math.min(devicePixelRatio,mode.pixelRatio));renderer.setSize(W,H,false);
+  renderer.shadowMap.enabled=mode.shadowSize>0;sun.castShadow=mode.shadowSize>0;stage.receiveShadow=mode.shadowSize>0;
+  if(mode.shadowSize&&sun.shadow.mapSize.x!==mode.shadowSize){sun.shadow.map?.dispose();sun.shadow.map=null;sun.shadow.mapSize.set(mode.shadowSize,mode.shadowSize);}
+  if(updateMaterials)for(const mesh of meshMeta.keys()){
+    const material=mesh.material,quality=material.userData.qualityMaps;
+    if(quality){material.map=mode.textures?quality.map:null;material.bumpMap=mode.textures?quality.bumpMap:null;material.roughnessMap=mode.textures?quality.roughnessMap:null;material.needsUpdate=true;}
+    mesh.castShadow=mode.shadowSize>0&&mesh.userData.baseOpacity>=1;mesh.receiveShadow=mode.shadowSize>0;
+  }
+  qualityButton.textContent='Qualidade: '+mode.label;qualityButton.title=mode.label==='Leve'?'Modo leve ativo: sem texturas e sombras':`Modo ${mode.label.toLowerCase()} ativo`;
+  localStorage.setItem('canil-render-quality',String(qualityIndex));
+}
+qualityButton.addEventListener('click',()=>{qualityIndex=qualityIndex===1?0:qualityIndex===0?2:1;applyQualityMode();});
+applyQualityMode(false);
+
 // Grid
 const grid = new THREE.GridHelper(60, 60, 0x1a2332, 0x1a2332);
 grid.material.opacity = 0.5;
@@ -333,10 +357,11 @@ function surfaceUV(geometry,scale){
 const CANIL_MATERIAL_RULES=[
   {kind:'grass',test:(m,s)=>/grama|grass|relva|veget|paisag/i.test(s)},
   {kind:'roof',test:(m,s)=>m.type==='IFCROOF'||m.role==='ROOF'||/telhad|cobertura|fibrocimento|telha/i.test(s)},
-  {kind:'gate',test:(m,s)=>m.type==='IFCRAILING'||/port[aã]o|gradil|alambrado|cercamento/i.test(s)},
+  {kind:'fence',test:(m,s)=>/alambrado|cercamento/i.test(s)},
+  {kind:'gate',test:(m,s)=>/port[aã]o|gradil/i.test(s)},
   {kind:'window-frame',test:(m,s,o)=>m.type==='IFCWINDOW'&&o>=.72},
   {kind:'glass',test:(m,s,o)=>(m.type==='IFCWINDOW'&&o<.72)||/vidro|glass/i.test(s)||o<.72},
-  {kind:'stair',test:(m,s)=>/IFCSTAIR|IFCSTAIRFLIGHT/.test(m.type)||/escada|degrau/i.test(s)},
+  {kind:'stair',test:(m,s)=>/IFCSTAIR|IFCSTAIRFLIGHT/.test(m.type)||/escada|degrau|fire[_ ]?ladder|fire stair|ladder/i.test(s)},
   {kind:'wood',test:(m,s)=>/madeira|wood|compensado/i.test(s)},
   {kind:'door',test:(m,s)=>m.type==='IFCDOOR'||/porta/i.test(s)},
   {kind:'wall',test:m=>/^IFCWALL/.test(m.type)},
@@ -345,13 +370,14 @@ const CANIL_MATERIAL_RULES=[
 ];
 function canilMaterialKind(meta,opacity){const text=`${meta.name||''} ${meta.role||''} ${meta.type||''}`;return CANIL_MATERIAL_RULES.find(r=>r.test(meta,text,opacity))?.kind||'ifc';}
 function createCanilMaterial(meta,nativeColor,opacity,geometry){
-  const kind=canilMaterialKind(meta,opacity),presets={grass:{color:0x78934c,map:grassTexture,roughness:1,bump:.018,scale:1.3},roof:{color:0x515b63,map:roofSurfaceTexture,roughness:.82,bump:.028,scale:1.2},gate:{color:0x111417,roughness:.3,metalness:.82},'window-frame':{color:0xaeb7bf,roughness:.24,metalness:.78},glass:{color:0x91c4d4,roughness:.08,metalness:0},stair:{color:0xaeb7bf,roughness:.26,metalness:.76},wood:{color:0x8a6243,map:woodTexture,roughness:.72,bump:.012,scale:.65},door:{color:0x555c60,roughness:.38,metalness:.48},wall:{color:0xc8c6bf,map:plasterTexture,roughness:.92,bump:.006,scale:.8},concrete:{color:0x9a9b98,map:concreteTexture,roughness:.94,bump:.016,scale:1.15},metal:{roughness:.4,metalness:.62}},p=presets[kind]||{};
+  const kind=canilMaterialKind(meta,opacity),presets={grass:{color:0x78934c,map:grassTexture,roughness:1,bump:.018,scale:1.3},roof:{color:0x515b63,map:roofSurfaceTexture,roughness:.82,bump:.028,scale:1.2},fence:{color:0x8e9498,roughness:.72,metalness:.12},gate:{color:0x111417,roughness:.3,metalness:.82},'window-frame':{color:0x7f8b94,roughness:.2,metalness:.9},glass:{color:0x91c4d4,roughness:.08,metalness:0},stair:{color:0x87929a,roughness:.22,metalness:.86},wood:{color:0x8a6243,map:woodTexture,roughness:.72,bump:.012,scale:.65},door:{color:0x555c60,roughness:.38,metalness:.48},wall:{color:0xc8c6bf,map:plasterTexture,roughness:.92,bump:.006,scale:.8},concrete:{color:0x9a9b98,map:concreteTexture,roughness:.94,bump:.016,scale:1.15},metal:{roughness:.4,metalness:.62}},p=presets[kind]||{};
   const color=p.color!==undefined?new THREE.Color(p.color):(nativeColor?nativeColor.clone():new THREE.Color(COLORS[meta.type]||COLORS.DEFAULT));
   if(kind==='glass')return new THREE.MeshPhysicalMaterial({color,opacity:Math.min(opacity,.38),transparent:true,depthWrite:false,side:THREE.DoubleSide,roughness:.08,metalness:0,transmission:.18,thickness:.02,envMapIntensity:1.3,wireframe});
   if(p.map){surfaceUV(geometry,p.scale);}
   const material=new THREE.MeshStandardMaterial({color,map:p.map||null,opacity,transparent:opacity<1,depthWrite:opacity>=1,side:THREE.DoubleSide,wireframe,roughness:p.roughness??.82,metalness:p.metalness??0,envMapIntensity:(p.metalness||0)>.4?.95:.42});
   if(p.bump){material.bumpMap=p.map||grainTexture;material.bumpScale=p.bump;}if(kind==='wall'||kind==='concrete')material.roughnessMap=grainTexture;
-  material.userData.canilKind=kind;return material;
+  material.userData.canilKind=kind;material.userData.qualityMaps={map:material.map,bumpMap:material.bumpMap,roughnessMap:material.roughnessMap};
+  if(!QUALITY_MODES[qualityIndex].textures){material.map=null;material.bumpMap=null;material.roughnessMap=null;}return material;
 }
 
 // Câmera órbita
@@ -386,10 +412,15 @@ function leaveWalk(){
 function toggleWalk(){
   if(walking){leaveWalk();fitView();return;}
   if(!meshMeta.size)return;
-  const box=new THREE.Box3();for(const mesh of meshMeta.keys())box.expandByObject(mesh);
-  const center=box.getCenter(new THREE.Vector3());
-  camera.position.set(center.x,box.min.y+1.7,box.max.z+2);
-  walkYaw=0;walkPitch=0;walking=true;movementKeys.clear();walkLook();
+  const box=new THREE.Box3();for(const mesh of meshMeta.keys())if(mesh.visible&&mesh.parent.visible)box.expandByObject(mesh);
+  const entryDoors=new Map();
+  for(const [mesh,meta] of meshMeta)if(mesh.visible&&mesh.parent.visible&&meta.type==='IFCDOOR'&&/porta.*(?:02|2).*folhas.*visor/i.test(meta.name||'')){
+    if(!entryDoors.has(meta.id))entryDoors.set(meta.id,new THREE.Box3());entryDoors.get(meta.id).expandByObject(mesh);
+  }
+  const entry=[...entryDoors.values()].sort((a,b)=>b.getCenter(new THREE.Vector3()).x-a.getCenter(new THREE.Vector3()).x)[0];
+  if(entry){const doorCenter=entry.getCenter(new THREE.Vector3());camera.position.set(entry.max.x+5.5,box.min.y+1.7,doorCenter.z-4);const direction=doorCenter.clone().sub(camera.position);walkYaw=Math.atan2(-direction.x,-direction.z);}
+  else{const center=box.getCenter(new THREE.Vector3());camera.position.set(center.x,box.min.y+1.7,box.max.z+2);walkYaw=0;}
+  walkPitch=0;walking=true;movementKeys.clear();walkLook();
   speedButton.style.display='flex';
   walkButton.classList.add('on');walkButton.textContent='Voltar à órbita';walkButton.setAttribute('aria-pressed','true');
   navigationHint.textContent='W/A/S/D ou setas: andar • Arrastar: olhar • Shift: acelerar • Q/E: descer/subir • Esc: órbita';
