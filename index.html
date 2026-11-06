@@ -64,7 +64,11 @@
   #toolbar .tb.on{border-color:#52ba89;background:linear-gradient(145deg,#235e49,#194535);color:#c8ffdf;box-shadow:0 7px 20px #071c1499,inset 0 1px #ffffff16}
   #toolbar .tb .icon{width:29px;height:29px;padding:5px;border-radius:8px;flex-shrink:0;color:#88e1b0;background:#1d3a39;border:1px solid #315b50;filter:drop-shadow(0 2px 3px #0005)}
   #toolbar #btn-fit{border-color:#3e6f5b;background:linear-gradient(145deg,#1d4237,#183228)}#toolbar #btn-walk{border-color:#3f8065;background:linear-gradient(145deg,#255b47,#1b4335);color:#caffde}#toolbar #btn-quality[data-quality="leve"] .icon{color:#8fd4ff;background:#18384b;border-color:#2c637e}#toolbar #btn-quality[data-quality="alta"] .icon{color:#ffd477;background:#493a1c;border-color:#775c28}
+  #toolbar #btn-show-hidden.attention{border-color:#ffbd59;background:linear-gradient(145deg,#6e4819,#4d3215);color:#fff3d8;animation:hiddenPulse 1.6s ease-in-out infinite}#toolbar #btn-show-hidden.attention .icon{color:#ffe1a3;background:#6b4519;border-color:#c78936}#toolbar #btn-show-hidden.attention::after{color:#ffd27c}
+  @keyframes hiddenPulse{50%{border-color:#ffe0a2;box-shadow:0 0 0 4px #ffbd5924,0 8px 24px #0007}}
   .tool-section{display:flex;align-items:center;gap:8px;font-size:9px;font-weight:700;letter-spacing:1.9px;color:#91a9b9;padding:10px 5px 2px}.tool-section::after{content:'';height:1px;flex:1;background:linear-gradient(90deg,#38515f,transparent)}
+  #hidden-alert{position:absolute;top:14px;left:214px;z-index:9;display:flex;align-items:center;gap:12px;max-width:390px;padding:11px 12px;border:1px solid #e5a94d;border-radius:12px;background:#3b2b16f2;color:#fff2d4;box-shadow:0 12px 34px #0009;backdrop-filter:blur(12px)}#hidden-alert[hidden]{display:none}#hidden-alert strong{display:block;font-size:12px}#hidden-alert span{display:block;margin-top:2px;color:#dbc59d;font-size:10px;line-height:1.4}#hidden-alert button{flex-shrink:0;border:1px solid #f3bd67;border-radius:8px;background:#e8a640;color:#261806;padding:7px 10px;font-size:11px;font-weight:800}#hidden-alert button:hover{background:#ffc86f}
+  #shortcut-toast{position:absolute;left:50%;bottom:72px;z-index:12;transform:translate(-50%,12px);padding:9px 14px;border:1px solid #6d8fa2;border-radius:9px;background:#132b3aee;color:#e8f5fc;font-size:11px;font-weight:700;opacity:0;pointer-events:none;transition:opacity .18s,transform .18s}#shortcut-toast.show{opacity:1;transform:translate(-50%,0)}#shortcut-toast kbd{padding:2px 6px;border:1px solid #7498ac;border-radius:5px;background:#0b1720;color:#8ee2b4;font:700 11px inherit}
   .action{border:1px solid #375063;background:#192c3b;color:#dfebf4;padding:9px 12px;border-radius:7px;font-size:12px} .action:hover{background:#294457}
   .action.primary{background:#286b50;border-color:#358465;color:white} .action:disabled{opacity:.45;cursor:default}
   .model-card{margin:8px 12px;border:1px solid var(--border);border-radius:10px;background:#15222d;overflow:hidden}
@@ -90,7 +94,7 @@
     .mobile-panel-close{align-items:center;justify-content:space-between;min-height:40px;border:0;border-bottom:1px solid #2b414f;background:#101c27;color:#b9ccd8;padding:0 10px;font-size:11px;font-weight:700;letter-spacing:.8px}
     #toolbar{top:58px;left:8px;z-index:40;width:min(230px,78vw);max-height:calc(100% - 70px);overflow-y:auto;transform:translateX(calc(-100% - 20px));transition:transform .22s ease}#toolbar.mobile-open{transform:translateX(0);padding-top:49px}#toolbar .tb{width:100%!important;min-height:40px}#toolbar.mobile-open + #close-mobile-toolbar{display:flex;position:absolute;top:67px;left:17px;z-index:41;width:min(212px,calc(78vw - 18px))}#btn-walk,#btn-speed{display:none!important}
     #sidebar{position:absolute;top:0;right:0;bottom:0;z-index:40;width:min(330px,88vw);max-width:none;transform:translateX(100%);transition:transform .22s ease;box-shadow:-16px 0 45px #0009}#sidebar.mobile-open{transform:translateX(0)}#sidebar.mobile-open .mobile-panel-close{display:flex;width:100%;position:sticky;top:0;z-index:2}
-    #info{left:10px;right:10px;bottom:64px;max-width:none}#hint{bottom:8px;right:8px;max-width:calc(100% - 16px);font-size:9px;line-height:1.55;padding:6px 9px}#pdf-dialog{width:96vw;height:92dvh;padding:14px}.pdf-bar{flex-wrap:wrap}
+    #info{left:10px;right:10px;bottom:64px;max-width:none}#hint{bottom:8px;right:8px;max-width:calc(100% - 16px);font-size:9px;line-height:1.55;padding:6px 9px}#hidden-alert{top:68px;left:10px;right:10px;max-width:none}#shortcut-toast{bottom:66px}#pdf-dialog{width:96vw;height:92dvh;padding:14px}.pdf-bar{flex-wrap:wrap}
   }
 </style>
 </head>
@@ -143,10 +147,12 @@
       <button class="tb" id="btn-grid" aria-pressed="false"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 4h16v16H4zM4 10h16M4 15h16M10 4v16M15 4v16"/></svg><span class="tb-label">Grade de referência</span></button>
     </nav>
     <button class="mobile-panel-close" id="close-mobile-toolbar">FECHAR <span>×</span></button>
+    <div id="hidden-alert" role="status" aria-live="polite" hidden><div><strong id="hidden-alert-title">Elemento oculto</strong><span>Há componentes escondidos nesta visualização.</span></div><button id="hidden-alert-restore" type="button">Restaurar agora</button></div>
+    <div id="shortcut-toast" role="status" aria-live="polite">Pressione <kbd>H</kbd> novamente para ocultar</div>
     <div id="info"></div>
     <div id="hint">
       Girar: arrastar &nbsp;|&nbsp; Aproximar: rolar a roda do mouse<br>
-      Deslocar: Shift + arrastar &nbsp;|&nbsp; Selecionar: clique
+      Deslocar: Shift + arrastar &nbsp;|&nbsp; Selecionar: clique &nbsp;|&nbsp; Ocultar: H H
     </div>
   </div>
   <div id="sidebar">
@@ -554,19 +560,31 @@ const meshMeta  = new Map(); // mesh → meta
 let selected = null;
 const hiddenMeshes=new Set();
 const restoreHiddenButton=document.getElementById('btn-show-hidden');
+const hiddenAlert=document.getElementById('hidden-alert'),hiddenAlertTitle=document.getElementById('hidden-alert-title'),shortcutToast=document.getElementById('shortcut-toast');
+let shortcutToastTimer=0,lastHAt=0;
+function hiddenElementCount(){return new Set([...hiddenMeshes].map(mesh=>{const meta=meshMeta.get(mesh);return meta?`${meta.discipline}:${meta.id}`:mesh.uuid;})).size;}
+function showShortcutToast(html,duration=1100){clearTimeout(shortcutToastTimer);shortcutToast.innerHTML=html;shortcutToast.classList.add('show');shortcutToastTimer=setTimeout(()=>shortcutToast.classList.remove('show'),duration);}
 function updateHiddenButton(){
-  restoreHiddenButton.style.display=hiddenMeshes.size?'flex':'none';
-  restoreHiddenButton.querySelector('.tb-label').textContent=hiddenMeshes.size===1?'Restaurar oculto':`Restaurar ocultos (${hiddenMeshes.size})`;
+  const count=hiddenElementCount();restoreHiddenButton.style.display=count?'flex':'none';restoreHiddenButton.classList.toggle('attention',count>0);
+  restoreHiddenButton.querySelector('.tb-label').textContent=count===1?'Restaurar 1 oculto':`Restaurar ${count} ocultos`;
+  hiddenAlert.hidden=!count;if(count)hiddenAlertTitle.textContent=count===1?'1 elemento está oculto':`${count} elementos estão ocultos`;
 }
 function hideSelectedElement(){
   if(!selected)return;
   const meta=meshMeta.get(selected);if(!meta)return;
   for(const [mesh,item] of meshMeta)if(item.id===meta.id&&item.discipline===meta.discipline){mesh.material.emissive?.set(0);mesh.visible=false;hiddenMeshes.add(mesh);}
-  selected=null;infoEl.style.display='none';updateHiddenButton();
+  selected=null;infoEl.style.display='none';shortcutToast.classList.remove('show');updateHiddenButton();
 }
-restoreHiddenButton.addEventListener('click',()=>{
+function restoreAllHidden(){
   for(const mesh of hiddenMeshes)if(meshMeta.has(mesh))mesh.visible=true;
-  hiddenMeshes.clear();updateHiddenButton();
+  hiddenMeshes.clear();updateHiddenButton();showShortcutToast('Elementos restaurados',1000);
+}
+restoreHiddenButton.addEventListener('click',restoreAllHidden);document.getElementById('hidden-alert-restore').addEventListener('click',restoreAllHidden);
+window.addEventListener('keydown',e=>{
+  if(e.repeat||e.ctrlKey||e.altKey||e.metaKey||e.key.toLowerCase()!=='h'||e.target.closest?.('input,textarea,select,button')||document.querySelector('dialog[open]')||!selected)return;
+  e.preventDefault();const now=performance.now();
+  if(now-lastHAt<=800){lastHAt=0;hideSelectedElement();}
+  else{lastHAt=now;showShortcutToast('Pressione <kbd>H</kbd> novamente para ocultar',900);}
 });
 canvas.addEventListener('click', e=>{
   if(dragDistance>4) return;
@@ -586,7 +604,7 @@ canvas.addEventListener('click', e=>{
   for(const [label,value] of [['Nome',m.name||'Elemento'],['Disciplina',m.disciplineLabel||'Arquitetura'],['Categoria',categoryLabel(m.type)],['Pavimento',m.storey||'Não informado']]){
     const row=document.createElement('div'); row.textContent=`${label}: ${value}`; infoEl.appendChild(row);
   }
-  const hideButton=document.createElement('button');hideButton.className='action element-action';hideButton.textContent='Ocultar elemento';hideButton.title='Ocultar este elemento da visualização';hideButton.onclick=hideSelectedElement;infoEl.appendChild(hideButton);
+  const hideButton=document.createElement('button');hideButton.className='action element-action';hideButton.textContent='Ocultar elemento · H H';hideButton.title='Ocultar este elemento da visualização (atalho H H)';hideButton.onclick=hideSelectedElement;infoEl.appendChild(hideButton);
 });
 
 // ── CAMADAS ──────────────────────────────────────────────────────────────────
