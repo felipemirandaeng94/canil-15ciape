@@ -77,7 +77,17 @@
   dialog input:not([type=checkbox]){display:block;width:100%;padding:10px;margin:7px 0 14px;background:#0d1821;border:1px solid #3c5365;border-radius:6px;color:white} dialog label{font-size:12px}
   .dialog-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:18px} [hidden]{display:none!important} #upload-result{font-size:12px;white-space:pre-wrap;color:#9ee6bd;margin:12px 0}
   #pdf-dialog{width:92vw;height:90vh;max-width:1300px} #pdf-frame{width:100%;height:calc(100% - 70px);border:0;background:white;margin-top:12px} .pdf-bar{display:flex;align-items:center;gap:10px}.pdf-bar strong{flex:1;overflow:hidden;text-overflow:ellipsis}
-  @media(max-width:800px){#sidebar{width:240px}#toolbar .tb{width:112px!important}#info{left:12px;bottom:75px}#header{padding:0 8px;gap:6px}#header .institution-mark{width:55px;height:54px}#header .institution-mark.ime img{height:45px}#header .institution-mark.cia img{height:58px}#header .header-actions{gap:5px}#header .title h1{font-size:10px}.badge{display:none}#hint{font-size:10px;max-width:90%}}
+  #mobile-nav,#mobile-backdrop,.mobile-panel-close{display:none}.mobile-toggle{min-height:42px;border:1px solid #3c5668;background:#132432eF;color:#e3edf4;border-radius:9px;padding:0 13px;font-size:12px;font-weight:600;box-shadow:0 5px 18px #0007;backdrop-filter:blur(8px)}
+  @media(max-width:800px){
+    body{height:100dvh}#header{height:58px;padding:0 6px;gap:4px}#header .institution-mark{width:49px;height:52px}#header .institution-mark.ime img{height:42px}#header .institution-mark.cia img{height:55px}#header .project-identity{gap:3px;flex:1;overflow:hidden}#header .title{flex:1}#header .title h1{font-size:9px;letter-spacing:.15px}#header .title p{font-size:9px;margin-top:3px}#header .header-actions{display:none}
+    #main{position:relative;overflow:hidden}#canvas-wrap{width:100%;min-width:0}canvas{touch-action:none}
+    #mobile-nav{position:absolute;top:10px;left:10px;right:10px;z-index:22;display:flex;justify-content:space-between;gap:8px;pointer-events:none}#mobile-nav .mobile-toggle{pointer-events:auto}#mobile-nav .mobile-actions{display:flex;gap:7px}
+    #mobile-backdrop{position:absolute;inset:0;background:#02070ca8;z-index:25;backdrop-filter:blur(2px)}#main.mobile-panel-open #mobile-backdrop{display:block}
+    .mobile-panel-close{align-items:center;justify-content:space-between;min-height:40px;border:0;border-bottom:1px solid #2b414f;background:#101c27;color:#b9ccd8;padding:0 10px;font-size:11px;font-weight:700;letter-spacing:.8px}
+    #toolbar{top:58px;left:8px;z-index:40;width:min(230px,78vw);max-height:calc(100% - 70px);overflow-y:auto;transform:translateX(calc(-100% - 20px));transition:transform .22s ease}#toolbar.mobile-open{transform:translateX(0);padding-top:49px}#toolbar .tb{width:100%!important;min-height:40px}#toolbar.mobile-open + #close-mobile-toolbar{display:flex;position:absolute;top:67px;left:17px;z-index:41;width:min(212px,calc(78vw - 18px))}#btn-walk,#btn-speed{display:none!important}
+    #sidebar{position:absolute;top:0;right:0;bottom:0;z-index:40;width:min(330px,88vw);max-width:none;transform:translateX(100%);transition:transform .22s ease;box-shadow:-16px 0 45px #0009}#sidebar.mobile-open{transform:translateX(0)}#sidebar.mobile-open .mobile-panel-close{display:flex;width:100%;position:sticky;top:0;z-index:2}
+    #info{left:10px;right:10px;bottom:64px;max-width:none}#hint{bottom:8px;right:8px;max-width:calc(100% - 16px);font-size:9px;line-height:1.55;padding:6px 9px}#pdf-dialog{width:96vw;height:92dvh;padding:14px}.pdf-bar{flex-wrap:wrap}
+  }
 </style>
 </head>
 <body>
@@ -100,6 +110,10 @@
 <div id="main">
   <div id="canvas-wrap">
     <canvas id="c"></canvas>
+    <div id="mobile-nav" aria-label="Controles do modo mobile">
+      <button class="mobile-toggle" id="btn-mobile-tools" aria-controls="toolbar" aria-expanded="false">☰ Ferramentas</button>
+      <div class="mobile-actions"><button class="mobile-toggle" id="btn-mobile-pdfs">PDFs</button><button class="mobile-toggle" id="btn-mobile-layers" aria-controls="sidebar" aria-expanded="false">Disciplinas</button></div>
+    </div>
     <div id="status">
       <div class="spinner"></div>
       <div id="status-text">Carregando...</div>
@@ -111,6 +125,7 @@
 
     </div>
     <nav id="toolbar" aria-label="Ferramentas 3D"><span class="tool-section">VISUALIZAÇÃO</span><button class="tb" id="btn-fit" title="Enquadrar modelo"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 8V3h5m8 0h5v5M3 16v5h5m8 0h5v-5"/></svg>Enquadrar modelo</button><button class="tb" id="btn-top" title="Vista superior"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 4h16v16H4zM4 10h16M10 4v16"/></svg>Vista superior</button><button class="tb" id="btn-front" title="Vista frontal"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 20V8l8-5 8 5v12H4zM9 20v-8h6v8"/></svg>Vista frontal</button><button class="tb" id="btn-side" title="Vista lateral"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 20V5h14v15zM5 11h14"/></svg>Vista lateral</button><button class="tb" id="btn-wire" title="Linhas do modelo"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m12 2 9 5v10l-9 5-9-5V7zM3 7l9 5 9-5M12 12v10"/></svg>Linhas do modelo</button><button class="tb" id="btn-show-hidden" style="display:none" title="Restaurar todos os elementos ocultos"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z"/><circle cx="12" cy="12" r="2.5"/></svg>Restaurar ocultos</button><span class="tool-section">NAVEGAÇÃO</span><button class="tb" id="btn-walk" aria-pressed="false">Andar 3D</button><button class="tb" id="btn-speed" style="display:none" title="Alternar velocidade: 1×, 2× e 4×">Velocidade: 1×</button><button class="tb" id="btn-grid" aria-pressed="false">Grade de referência</button></nav>
+    <button class="mobile-panel-close" id="close-mobile-toolbar">FECHAR <span>×</span></button>
     <div id="info"></div>
     <div id="hint">
       Girar: arrastar &nbsp;|&nbsp; Aproximar: rolar a roda do mouse<br>
@@ -118,8 +133,10 @@
     </div>
   </div>
   <div id="sidebar">
+    <button class="mobile-panel-close" id="close-mobile-sidebar">FECHAR <span>×</span></button>
     <h2>DISCIPLINAS</h2><p class="panel-note">Sobreponha os modelos, isole disciplinas e ajuste a transparência para inspeção visual.</p><div id="layers"></div><p class="panel-note">Exporte todos os IFCs com as mesmas coordenadas. A sobreposição visual não substitui uma análise automática de interferências.</p><h2>PLANTAS · PDF</h2><div id="pdf-list">Consultando plantas...</div><button class="action" id="refresh-pdfs" style="margin:0 12px 20px">Atualizar plantas</button>
   </div>
+  <div id="mobile-backdrop" aria-hidden="true"></div>
 </div>
 
 <dialog id="admin-dialog"><h2>Publicar plantas</h2><p>Envie PDFs para a pasta <b>plantas</b> do projeto. Os arquivos ficarão públicos.</p><form id="pin-form"><label>Senha do painel<input id="admin-pin" type="password" inputmode="numeric" autocomplete="off" required></label><button class="action primary">Abrir painel</button></form><form id="upload-form" hidden><p>A senha abre este painel; a autorização de gravação é feita pelo GitHub. Use uma chave de acesso restrita a este repositório com permissão <b>Conteúdo: leitura e gravação</b>. A chave será apagada do campo ao enviar e não será salvo.</p><label>Chave de acesso do GitHub<input id="github-token" type="password" autocomplete="off" required></label><label>Plantas PDF (até 20 MB cada)<input id="pdf-files" type="file" accept=".pdf,application/pdf" multiple required></label><label><input id="replace-pdfs" type="checkbox"> Substituir PDFs existentes com o mesmo nome</label><div class="dialog-actions"><button class="action primary" id="send-pdfs">Enviar ao GitHub</button></div></form><div id="upload-result" role="status" aria-live="polite"></div><div class="dialog-actions"><button class="action" id="close-admin">Fechar</button></div></dialog>
@@ -228,6 +245,25 @@ const sTxt    = document.getElementById('status-text');
 const sPct    = document.getElementById('status-pct');
 const errBox  = document.getElementById('err-box');
 const infoEl  = document.getElementById('info');
+const mainEl=document.getElementById('main'),toolbarEl=document.getElementById('toolbar'),sidebarEl=document.getElementById('sidebar');
+const mobileToolsButton=document.getElementById('btn-mobile-tools'),mobileLayersButton=document.getElementById('btn-mobile-layers'),mobileBackdrop=document.getElementById('mobile-backdrop');
+const mobileQuery=matchMedia('(max-width:800px)');
+function closeMobilePanels(){
+  toolbarEl.classList.remove('mobile-open');sidebarEl.classList.remove('mobile-open');mainEl.classList.remove('mobile-panel-open');
+  mobileToolsButton.setAttribute('aria-expanded','false');mobileLayersButton.setAttribute('aria-expanded','false');
+  if(mobileQuery.matches){toolbarEl.inert=true;sidebarEl.inert=true;}else{toolbarEl.inert=false;sidebarEl.inert=false;}
+}
+function toggleMobilePanel(panel,button){
+  const willOpen=!panel.classList.contains('mobile-open');closeMobilePanels();
+  if(willOpen){panel.classList.add('mobile-open');mainEl.classList.add('mobile-panel-open');panel.inert=false;button.setAttribute('aria-expanded','true');}
+}
+mobileToolsButton.addEventListener('click',()=>toggleMobilePanel(toolbarEl,mobileToolsButton));
+mobileLayersButton.addEventListener('click',()=>toggleMobilePanel(sidebarEl,mobileLayersButton));
+mobileBackdrop.addEventListener('click',closeMobilePanels);
+document.getElementById('close-mobile-toolbar').addEventListener('click',closeMobilePanels);document.getElementById('close-mobile-sidebar').addEventListener('click',closeMobilePanels);
+toolbarEl.addEventListener('click',e=>{if(mobileQuery.matches&&e.target.closest('button'))closeMobilePanels();});
+document.getElementById('btn-mobile-pdfs').addEventListener('click',()=>{closeMobilePanels();document.getElementById('btn-admin').click();});
+mobileQuery.addEventListener('change',closeMobilePanels);closeMobilePanels();
 
 const scene    = new THREE.Scene();
 scene.background=new THREE.Color(0x0d1117);
@@ -311,7 +347,8 @@ const walkSpeeds=[1,2,4],speedButton=document.getElementById('btn-speed');
 speedButton.addEventListener('click',()=>{walkSpeedIndex=(walkSpeedIndex+1)%walkSpeeds.length;const label='Velocidade: '+walkSpeeds[walkSpeedIndex]+'×';speedButton.textContent=label;speedButton.setAttribute('aria-label','Velocidade de caminhada '+walkSpeeds[walkSpeedIndex]+'×');});
 const movementKeys=new Set();
 const navigationHint=document.getElementById('hint');
-const orbitHint=navigationHint.innerHTML;
+const desktopOrbitHint=navigationHint.innerHTML,mobileOrbitHint='1 dedo: girar e selecionar<br>2 dedos: aproximar e deslocar';
+let orbitHint=mobileQuery.matches?mobileOrbitHint:desktopOrbitHint;navigationHint.innerHTML=orbitHint;
 const walkButton=document.getElementById('btn-walk');
 function walkLook(){
   camera.lookAt(camera.position.clone().add(new THREE.Vector3(-Math.sin(walkYaw)*Math.cos(walkPitch),Math.sin(walkPitch),-Math.cos(walkYaw)*Math.cos(walkPitch))));
@@ -333,6 +370,7 @@ function toggleWalk(){
   navigationHint.textContent='W/A/S/D ou setas: andar • Arrastar: olhar • Shift: acelerar • Q/E: descer/subir • Esc: órbita';
 }
 walkButton.addEventListener('click',toggleWalk);
+mobileQuery.addEventListener('change',()=>{orbitHint=mobileQuery.matches?mobileOrbitHint:desktopOrbitHint;if(!walking)navigationHint.innerHTML=orbitHint;});
 const walkCodes=new Set(['KeyW','KeyA','KeyS','KeyD','ArrowUp','ArrowDown','ArrowLeft','ArrowRight','KeyQ','KeyE','ShiftLeft','ShiftRight']);
 window.addEventListener('keydown',e=>{
   if(!walking||e.target.closest?.('input,textarea,select'))return;
@@ -340,7 +378,7 @@ window.addEventListener('keydown',e=>{
   if(walkCodes.has(e.code)){e.preventDefault();movementKeys.add(e.code);}
 });
 window.addEventListener('keyup',e=>movementKeys.delete(e.code));
-window.addEventListener('blur',()=>{movementKeys.clear();dragging=false;});
+window.addEventListener('blur',()=>{movementKeys.clear();activePointers.clear();pinchDistance=0;dragging=false;});
 function stepWalk(dt){
   if(!walking)return;
   const forward=Number(movementKeys.has('KeyW')||movementKeys.has('ArrowUp'))-Number(movementKeys.has('KeyS')||movementKeys.has('ArrowDown'));
@@ -355,12 +393,30 @@ function stepWalk(dt){
 }
 
 // ── CONTROLES ────────────────────────────────────────────────────────────────
-let dragging=false, shifting=false, lx=0, ly=0, dragDistance=0;
-canvas.addEventListener('mousedown',  e=>{dragging=true; dragDistance=0; lx=e.clientX; ly=e.clientY;});
-canvas.addEventListener('mouseup',    ()=>dragging=false);
-canvas.addEventListener('mouseleave', ()=>dragging=false);
-canvas.addEventListener('mousemove',  e=>{
-  if(!dragging) return;
+let dragging=false, shifting=false, lx=0, ly=0, dragDistance=0,pinchDistance=0,pinchCenter={x:0,y:0};
+const activePointers=new Map();
+canvas.addEventListener('pointerdown',e=>{
+  canvas.setPointerCapture(e.pointerId);activePointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  if(activePointers.size===1){dragging=true;dragDistance=0;lx=e.clientX;ly=e.clientY;}
+  if(activePointers.size===2){const [a,b]=[...activePointers.values()];pinchDistance=Math.hypot(a.x-b.x,a.y-b.y);pinchCenter={x:(a.x+b.x)/2,y:(a.y+b.y)/2};dragging=false;dragDistance=99;}
+});
+function releasePointer(e){
+  activePointers.delete(e.pointerId);pinchDistance=0;
+  if(activePointers.size===1){const p=[...activePointers.values()][0];lx=p.x;ly=p.y;dragging=true;}else dragging=false;
+}
+canvas.addEventListener('pointerup',releasePointer);canvas.addEventListener('pointercancel',releasePointer);
+canvas.addEventListener('pointermove',e=>{
+  if(!activePointers.has(e.pointerId))return;activePointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  if(activePointers.size>=2){
+    const [a,b]=[...activePointers.values()],distance=Math.max(10,Math.hypot(a.x-b.x,a.y-b.y)),center={x:(a.x+b.x)/2,y:(a.y+b.y)/2};
+    if(!walking){
+      radius=Math.max(0.5,Math.min(500,radius*(pinchDistance/distance)));
+      const dx=center.x-pinchCenter.x,dy=center.y-pinchCenter.y,right=new THREE.Vector3().crossVectors(camera.getWorldDirection(new THREE.Vector3()),camera.up).normalize();
+      target.addScaledVector(right,-dx*radius*0.0015);target.addScaledVector(camera.up,dy*radius*0.0015);camUpdate();
+    }
+    pinchDistance=distance;pinchCenter=center;dragDistance=99;return;
+  }
+  if(!dragging)return;
   const dx=e.clientX-lx, dy=e.clientY-ly;
   dragDistance+=Math.abs(dx)+Math.abs(dy);
   lx=e.clientX; ly=e.clientY;
@@ -375,6 +431,7 @@ canvas.addEventListener('mousemove',  e=>{
   }
   camUpdate();
 });
+canvas.addEventListener('contextmenu',e=>e.preventDefault());
 canvas.addEventListener('wheel', e=>{
   e.preventDefault();
   if(walking)return;
