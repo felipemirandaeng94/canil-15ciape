@@ -57,10 +57,14 @@
   #header .title h1{color:#eef5f8;font-size:14px;letter-spacing:.5px} #header .title p{color:var(--muted);font-size:12px;margin-top:5px}
   #header .badge{border-radius:5px;letter-spacing:1px} #sidebar{width:310px;background:#101923;border-color:var(--border)}
   #sidebar h2{position:static;background:none;border:0;color:#dbe9f1;font-size:11px;padding:20px 18px 10px;letter-spacing:1.6px}
-  #toolbar{padding:9px;background:#101c27ed;border:1px solid var(--border);border-radius:12px;gap:4px;box-shadow:0 8px 30px #0005}
-  #toolbar .tb{width:140px!important;height:36px;border:0;border-radius:7px;justify-content:flex-start;padding:0 10px;gap:9px;color:#c4d1db;font-size:12px!important;background:transparent}
-  #toolbar .tb:hover{background:#243746;color:white} #toolbar .tb.on{background:#224e3f;color:#a1f2bf}
-  .tool-section{font-size:9px;letter-spacing:1.8px;color:#8094a5;padding:8px 10px 4px} .icon{width:18px;height:18px;flex-shrink:0}
+  #toolbar{width:190px;padding:11px;background:linear-gradient(155deg,#122330f2,#0d1923f2);border:1px solid #345061;border-radius:16px;gap:6px;box-shadow:0 18px 46px #0008,inset 0 1px #ffffff0a;backdrop-filter:blur(14px)}
+  #toolbar .tb{width:168px!important;min-height:44px;height:auto;border:1px solid #2a4353;border-radius:11px;justify-content:flex-start;padding:7px 9px;gap:10px;color:#d3e0e8;font-size:12px!important;font-weight:600;background:linear-gradient(145deg,#172b38,#12232f);box-shadow:0 4px 12px #0003,inset 0 1px #ffffff08;transition:transform .18s ease,border-color .18s ease,background .18s ease,color .18s ease,box-shadow .18s ease}
+  #toolbar .tb::after{content:'›';margin-left:auto;color:#688397;font-size:18px;font-weight:400;transition:transform .18s,color .18s}
+  #toolbar .tb:hover{transform:translateX(3px);border-color:#5b8aa2;background:linear-gradient(145deg,#203b4b,#172d3a);color:#fff;box-shadow:0 7px 18px #0005,inset 0 1px #ffffff10}#toolbar .tb:hover::after{transform:translateX(2px);color:#75dfab}
+  #toolbar .tb.on{border-color:#52ba89;background:linear-gradient(145deg,#235e49,#194535);color:#c8ffdf;box-shadow:0 7px 20px #071c1499,inset 0 1px #ffffff16}
+  #toolbar .tb .icon{width:29px;height:29px;padding:5px;border-radius:8px;flex-shrink:0;color:#88e1b0;background:#1d3a39;border:1px solid #315b50;filter:drop-shadow(0 2px 3px #0005)}
+  #toolbar #btn-fit{border-color:#3e6f5b;background:linear-gradient(145deg,#1d4237,#183228)}#toolbar #btn-walk{border-color:#3f8065;background:linear-gradient(145deg,#255b47,#1b4335);color:#caffde}#toolbar #btn-quality[data-quality="leve"] .icon{color:#8fd4ff;background:#18384b;border-color:#2c637e}#toolbar #btn-quality[data-quality="alta"] .icon{color:#ffd477;background:#493a1c;border-color:#775c28}
+  .tool-section{display:flex;align-items:center;gap:8px;font-size:9px;font-weight:700;letter-spacing:1.9px;color:#91a9b9;padding:10px 5px 2px}.tool-section::after{content:'';height:1px;flex:1;background:linear-gradient(90deg,#38515f,transparent)}
   .action{border:1px solid #375063;background:#192c3b;color:#dfebf4;padding:9px 12px;border-radius:7px;font-size:12px} .action:hover{background:#294457}
   .action.primary{background:#286b50;border-color:#358465;color:white} .action:disabled{opacity:.45;cursor:default}
   .model-card{margin:8px 12px;border:1px solid var(--border);border-radius:10px;background:#15222d;overflow:hidden}
@@ -123,7 +127,21 @@
       <p>O modelo <strong>CANIL.ifc</strong> não foi localizado automaticamente.<br>Publique o arquivo junto ao index.html no GitHub.</p>
 
     </div>
-    <nav id="toolbar" aria-label="Ferramentas 3D"><span class="tool-section">VISUALIZAÇÃO</span><button class="tb" id="btn-fit" title="Enquadrar modelo"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 8V3h5m8 0h5v5M3 16v5h5m8 0h5v-5"/></svg>Enquadrar modelo</button><button class="tb" id="btn-top" title="Vista superior"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 4h16v16H4zM4 10h16M10 4v16"/></svg>Vista superior</button><button class="tb" id="btn-front" title="Vista frontal"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 20V8l8-5 8 5v12H4zM9 20v-8h6v8"/></svg>Vista frontal</button><button class="tb" id="btn-side" title="Vista lateral"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 20V5h14v15zM5 11h14"/></svg>Vista lateral</button><button class="tb" id="btn-wire" title="Linhas do modelo"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m12 2 9 5v10l-9 5-9-5V7zM3 7l9 5 9-5M12 12v10"/></svg>Linhas do modelo</button><button class="tb" id="btn-show-hidden" style="display:none" title="Restaurar todos os elementos ocultos"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z"/><circle cx="12" cy="12" r="2.5"/></svg>Restaurar ocultos</button><span class="tool-section">DESEMPENHO</span><button class="tb" id="btn-quality" title="Alternar qualidade da renderização">Qualidade: Equilibrada</button><span class="tool-section">NAVEGAÇÃO</span><button class="tb" id="btn-walk" aria-pressed="false">Andar 3D</button><button class="tb" id="btn-speed" style="display:none" title="Alternar velocidade: 1×, 2× e 4×">Velocidade: 1×</button><button class="tb" id="btn-grid" aria-pressed="false">Grade de referência</button></nav>
+    <nav id="toolbar" aria-label="Ferramentas 3D">
+      <span class="tool-section">VISUALIZAÇÃO</span>
+      <button class="tb" id="btn-fit" title="Enquadrar todo o modelo"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 8V3h5m8 0h5v5M3 16v5h5m8 0h5v-5"/></svg><span class="tb-label">Enquadrar modelo</span></button>
+      <button class="tb" id="btn-top" title="Olhar o projeto por cima"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 4h16v16H4zM4 10h16M10 4v16"/></svg><span class="tb-label">Vista superior</span></button>
+      <button class="tb" id="btn-front" title="Abrir a vista frontal"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 20V8l8-5 8 5v12H4zM9 20v-8h6v8"/></svg><span class="tb-label">Vista frontal</span></button>
+      <button class="tb" id="btn-side" title="Abrir a vista lateral"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M5 20V5h14v15zM5 11h14"/></svg><span class="tb-label">Vista lateral</span></button>
+      <button class="tb" id="btn-wire" title="Destacar as linhas da geometria"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="m12 2 9 5v10l-9 5-9-5V7zM3 7l9 5 9-5M12 12v10"/></svg><span class="tb-label">Linhas do modelo</span></button>
+      <button class="tb" id="btn-show-hidden" style="display:none" title="Restaurar todos os elementos ocultos"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z"/><circle cx="12" cy="12" r="2.5"/></svg><span class="tb-label">Restaurar ocultos</span></button>
+      <span class="tool-section">DESEMPENHO</span>
+      <button class="tb" id="btn-quality" title="Alternar qualidade da renderização"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M5 17a8 8 0 1 1 14 0M12 12l4-4"/><circle cx="12" cy="17" r="1"/></svg><span class="tb-label">Equilibrada</span></button>
+      <span class="tool-section">NAVEGAÇÃO</span>
+      <button class="tb" id="btn-walk" aria-pressed="false"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="5" r="2"/><path d="m9 22 1-7-3-3 2-4 3 3 3-1 2 3-4 2-1 7"/></svg><span class="tb-label">Explorar em 3D</span></button>
+      <button class="tb" id="btn-speed" style="display:none" title="Alternar velocidade: 1×, 2× e 4×"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M13 2 5 14h6l-1 8 9-13h-6z"/></svg><span class="tb-label">Velocidade 1×</span></button>
+      <button class="tb" id="btn-grid" aria-pressed="false"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 4h16v16H4zM4 10h16M4 15h16M10 4v16M15 4v16"/></svg><span class="tb-label">Grade de referência</span></button>
+    </nav>
     <button class="mobile-panel-close" id="close-mobile-toolbar">FECHAR <span>×</span></button>
     <div id="info"></div>
     <div id="hint">
@@ -325,7 +343,7 @@ function applyQualityMode(updateMaterials=true){
     if(quality){material.map=mode.textures?quality.map:null;material.bumpMap=mode.textures?quality.bumpMap:null;material.roughnessMap=mode.textures?quality.roughnessMap:null;material.needsUpdate=true;}
     mesh.castShadow=mode.shadowSize>0&&mesh.userData.baseOpacity>=1;mesh.receiveShadow=mode.shadowSize>0;
   }
-  qualityButton.textContent='Qualidade: '+mode.label;qualityButton.title=mode.label==='Leve'?'Modo leve ativo: sem texturas e sombras':`Modo ${mode.label.toLowerCase()} ativo`;
+  qualityButton.querySelector('.tb-label').textContent=mode.label;qualityButton.dataset.quality=mode.label.toLowerCase();qualityButton.setAttribute('aria-label','Qualidade da renderização: '+mode.label);qualityButton.title=mode.label==='Leve'?'Modo leve ativo: sem texturas e sombras':`Modo ${mode.label.toLowerCase()} ativo`;
   localStorage.setItem('canil-render-quality',String(qualityIndex));
 }
 qualityButton.addEventListener('click',()=>{qualityIndex=qualityIndex===1?0:qualityIndex===0?2:1;applyQualityMode();});
@@ -395,7 +413,7 @@ camUpdate();
 
 let walking=false,walkYaw=0,walkPitch=0,walkSpeedIndex=0;
 const walkSpeeds=[1,2,4],speedButton=document.getElementById('btn-speed');
-speedButton.addEventListener('click',()=>{walkSpeedIndex=(walkSpeedIndex+1)%walkSpeeds.length;const label='Velocidade: '+walkSpeeds[walkSpeedIndex]+'×';speedButton.textContent=label;speedButton.setAttribute('aria-label','Velocidade de caminhada '+walkSpeeds[walkSpeedIndex]+'×');});
+speedButton.addEventListener('click',()=>{walkSpeedIndex=(walkSpeedIndex+1)%walkSpeeds.length;const label='Velocidade '+walkSpeeds[walkSpeedIndex]+'×';speedButton.querySelector('.tb-label').textContent=label;speedButton.setAttribute('aria-label','Velocidade de caminhada '+walkSpeeds[walkSpeedIndex]+'×');});
 const movementKeys=new Set();
 const navigationHint=document.getElementById('hint');
 const desktopOrbitHint=navigationHint.innerHTML,mobileOrbitHint='1 dedo: girar e selecionar<br>2 dedos: aproximar e deslocar';
@@ -407,7 +425,7 @@ function walkLook(){
 function leaveWalk(){
   speedButton.style.display='none';
   walking=false;movementKeys.clear();walkButton.classList.remove('on');
-  walkButton.textContent='Andar 3D';walkButton.setAttribute('aria-pressed','false');navigationHint.innerHTML=orbitHint;
+  walkButton.querySelector('.tb-label').textContent='Explorar em 3D';walkButton.setAttribute('aria-pressed','false');navigationHint.innerHTML=orbitHint;
 }
 function toggleWalk(){
   if(walking){leaveWalk();fitView();return;}
@@ -422,7 +440,7 @@ function toggleWalk(){
   else{const center=box.getCenter(new THREE.Vector3());camera.position.set(center.x,box.min.y+1.7,box.max.z+2);walkYaw=0;}
   walkPitch=0;walking=true;movementKeys.clear();walkLook();
   speedButton.style.display='flex';
-  walkButton.classList.add('on');walkButton.textContent='Voltar à órbita';walkButton.setAttribute('aria-pressed','true');
+  walkButton.classList.add('on');walkButton.querySelector('.tb-label').textContent='Voltar à órbita';walkButton.setAttribute('aria-pressed','true');
   navigationHint.textContent='W/A/S/D ou setas: andar • Arrastar: olhar • Shift: acelerar • Q/E: descer/subir • Esc: órbita';
 }
 walkButton.addEventListener('click',toggleWalk);
@@ -538,7 +556,7 @@ const hiddenMeshes=new Set();
 const restoreHiddenButton=document.getElementById('btn-show-hidden');
 function updateHiddenButton(){
   restoreHiddenButton.style.display=hiddenMeshes.size?'flex':'none';
-  restoreHiddenButton.lastChild.textContent=hiddenMeshes.size===1?'Restaurar oculto':`Restaurar ocultos (${hiddenMeshes.size})`;
+  restoreHiddenButton.querySelector('.tb-label').textContent=hiddenMeshes.size===1?'Restaurar oculto':`Restaurar ocultos (${hiddenMeshes.size})`;
 }
 function hideSelectedElement(){
   if(!selected)return;
