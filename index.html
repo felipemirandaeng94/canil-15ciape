@@ -78,11 +78,11 @@
   .model-controls button{font-size:11px;padding:5px 9px}.model-card details{border-top:1px solid #283a46}.model-card summary{cursor:pointer;padding:9px 12px;color:#9db2c0;font-size:11px}
   .li{font-size:11px;border-color:#21313c;padding:8px 12px;gap:7px}.li-name{text-transform:none;color:#b9cbd7;white-space:normal;line-height:1.45}.li input{accent-color:#65dba3}.li-cnt{color:#91a9b9}
   .panel-note{margin:8px 16px 14px;font-size:11px;line-height:1.6;color:#8fa5b5} #hint{color:#cbd8e2;border-color:#293d4c;max-width:calc(100% - 190px)}
-  #info{left:178px;max-width:340px;border-color:#446576;background:#111d29ee} #pdf-list{padding:0 12px 16px;display:grid;gap:7px}
+  #info{left:178px;max-width:340px;border-color:#446576;background:#111d29ee} #pdf-list{padding:0 12px 16px;display:grid;gap:9px}
   #info .element-action{display:block;width:100%;margin-top:10px;background:#573338;border-color:#8c4b52;color:#ffe8e8}#info .element-action:hover{background:#714047}
-  .pdf-link{text-align:left;overflow-wrap:anywhere} dialog{color:#e6edf3;background:#13212c;border:1px solid #416078;border-radius:14px;padding:24px;margin:auto;width:min(520px,94vw);box-shadow:0 30px 100px #0009}
+  .pdf-folder{border:1px solid #2d4656;border-radius:11px;background:linear-gradient(145deg,#172733,#13212b);overflow:hidden;box-shadow:0 5px 16px #0003}.pdf-folder[open]{border-color:#477086}.pdf-folder summary{list-style:none;display:grid;grid-template-columns:30px 1fr auto;align-items:center;gap:9px;padding:11px 10px;cursor:pointer;user-select:none}.pdf-folder summary::-webkit-details-marker{display:none}.pdf-folder summary:hover{background:#1c303d}.pdf-folder-icon{position:relative;width:24px;height:17px;border:1px solid #55bb89;border-radius:3px;background:#1e5a43}.pdf-folder-icon::before{content:'';position:absolute;left:2px;top:-5px;width:10px;height:5px;border:1px solid #55bb89;border-bottom:0;border-radius:3px 3px 0 0;background:#1e5a43}.pdf-folder-title{font-size:12px;font-weight:700;color:#e4eff5}.pdf-folder-subtitle{display:block;margin-top:2px;font-size:9px;font-weight:400;color:#8fa8b7;line-height:1.3}.pdf-folder-count{font-size:9px;color:#9fc1d2;border:1px solid #355366;border-radius:10px;padding:3px 6px;white-space:nowrap}.pdf-folder-body{display:grid;gap:6px;padding:0 9px 10px;border-top:1px solid #243b49}.pdf-folder-state{padding:11px 3px 2px;color:#8299a8;font-size:10px;line-height:1.45}.pdf-link{text-align:left;overflow-wrap:anywhere;margin-top:7px;padding:8px 9px;line-height:1.35}.pdf-link+.pdf-link{margin-top:0} dialog{color:#e6edf3;background:#13212c;border:1px solid #416078;border-radius:14px;padding:24px;margin:auto;width:min(520px,94vw);box-shadow:0 30px 100px #0009}
   dialog::backdrop{background:#030a12bb;backdrop-filter:blur(4px)} dialog h2{font-size:20px;margin:0 0 10px} dialog p{font-size:12px;color:#a9becd;line-height:1.6;margin-bottom:14px}
-  dialog input:not([type=checkbox]){display:block;width:100%;padding:10px;margin:7px 0 14px;background:#0d1821;border:1px solid #3c5365;border-radius:6px;color:white} dialog label{font-size:12px}
+  dialog input:not([type=checkbox]),dialog select{display:block;width:100%;padding:10px;margin:7px 0 14px;background:#0d1821;border:1px solid #3c5365;border-radius:6px;color:white} dialog label{font-size:12px}
   .dialog-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:18px} [hidden]{display:none!important} #upload-result{font-size:12px;white-space:pre-wrap;color:#9ee6bd;margin:12px 0}
   #pdf-dialog{width:92vw;height:90vh;max-width:1300px} #pdf-frame{width:100%;height:calc(100% - 70px);border:0;background:white;margin-top:12px} .pdf-bar{display:flex;align-items:center;gap:10px}.pdf-bar strong{flex:1;overflow:hidden;text-overflow:ellipsis}
   #mobile-nav,#mobile-backdrop,.mobile-panel-close{display:none}.mobile-toggle{min-height:42px;border:1px solid #3c5668;background:#132432eF;color:#e3edf4;border-radius:9px;padding:0 13px;font-size:12px;font-weight:600;box-shadow:0 5px 18px #0007;backdrop-filter:blur(8px)}
@@ -119,7 +119,7 @@
     <canvas id="c"></canvas>
     <div id="mobile-nav" aria-label="Controles do modo mobile">
       <button class="mobile-toggle" id="btn-mobile-tools" aria-controls="toolbar" aria-expanded="false">☰ Ferramentas</button>
-      <div class="mobile-actions"><button class="mobile-toggle" id="btn-mobile-pdfs">PDFs</button><button class="mobile-toggle" id="btn-mobile-layers" aria-controls="sidebar" aria-expanded="false">Disciplinas</button></div>
+      <div class="mobile-actions"><button class="mobile-toggle" id="btn-mobile-pdfs" aria-controls="sidebar" aria-expanded="false">PDFs</button><button class="mobile-toggle" id="btn-mobile-layers" aria-controls="sidebar" aria-expanded="false">Disciplinas</button></div>
     </div>
     <div id="status">
       <div class="spinner"></div>
@@ -162,7 +162,7 @@
   <div id="mobile-backdrop" aria-hidden="true"></div>
 </div>
 
-<dialog id="admin-dialog"><h2>Publicar plantas</h2><p>Envie PDFs para a pasta <b>plantas</b> do projeto. Os arquivos ficarão públicos.</p><form id="pin-form"><label>Senha do painel<input id="admin-pin" type="password" inputmode="numeric" autocomplete="off" required></label><button class="action primary">Abrir painel</button></form><form id="upload-form" hidden><p>A senha abre este painel; a autorização de gravação é feita pelo GitHub. Use uma chave de acesso restrita a este repositório com permissão <b>Conteúdo: leitura e gravação</b>. A chave será apagada do campo ao enviar e não será salvo.</p><label>Chave de acesso do GitHub<input id="github-token" type="password" autocomplete="off" required></label><label>Plantas PDF (até 20 MB cada)<input id="pdf-files" type="file" accept=".pdf,application/pdf" multiple required></label><label><input id="replace-pdfs" type="checkbox"> Substituir PDFs existentes com o mesmo nome</label><div class="dialog-actions"><button class="action primary" id="send-pdfs">Enviar ao GitHub</button></div></form><div id="upload-result" role="status" aria-live="polite"></div><div class="dialog-actions"><button class="action" id="close-admin">Fechar</button></div></dialog>
+<dialog id="admin-dialog"><h2>Publicar plantas</h2><p>Escolha a disciplina e envie as pranchas em PDF. Os arquivos ficarão públicos dentro da pasta correspondente.</p><form id="pin-form"><label>Senha do painel<input id="admin-pin" type="password" inputmode="numeric" autocomplete="off" required></label><button class="action primary">Abrir painel</button></form><form id="upload-form" hidden><p>A senha abre este painel; a autorização de gravação é feita pelo GitHub. Use uma chave de acesso restrita a este repositório com permissão <b>Conteúdo: leitura e gravação</b>. A chave será apagada do campo ao enviar e não será salva.</p><label>Chave de acesso do GitHub<input id="github-token" type="password" autocomplete="off" required></label><label>Disciplina<select id="pdf-category" required><option value="arquitetonico">Arquitetônico</option><option value="estrutural">Estrutural</option><option value="eletrico">Elétrico</option><option value="hidrossanitario">Hidrossanitário</option></select></label><label>Pranchas PDF (até 20 MB cada)<input id="pdf-files" type="file" accept=".pdf,application/pdf" multiple required></label><label><input id="replace-pdfs" type="checkbox"> Substituir PDFs existentes com o mesmo nome</label><div class="dialog-actions"><button class="action primary" id="send-pdfs">Enviar ao GitHub</button></div></form><div id="upload-result" role="status" aria-live="polite"></div><div class="dialog-actions"><button class="action" id="close-admin">Fechar</button></div></dialog>
 <dialog id="pdf-dialog"><div class="pdf-bar"><strong id="pdf-title">Planta</strong><a class="action" id="pdf-download" download>Baixar PDF</a><button class="action" id="close-pdf">Fechar</button></div><iframe id="pdf-frame" title="Visualização da planta PDF"></iframe></dialog>
 <script type="importmap">
 {"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"}}
@@ -269,11 +269,11 @@ const sPct    = document.getElementById('status-pct');
 const errBox  = document.getElementById('err-box');
 const infoEl  = document.getElementById('info');
 const mainEl=document.getElementById('main'),toolbarEl=document.getElementById('toolbar'),sidebarEl=document.getElementById('sidebar');
-const mobileToolsButton=document.getElementById('btn-mobile-tools'),mobileLayersButton=document.getElementById('btn-mobile-layers'),mobileBackdrop=document.getElementById('mobile-backdrop');
+const mobileToolsButton=document.getElementById('btn-mobile-tools'),mobilePdfButton=document.getElementById('btn-mobile-pdfs'),mobileLayersButton=document.getElementById('btn-mobile-layers'),mobileBackdrop=document.getElementById('mobile-backdrop');
 const mobileQuery=matchMedia('(max-width:800px)');
 function closeMobilePanels(){
   toolbarEl.classList.remove('mobile-open');sidebarEl.classList.remove('mobile-open');mainEl.classList.remove('mobile-panel-open');
-  mobileToolsButton.setAttribute('aria-expanded','false');mobileLayersButton.setAttribute('aria-expanded','false');
+  mobileToolsButton.setAttribute('aria-expanded','false');mobilePdfButton.setAttribute('aria-expanded','false');mobileLayersButton.setAttribute('aria-expanded','false');
   if(mobileQuery.matches){toolbarEl.inert=true;sidebarEl.inert=true;}else{toolbarEl.inert=false;sidebarEl.inert=false;}
 }
 function toggleMobilePanel(panel,button){
@@ -285,7 +285,7 @@ mobileLayersButton.addEventListener('click',()=>toggleMobilePanel(sidebarEl,mobi
 mobileBackdrop.addEventListener('click',closeMobilePanels);
 document.getElementById('close-mobile-toolbar').addEventListener('click',closeMobilePanels);document.getElementById('close-mobile-sidebar').addEventListener('click',closeMobilePanels);
 toolbarEl.addEventListener('click',e=>{if(mobileQuery.matches&&e.target.closest('button'))closeMobilePanels();});
-document.getElementById('btn-mobile-pdfs').addEventListener('click',()=>{closeMobilePanels();document.getElementById('btn-admin').click();});
+mobilePdfButton.addEventListener('click',()=>{toggleMobilePanel(sidebarEl,mobilePdfButton);sidebarEl.scrollTop=0;});
 mobileQuery.addEventListener('change',closeMobilePanels);closeMobilePanels();
 
 const scene    = new THREE.Scene();
@@ -829,6 +829,12 @@ const frameClock=new THREE.Clock();
 (function loop(){ requestAnimationFrame(loop);stepWalk(Math.min(frameClock.getDelta(),0.05)); renderer.render(scene,camera); })();
 
 const REPO_API='https://api.github.com/repos/felipemirandaeng94/canil-15ciape/contents/';
+const PDF_CATEGORIES=[
+  {slug:'arquitetonico',label:'Arquitetônico',subtitle:'Plantas, fachadas e vistas'},
+  {slug:'estrutural',label:'Estrutural',subtitle:'Formas e armações'},
+  {slug:'eletrico',label:'Elétrico',subtitle:'Instalações e distribuição'},
+  {slug:'hidrossanitario',label:'Hidrossanitário',subtitle:'Água, esgoto sanitário e águas pluviais'}
+];
 const admin=document.getElementById('admin-dialog'),pinForm=document.getElementById('pin-form'),uploadForm=document.getElementById('upload-form'),uploadResult=document.getElementById('upload-result');
 let uploadBusy=false,pdfObjectURL=null;
 document.getElementById('btn-admin').onclick=()=>{leaveWalk();admin.showModal();document.getElementById('admin-pin').focus();};
@@ -837,12 +843,13 @@ function closeAdmin(){if(uploadBusy)return;admin.close();}
 document.getElementById('close-admin').onclick=closeAdmin;
 admin.addEventListener('cancel',e=>{if(uploadBusy)e.preventDefault();});
 admin.addEventListener('close',()=>{pinForm.reset();uploadForm.reset();pinForm.hidden=false;uploadForm.hidden=true;uploadResult.textContent='';});
-async function publishPdf(file,token,replace,request=fetch){
+async function publishPdf(file,token,replace,category,request=fetch){
   if(!/\.pdf$/i.test(file.name)||file.size>20*1024*1024)throw new Error('Escolha um PDF de até 20 MB: '+file.name);
+  if(!PDF_CATEGORIES.some(item=>item.slug===category))throw new Error('Disciplina de destino inválida.');
   const bytes=new Uint8Array(await file.arrayBuffer());
   if(new TextDecoder().decode(bytes.slice(0,5))!=='%PDF-')throw new Error('Conteúdo inválido: '+file.name);
   const name=file.name.normalize('NFC').replace(/[^\p{L}\p{N}._ -]/gu,'_');
-  const url=REPO_API+'plantas/'+encodeURIComponent(name);
+  const url=REPO_API+'plantas/'+encodeURIComponent(category)+'/'+encodeURIComponent(name);
   const headers={Accept:'application/vnd.github+json',Authorization:'Bearer '+token,'X-GitHub-Api-Version':'2022-11-28'};
   const current=await request(url+'?ref=main',{headers,cache:'no-store',signal:AbortSignal.timeout(30000)});
   let sha;
@@ -856,12 +863,12 @@ async function publishPdf(file,token,replace,request=fetch){
 uploadForm.onsubmit=async e=>{
   e.preventDefault();if(uploadBusy)return;
   let token=document.getElementById('github-token').value.trim();document.getElementById('github-token').value='';
-  const files=Array.from(document.getElementById('pdf-files').files),replace=document.getElementById('replace-pdfs').checked;
+  const files=Array.from(document.getElementById('pdf-files').files),replace=document.getElementById('replace-pdfs').checked,category=document.getElementById('pdf-category').value;
   if(!token||!files.length){uploadResult.textContent='Informe a chave de acesso e selecione os PDFs.';return;}
   uploadBusy=true;document.getElementById('send-pdfs').disabled=true;document.getElementById('close-admin').disabled=true;
   let completed=[];
   try{
-    for(const file of files){uploadResult.textContent=completed.map(n=>'Enviado: '+n).join('\n')+'\nEnviando '+file.name+'...';completed.push(await publishPdf(file,token,replace));}
+    for(const file of files){uploadResult.textContent=completed.map(n=>'Enviado: '+n).join('\n')+'\nEnviando '+file.name+'...';completed.push(await publishPdf(file,token,replace,category));}
     uploadResult.textContent=completed.map(n=>'Enviado: '+n).join('\n')+'\nOs PDFs já estão no GitHub. A publicação no Pages pode levar alguns minutos.';
     document.getElementById('pdf-files').value='';await listPdfs();
   }catch(error){uploadResult.textContent=completed.map(n=>'Enviado: '+n).join('\n')+'\n'+error.message;}
@@ -870,14 +877,15 @@ uploadForm.onsubmit=async e=>{
 const pdfDialog=document.getElementById('pdf-dialog');
 document.getElementById('close-pdf').onclick=()=>pdfDialog.close();
 pdfDialog.addEventListener('close',()=>{document.getElementById('pdf-frame').src='about:blank';if(pdfObjectURL)URL.revokeObjectURL(pdfObjectURL);pdfObjectURL=null;});
-async function viewPdf(name,button){
+async function viewPdf(category,name,button){
   button.disabled=true;
   try{
-    const response=await fetch(REPO_API+'plantas/'+encodeURIComponent(name)+'?ref=main',{headers:{Accept:'application/vnd.github.raw+json'},signal:AbortSignal.timeout(60000)});
+    const response=await fetch(REPO_API+'plantas/'+encodeURIComponent(category)+'/'+encodeURIComponent(name)+'?ref=main',{headers:{Accept:'application/vnd.github.raw+json'},signal:AbortSignal.timeout(60000)});
     if(!response.ok)throw new Error('PDF indisponível: HTTP '+response.status);
     const data=await response.arrayBuffer();if(new TextDecoder().decode(new Uint8Array(data,0,Math.min(5,data.byteLength)))!=='%PDF-')throw new Error('O arquivo recebido não é PDF.');
     if(pdfObjectURL)URL.revokeObjectURL(pdfObjectURL);pdfObjectURL=URL.createObjectURL(new Blob([data],{type:'application/pdf'}));
-    document.getElementById('pdf-title').textContent=name;document.getElementById('pdf-frame').src=pdfObjectURL;
+    const categoryLabel=PDF_CATEGORIES.find(item=>item.slug===category)?.label||'Planta';
+    document.getElementById('pdf-title').textContent=categoryLabel+' — '+name;document.getElementById('pdf-frame').src=pdfObjectURL;
     const download=document.getElementById('pdf-download');download.href=pdfObjectURL;download.download=name;
     leaveWalk();pdfDialog.showModal();
   }catch(error){button.textContent=name+' — '+error.message;}
@@ -885,14 +893,22 @@ async function viewPdf(name,button){
 }
 async function listPdfs(){
   const list=document.getElementById('pdf-list');list.textContent='Consultando plantas...';
-  try{
-    const response=await fetch(REPO_API+'plantas?ref=main',{cache:'no-store',signal:AbortSignal.timeout(30000)});
-    if(response.status===404){list.textContent='Nenhuma planta publicada ainda.';return;}
-    if(!response.ok)throw new Error('Consulta indisponível (HTTP '+response.status+'). Use Atualizar plantas para tentar novamente.');
-    const entries=(await response.json()).filter(e=>e.type==='file'&&/\.pdf$/i.test(e.name)).sort((a,b)=>a.name.localeCompare(b.name,'pt-BR'));
-    list.replaceChildren();if(!entries.length){list.textContent='Nenhuma planta publicada ainda.';return;}
-    for(const entry of entries){const button=document.createElement('button');button.className='action pdf-link';button.textContent=entry.name;button.onclick=()=>viewPdf(entry.name,button);list.appendChild(button);}
-  }catch(error){list.textContent=error.message;}
+  list.replaceChildren();
+  const loads=PDF_CATEGORIES.map(async(category,index)=>{
+    const folder=document.createElement('details');folder.className='pdf-folder';folder.open=index===0;
+    const summary=document.createElement('summary'),icon=document.createElement('span'),heading=document.createElement('span'),title=document.createElement('span'),subtitle=document.createElement('span'),count=document.createElement('span'),body=document.createElement('div');
+    icon.className='pdf-folder-icon';icon.setAttribute('aria-hidden','true');title.className='pdf-folder-title';title.textContent=category.label;subtitle.className='pdf-folder-subtitle';subtitle.textContent=category.subtitle;count.className='pdf-folder-count';count.textContent='Consultando';body.className='pdf-folder-body';heading.append(title,subtitle);summary.append(icon,heading,count);folder.append(summary,body);list.appendChild(folder);
+    try{
+      const response=await fetch(REPO_API+'plantas/'+encodeURIComponent(category.slug)+'?ref=main',{cache:'no-store',signal:AbortSignal.timeout(30000)});
+      if(response.status===404){count.textContent='0 pranchas';body.innerHTML='<p class="pdf-folder-state">Ainda sem pranchas publicadas.</p>';return;}
+      if(!response.ok)throw new Error('Consulta indisponível (HTTP '+response.status+').');
+      const entries=(await response.json()).filter(entry=>entry.type==='file'&&/\.pdf$/i.test(entry.name)).sort((a,b)=>a.name.localeCompare(b.name,'pt-BR',{numeric:true}));
+      count.textContent=entries.length+' '+(entries.length===1?'prancha':'pranchas');
+      if(!entries.length){body.innerHTML='<p class="pdf-folder-state">Ainda sem pranchas publicadas.</p>';return;}
+      for(const entry of entries){const button=document.createElement('button');button.className='action pdf-link';button.textContent=entry.name;button.onclick=()=>viewPdf(category.slug,entry.name,button);body.appendChild(button);}
+    }catch(error){count.textContent='Indisponível';body.innerHTML='<p class="pdf-folder-state"></p>';body.firstChild.textContent=error.message;}
+  });
+  await Promise.all(loads);
 }
 document.getElementById('refresh-pdfs').onclick=listPdfs;
 listPdfs();
