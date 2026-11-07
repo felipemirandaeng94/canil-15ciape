@@ -20,3 +20,99 @@ button,a,summary{ -webkit-tap-highlight-color:transparent}button:disabled{opacit
 @media(max-width:1200px) and (min-width:801px){#workspace-nav{width:65px}#workspace-nav .ui-button span,.model-summary{display:none}#sidebar{width:300px}#header h1 strong{font-size:19px}#header h1 span{font-size:11px}#header .coordination span{display:none}#toolbar .tb{padding:5px;min-width:44px;font-size:9px!important}}
 @media(max-width:800px){#header{height:64px;padding:5px 8px;gap:6px}#header .institution-mark{width:35px;height:49px}#header .institution-mark img{max-height:49px}#header .project-identity{gap:8px}#header h1 strong{font-size:13px}#header h1 span{font-size:8px;line-height:1.4}#header .header-actions{display:flex}#header .coordination{display:none}#btn-admin{font-size:0;padding:8px}#btn-admin::after{content:'Gerenciar';font-size:10px}#workspace-nav{display:none}#sidebar{width:min(350px,94vw)}.panel-collapsed #sidebar{display:flex}#toolbar{top:60px;left:8px;right:auto;width:min(300px,85vw);flex-wrap:wrap;max-height:calc(100% - 180px);transform:translateX(calc(-100% - 30px));z-index:40}#toolbar.mobile-open{transform:none;padding-top:10px}#toolbar.mobile-open+#close-mobile-toolbar{display:none}#toolbar .tb{width:calc(33% - 3px)!important;max-width:none;min-height:50px}#orientation{top:65px;right:10px;width:55px;height:55px}#viewer-footer{bottom:0}#preset-views{gap:4px;padding:6px}#preset-views .ui-note{display:none}#preset-views button{flex:1;padding:9px 5px;font-size:9px;gap:4px}#preset-views svg{width:15px;height:15px}#workspace-status{font-size:9px;padding:7px 10px}#hint{bottom:83px;font-size:8px;max-width:calc(100% - 16px)}#hidden-alert{top:125px}#reopen-panel{display:none!important}.panel-header{padding-top:13px}}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+
+/* Refined BIM workbench — 2026-11. Visual-only overrides. */
+#header{
+  position:relative;
+  min-height:88px;
+  background-image:
+    linear-gradient(90deg,#07191a 0%,#0b2220f2 29%,#08211c28 47%,#081c1bab 75%,#07191a 100%),
+    url('./banner-canil.svg');
+  background-size:100% 100%,auto 100%;
+  background-repeat:no-repeat;
+  background-position:center,58% center;
+  border-bottom-color:#396b5b;
+  box-shadow:0 2px 18px #0004;
+}
+#header .project-identity{gap:18px}
+#header .title h1 strong{font-size:clamp(18px,1.35vw,24px);letter-spacing:.8px;line-height:1.15}
+#header .title h1 span{font-size:clamp(10px,.78vw,13px);letter-spacing:.6px;color:#dce8e6}
+#header .header-actions .ui-button{min-height:42px;padding:10px 15px;border-radius:9px}
+#header .coordination{box-shadow:inset 0 0 0 1px #2e6a4d}
+#workspace-nav{width:228px;padding:22px 12px 13px;gap:5px;border-right-color:#294a49}
+#workspace-nav>.ui-button{min-height:48px;padding:11px 13px;gap:13px;font-size:13px;border-radius:9px}
+#workspace-nav>.ui-button svg{width:23px;height:23px}
+#workspace-nav>.ui-button.active{box-shadow:inset 3px 0 #79e5a5,0 5px 18px #0004}
+#workspace-nav .model-summary{padding:18px 14px;font-size:12px;border-color:#335f57;background:linear-gradient(140deg,#102927,#102026)}
+#sidebar{width:365px;background:linear-gradient(160deg,#102326,#0a171b);scrollbar-width:thin;scrollbar-color:#3d6960 transparent}
+.panel-header{padding:22px 17px 12px;font-size:13px;letter-spacing:1.1px}
+.panel-tabs{margin:5px 13px 15px;padding:4px}
+.panel-tabs button{min-height:36px;font-size:11px;font-weight:650}
+.ui-note{color:#a6bfba}
+.model-card{margin:8px 13px;border-color:#31574d;background:#122728;border-radius:11px;box-shadow:inset 3px 0 #409b75}
+.model-head{padding:11px 13px 8px;font-size:12px}
+.model-status{padding:0 13px 8px;line-height:1.4}
+.model-controls{padding:0 13px 10px}
+.model-card details{border-top-color:#294b45}
+.model-card.unavailable{box-shadow:inset 3px 0 #70613e;opacity:.6}
+.pdf-folder{margin-bottom:1px}
+.pdf-folder summary{min-height:56px}
+.pdf-entry .pdf-link{font-size:11px}
+#toolbar{
+  top:16px;left:17px;right:17px;
+  min-height:70px;max-height:84px;padding:7px 9px;gap:5px;
+  background:linear-gradient(145deg,#10292adf,#0e1d24f2);
+  border-color:#3d6660;border-radius:13px;
+  box-shadow:0 8px 28px #0005,inset 0 1px #ffffff10;
+}
+#toolbar .tb{
+  min-width:70px;max-width:108px;min-height:56px;
+  padding:7px 8px;gap:6px;font-size:10px!important;
+  line-height:1.15;font-weight:600;border-radius:9px;
+  white-space:normal;transition:background .15s,border-color .15s,color .15s;
+}
+#toolbar .tb .icon,#toolbar .tb>svg{height:23px;width:23px;color:#d1e7df}
+#toolbar .tb:hover{background:#20453c!important;border-color:#60ba8c;color:#edfff1}
+#toolbar .tb.on{background:#17553b!important;color:#d7ffe8;box-shadow:inset 0 0 0 1px #397950}
+#toolbar .tb:disabled{opacity:.35}
+#orientation{top:124px;width:76px;height:76px;background:#0e2425a6;border-color:#3a6157}
+#viewer-footer{background:linear-gradient(180deg,#0c2225f2,#09191bfa);border-top-color:#335b55}
+#workspace-status{padding:8px 16px;font-size:10px}
+#preset-views{min-height:111px;padding:9px 16px 13px;gap:11px;border-top-color:#23443e}
+#preset-views .ui-note{font-size:10px;font-weight:700;letter-spacing:.9px;margin-right:12px}
+#preset-views .ui-button{
+  min-width:125px;min-height:84px;justify-content:center;
+  flex-direction:column;gap:8px;padding:9px 12px;
+  border-color:#395b56;background:linear-gradient(150deg,#173331,#102427);
+  border-radius:11px;text-align:center;font-size:12px;line-height:1.2;
+}
+#preset-views .ui-button svg{width:29px;height:29px;color:#c5e7d7}
+#preset-views .ui-button.active{background:linear-gradient(145deg,#16412d,#102a25);border-color:#66ef97;box-shadow:inset 0 0 0 1px #4fc37a}
+#hint{bottom:150px}
+#shortcut-toast{bottom:175px}
+#hidden-alert{top:121px}
+@media (max-width:1400px) and (min-width:801px){
+  #workspace-nav{width:76px}
+  #workspace-nav>.ui-button span,#workspace-nav .model-summary{display:none}
+  #workspace-nav>.ui-button{justify-content:center;padding:10px}
+  #sidebar{width:320px}
+  #preset-views .ui-button{min-width:100px;min-height:74px}
+}
+@media (max-width:800px){
+  #header{height:64px;min-height:64px;background-size:100% 100%,auto 95%;background-position:center,63% center}
+  #header .title h1 strong{font-size:13px;letter-spacing:.2px}
+  #header .title h1 span{font-size:8px}
+  #header .header-actions .ui-button{min-height:34px}
+  #sidebar{width:min(350px,94vw)}
+  #toolbar{top:60px;left:8px;right:auto;min-height:0;max-height:calc(100% - 180px);padding:8px}
+  #toolbar .tb{min-width:0;min-height:51px;font-size:9px!important}
+  #toolbar .tb .icon,#toolbar .tb>svg{width:19px;height:19px}
+  #orientation{top:65px;width:55px;height:55px}
+  #preset-views{min-height:70px;padding:6px;gap:4px}
+  #preset-views .ui-button{min-width:0;min-height:58px;padding:5px;font-size:9px;gap:5px}
+  #preset-views .ui-button svg{width:18px;height:18px}
+  #hint{bottom:104px}
+  #shortcut-toast{bottom:115px}
+  #hidden-alert{top:126px}
+}
