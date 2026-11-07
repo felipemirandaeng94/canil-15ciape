@@ -97,6 +97,7 @@
     #info{left:10px;right:10px;bottom:64px;max-width:none}#hint{bottom:8px;right:8px;max-width:calc(100% - 16px);font-size:9px;line-height:1.55;padding:6px 9px}#hidden-alert{top:68px;left:10px;right:10px;max-width:none}#shortcut-toast{bottom:66px}#pdf-dialog{width:96vw;height:92dvh;padding:14px}.pdf-bar{flex-wrap:wrap}
   }
 </style>
+<link rel="stylesheet" href="./assets/interface.css">
 </head>
 <body>
 
@@ -201,13 +202,25 @@ self.onmessage=async ({data})=>{
       }
     }
     const storeyFor=(id)=>{const seen=new Set();while(id&&!seen.has(id)){if(storeys.has(id))return storeys.get(id);seen.add(id);id=parents.get(id);}return '';};
+    const propertyGroups=new Map(),groupCache=new Map();
+    for(const relId of list(WebIFC.IFCRELDEFINESBYPROPERTIES)){
+      const rel=api.GetLine(model,relId),ref=rel.RelatingPropertyDefinition?.value;
+      if(!ref)continue;
+      try{
+        if(!groupCache.has(ref)){
+          const group=api.GetLine(model,ref,true);
+          groupCache.set(ref,{name:group.Name?.value||'Propriedades IFC',values:group.HasProperties||group.Quantities||[]});
+        }
+        for(const obj of rel.RelatedObjects||[]){if(!propertyGroups.has(obj.value))propertyGroups.set(obj.value,[]);propertyGroups.get(obj.value).push(groupCache.get(ref));}
+      }catch(error){console.warn('Conjunto de propriedades indisponível',ref);}
+    }
     const products=api.GetLineIDsWithType(model,WebIFC.IFCPRODUCT,true);
     const candidates=[];
     for(let i=0;i<products.size();i++){
       const id=products.get(i),type=api.GetLineType(model,id);
       if(type===WebIFC.IFCSPACE||type===WebIFC.IFCOPENINGELEMENT)continue;
       const row=api.GetLine(model,id);
-      if(row.Representation) candidates.push({id,type:api.GetNameFromTypeCode(type).toUpperCase(),name:row.Name?.value||'Elemento',role:row.PredefinedType?.value||'',storey:storeyFor(id)});
+      if(row.Representation) candidates.push({id,type:api.GetNameFromTypeCode(type).toUpperCase(),name:row.Name?.value||'Elemento',globalId:row.GlobalId?.value||'',objectType:row.ObjectType?.value||'',propertyGroups:propertyGroups.get(id)||[],role:row.PredefinedType?.value||'',storey:storeyFor(id)});
     }
     products.delete?.();
     const rendered={},missing=[];
@@ -237,6 +250,7 @@ self.onmessage=async ({data})=>{
 <script type="module">
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
 import { RoomEnvironment } from 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/environments/RoomEnvironment.js';
+import { initInterface } from './assets/interface.js';
 
 
 clearTimeout(window.viewerBootTimer);
@@ -522,11 +536,12 @@ canvas.addEventListener('wheel', e=>{
 }, {passive:false});
 window.addEventListener('keydown', e=>shifting=e.shiftKey);
 window.addEventListener('keyup',   e=>shifting=e.shiftKey);
-window.addEventListener('resize',  ()=>{
+new ResizeObserver(()=>{
   W=wrap.clientWidth; H=wrap.clientHeight;
+  if(!W||!H)return;
   camera.aspect=W/H; camera.updateProjectionMatrix();
   renderer.setSize(W,H);
-});
+}).observe(wrap);
 
 // ── TOOLBAR ──────────────────────────────────────────────────────────────────
 let wireframe=false;
@@ -686,7 +701,7 @@ const CATEGORY_LABELS={
 };
 function categoryLabel(type){return CATEGORY_LABELS[type]||'Outros elementos';}
 const layerMap=new Map();
-const modelDefs=[{id:'ARQ',label:'Arquitetura',file:'CANIL.ifc',color:'#75dfab'},{id:'EST',label:'Estrutural',file:'ESTRUTURAL.ifc',color:'#a6b8d0'},{id:'HID',label:'Hidráulico',file:'HIDRAULICO.ifc',color:'#62b8ed'},{id:'ESG',label:'Esgoto',file:'ESGOTO.IFC',color:'#e4a16c'}];
+const modelDefs=[{id:'ARQ',label:'Arquitetura',file:'CANIL.ifc',color:'#75dfab'},{id:'EST',label:'Estrutural',file:'ESTRUTURAL.ifc',color:'#a6b8d0'},{id:'ELE',label:'Elétrico',file:'ELETRICO.ifc',color:'#e8cb79'},{id:'HID',label:'Hidráulico',file:'HIDRAULICO.ifc',color:'#62b8ed'},{id:'ESG',label:'Esgoto',file:'ESGOTO.IFC',color:'#e4a16c'}];
 let sharedAnchor=null,loadingQueue=Promise.resolve();
 function enqueueLoad(buf,name){const def=modelDefs.find(d=>d.file.toUpperCase()===name.toUpperCase());if(!def)throw new Error('Use um dos nomes: '+modelDefs.map(d=>d.file).join(', '));loadingQueue=loadingQueue.catch(()=>{}).then(()=>loadBuffer(buf,def.file));return loadingQueue;}
 function updateModelVisibility(def){for(const [key,l] of layerMap)if(l.model===def.id){l.group.visible=def.visible&&l.visible;for(const mesh of l.group.children){mesh.material.opacity=mesh.userData.baseOpacity*def.opacity;mesh.material.transparent=mesh.material.opacity<1;mesh.material.depthWrite=mesh.material.opacity>=1;}}if(selected&&!selected.parent.visible){selected.material.emissive.set(0);selected=null;infoEl.style.display='none';}}
@@ -913,6 +928,9 @@ async function listPdfs(){
 document.getElementById('refresh-pdfs').onclick=listPdfs;
 listPdfs();
 
+initInterface({THREE,camera,modelDefs,meshMeta,layerMap,categoryLabel,getSelected:()=>selected,hideSelectedElement,restoreAllHidden,hiddenMeshes,updateHiddenButton,fitView,leaveWalk,closeMobilePanels,
+  setView(view){fitView();if(view==='top'){phi=.02;theta=0;}if(view==='front'){phi=Math.PI/2;theta=0;}if(view==='side'){phi=Math.PI/2;theta=Math.PI/2;}camUpdate();}
+});
 // ── BOOT ──────────────────────────────────────────────────────────────────────
 tryFetch().catch(window.showViewerError);
 </script>
