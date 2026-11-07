@@ -441,8 +441,9 @@ function toggleWalk(){
   for(const [mesh,meta] of meshMeta)if(mesh.visible&&mesh.parent.visible&&meta.type==='IFCDOOR'&&/porta.*(?:02|2).*folhas.*visor/i.test(meta.name||'')){
     if(!entryDoors.has(meta.id))entryDoors.set(meta.id,new THREE.Box3());entryDoors.get(meta.id).expandByObject(mesh);
   }
-  const entry=[...entryDoors.values()].sort((a,b)=>b.getCenter(new THREE.Vector3()).x-a.getCenter(new THREE.Vector3()).x)[0];
-  if(entry){const doorCenter=entry.getCenter(new THREE.Vector3());camera.position.set(entry.max.x+5.5,box.min.y+1.7,doorCenter.z-4);const direction=doorCenter.clone().sub(camera.position);walkYaw=Math.atan2(-direction.x,-direction.z);}
+  const preferredDoor=[...meshMeta].find(([,meta])=>meta.type==='IFCDOOR'&&/:3828930$/.test(meta.name||''))?.[1];
+  const entry=preferredDoor?entryDoors.get(preferredDoor.id):[...entryDoors.values()].sort((a,b)=>b.getCenter(new THREE.Vector3()).x-a.getCenter(new THREE.Vector3()).x)[0];
+  if(entry){const doorCenter=entry.getCenter(new THREE.Vector3());camera.position.set(entry.max.x+7,box.min.y+1.7,doorCenter.z-5);const direction=doorCenter.clone().sub(camera.position);walkYaw=Math.atan2(-direction.x,-direction.z);}
   else{const center=box.getCenter(new THREE.Vector3());camera.position.set(center.x,box.min.y+1.7,box.max.z+2);walkYaw=0;}
   walkPitch=0;walking=true;movementKeys.clear();walkLook();
   speedButton.style.display='flex';
