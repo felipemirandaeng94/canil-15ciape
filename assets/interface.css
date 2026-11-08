@@ -398,3 +398,111 @@ button,a,summary{ -webkit-tap-highlight-color:transparent}button:disabled{opacit
     transform-origin:top right;
   }
 }
+
+/* Layout do modo IFC com painel de arquivos recolhido — ajuste v2. */
+@media (min-width:801px){
+  /* Sem extensão vazia após o último botão da barra de ferramentas. */
+  #main.panel-collapsed #toolbar{
+    width:max-content;
+    max-width:calc(100% - 215px);
+    right:auto;
+    left:16px;
+    top:16px;
+    padding:6px 8px;
+    display:flex;
+    flex-wrap:nowrap;
+    align-items:center;
+    overflow-x:auto;
+    overflow-y:hidden;
+    scrollbar-width:thin;
+  }
+  /* O atalho de reabrir o painel nunca se sobrepõe ao cubo de navegação. */
+  #main.panel-collapsed #reopen-panel{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    top:20px;
+    right:20px;
+    min-height:39px;
+    padding:8px 12px;
+    border-radius:9px;
+    border:1px solid #537f70;
+    background:#102c29ef;
+    color:#d7f6e7;
+    font-size:11px;
+    font-weight:650;
+    box-shadow:0 5px 20px #0005;
+    z-index:12;
+  }
+  #main.panel-collapsed #reopen-panel:hover,
+  #main.panel-collapsed #reopen-panel:focus-visible{
+    background:#1b4939;
+    border-color:#79e6a9;
+    color:#fff;
+  }
+  #main.panel-collapsed #reopen-panel svg{
+    height:17px;
+    width:17px;
+  }
+  #main.panel-collapsed #orientation.viewcube-widget{
+    top:101px;
+    right:26px;
+    z-index:9;
+  }
+  /* A faixa inferior vira uma coleção centralizada, compacta e simétrica. */
+  #main.panel-collapsed #preset-views{
+    justify-content:center;
+    gap:10px;
+    min-height:126px;
+    padding:9px 18px 11px;
+    background:linear-gradient(180deg,#102825,#0a1d1d);
+  }
+  #main.panel-collapsed #preset-views .view-strip-heading{
+    flex:0 0 134px;
+    width:134px;
+    font-size:10px;
+    line-height:1.6;
+    letter-spacing:.9px;
+  }
+  #main.panel-collapsed #preset-views button.view-card{
+    flex:0 0 140px;
+    width:140px;
+    min-width:140px;
+    height:105px;
+    min-height:105px;
+    gap:4px;
+    padding:6px;
+  }
+  #main.panel-collapsed #preset-views button.view-card.active{padding:5px}
+  #main.panel-collapsed #preset-views .view-preview{
+    flex:0 0 74px;
+    height:74px;
+  }
+  #main.panel-collapsed #preset-views .view-caption{font-size:11px}
+  #main.panel-collapsed #workspace-status{
+    padding:7px 18px;
+    color:#91bbae;
+    background:#0b2120;
+    border-bottom:1px solid #1b443b;
+  }
+  #main.panel-collapsed #hint{bottom:170px}
+  #main.panel-collapsed #shortcut-toast{bottom:190px}
+}
+@media (min-width:801px) and (max-width:1110px){
+  #main.panel-collapsed #preset-views .view-strip-heading{
+    display:none;
+  }
+  #main.panel-collapsed #preset-views button.view-card{
+    flex-basis:120px;
+    width:120px;
+    min-width:120px;
+    height:97px;
+    min-height:97px;
+  }
+  #main.panel-collapsed #preset-views .view-preview{
+    flex-basis:67px;
+    height:67px;
+  }
+  #main.panel-collapsed #preset-views{min-height:116px}
+}
