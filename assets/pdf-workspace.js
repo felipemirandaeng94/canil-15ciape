@@ -222,7 +222,7 @@ export function initPdfWorkspace({dialog,onChoose}){
         const url=new URL('./plantas/'+encodeURIComponent(state.category)+'/'+encodeURIComponent(file.name),location.href);
         const response=await fetch(url,{signal:AbortSignal.timeout(25000)});
         if(!response.ok)throw new Error('Prévia indisponível');
-        task=lib.getDocument({data:new Uint8Array(await response.arrayBuffer())});
+        task=lib.getDocument({data:new Uint8Array(await response.arrayBuffer()),isEvalSupported:false});
         pageDoc=await task.promise;
       }
       if(seq!==documentSeq)return;
@@ -285,7 +285,7 @@ export function initPdfWorkspace({dialog,onChoose}){
     renderFileList(seq);
     try{
       lib=await loadPdfJs();if(seq!==documentSeq)return;
-      loadingTask=lib.getDocument({data:new Uint8Array(bytes)});
+      loadingTask=lib.getDocument({data:new Uint8Array(bytes),isEvalSupported:false});
       doc=await loadingTask.promise;if(seq!==documentSeq)return;
       // Reinicia prévias após PDF.js estar pronto, evitando miniaturas vazias.
       renderFileList(seq);
