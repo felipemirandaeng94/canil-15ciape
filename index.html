@@ -98,6 +98,7 @@
   }
 </style>
 <link rel="stylesheet" href="./assets/interface.css">
+<link rel="stylesheet" href="./assets/pdf-workspace.css">
 </head>
 <body>
 
@@ -251,6 +252,7 @@ self.onmessage=async ({data})=>{
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
 import { RoomEnvironment } from 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/environments/RoomEnvironment.js';
 import { initInterface } from './assets/interface.js';
+import { initPdfWorkspace } from './assets/pdf-workspace.js';
 
 
 clearTimeout(window.viewerBootTimer);
@@ -908,23 +910,45 @@ uploadForm.onsubmit=async e=>{
   finally{token='';uploadBusy=false;document.getElementById('send-pdfs').disabled=false;document.getElementById('close-admin').disabled=false;}
 };
 const pdfDialog=document.getElementById('pdf-dialog');
+const pdfCatalog=new Map();
+const pdfWorkspace=initPdfWorkspace({
+  dialog:pdfDialog,
+  onChoose:(category,name)=>viewPdf(category,name)
+});
 document.getElementById('close-pdf').onclick=()=>pdfDialog.close();
-pdfDialog.addEventListener('close',()=>{document.getElementById('pdf-frame').src='about:blank';if(pdfObjectURL)URL.revokeObjectURL(pdfObjectURL);pdfObjectURL=null;});
-async function viewPdf(category,name,button){
-  button.disabled=true;
+pdfDialog.addEventListener('close',()=>{
+  pdfWorkspace.dispose();
+  document.getElementById('pdf-frame').src='about:blank';
+  if(pdfObjectURL)URL.revokeObjectURL(pdfObjectURL);
+  pdfObjectURL=null;
+});
+async function viewPdf(category,name,button=null){
+  if(button)button.disabled=true;
   try{
-    const response=await fetch(REPO_API+'plantas/'+encodeURIComponent(category)+'/'+encodeURIComponent(name)+'?ref=main',{headers:{Accept:'application/vnd.github.raw+json'},signal:AbortSignal.timeout(60000)});
+    const response=await fetch(REPO_API+'plantas/'+encodeURIComponent(category)+'/'+encodeURIComponent(name)+'?ref=main',{
+      headers:{Accept:'application/vnd.github.raw+json'},
+      signal:AbortSignal.timeout(60000)
+    });
     if(!response.ok)throw new Error('PDF indisponível: HTTP '+response.status);
-    const data=await response.arrayBuffer();if(new TextDecoder().decode(new Uint8Array(data,0,Math.min(5,data.byteLength)))!=='%PDF-')throw new Error('O arquivo recebido não é PDF.');
-    if(pdfObjectURL)URL.revokeObjectURL(pdfObjectURL);pdfObjectURL=URL.createObjectURL(new Blob([data],{type:'application/pdf'}));
+    const data=await response.arrayBuffer();
+    if(new TextDecoder().decode(new Uint8Array(data,0,Math.min(5,data.byteLength)))!=='%PDF-')throw new Error('O arquivo recebido não é PDF.');
+    if(pdfObjectURL)URL.revokeObjectURL(pdfObjectURL);
+    pdfObjectURL=URL.createObjectURL(new Blob([data],{type:'application/pdf'}));
     const categoryLabel=PDF_CATEGORIES.find(item=>item.slug===category)?.label||'Planta';
-    document.getElementById('pdf-title').textContent=categoryLabel+' — '+name;document.getElementById('pdf-frame').src=pdfObjectURL;
-    const download=document.getElementById('pdf-download');download.href=pdfObjectURL;download.download=name;
-    leaveWalk();pdfDialog.showModal();
-  }catch(error){button.textContent=name+' — '+error.message;}
-  finally{button.disabled=false;}
+    leaveWalk();
+    if(!pdfDialog.open)pdfDialog.showModal();
+    await pdfWorkspace.open({
+      category,label:categoryLabel,name,url:pdfObjectURL,bytes:data,
+      files:pdfCatalog.get(category)||[{name,size:data.byteLength}]
+    });
+  }catch(error){
+    console.error('Abertura da prancha:',error);
+    if(pdfDialog.open)pdfWorkspace.showError(error.message);
+    else if(button)button.title=error.message;
+  }finally{if(button)button.disabled=false;}
 }
 async function listPdfs(){
+  pdfCatalog.clear();
   const list=document.getElementById('pdf-list');list.textContent='Consultando plantas...';
   list.replaceChildren();
   const loads=PDF_CATEGORIES.map(async(category,index)=>{
@@ -936,6 +960,7 @@ async function listPdfs(){
       if(response.status===404){count.textContent='0 pranchas';body.innerHTML='<p class="pdf-folder-state">Ainda sem pranchas publicadas.</p>';return;}
       if(!response.ok)throw new Error('Consulta indisponível (HTTP '+response.status+').');
       const entries=(await response.json()).filter(entry=>entry.type==='file'&&/\.pdf$/i.test(entry.name)).sort((a,b)=>a.name.localeCompare(b.name,'pt-BR',{numeric:true}));
+      pdfCatalog.set(category.slug,entries.map(entry=>({name:entry.name,size:entry.size||0})));
       count.textContent=entries.length+' '+(entries.length===1?'prancha':'pranchas');
       if(!entries.length){body.innerHTML='<p class="pdf-folder-state">Ainda sem pranchas publicadas.</p>';return;}
       for(const entry of entries){const button=document.createElement('button');button.className='action pdf-link';button.textContent=entry.name;button.onclick=()=>viewPdf(category.slug,entry.name,button);body.appendChild(button);}
