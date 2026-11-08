@@ -590,6 +590,69 @@ function fitView(view='iso'){
   camUpdate();
 }
 
+// Miniaturas reais das vistas: render temporário no mesmo contexto WebGL.
+// A câmera de navegação, o IFC e os controles do usuário não são modificados.
+function captureViewThumbnail(view,width=256,height=138){
+  const bounds=new THREE.Box3();
+  for(const mesh of meshMeta.keys())if(mesh.visible&&mesh.parent?.visible)bounds.expandByObject(mesh);
+  if(bounds.isEmpty())return null;
+  const w=Math.max(80,Math.min(512,Math.round(width)));
+  const h=Math.max(56,Math.min(300,Math.round(height)));
+  const center=bounds.getCenter(new THREE.Vector3());
+  const previewCamera=new THREE.PerspectiveCamera(45,w/h,.05,1000);
+  const p=view==='top'?.02:(view==='front'||view==='side'?Math.PI/2:Math.PI/4);
+  const t=view==='top'||view==='front'?0:(view==='side'?Math.PI/2:Math.PI/4);
+  const setDirection=(distance)=>{
+    previewCamera.position.set(
+      center.x+distance*Math.sin(p)*Math.cos(t),
+      center.y+distance*Math.cos(p),
+      center.z+distance*Math.sin(p)*Math.sin(t)
+    );
+    previewCamera.lookAt(center);
+  };
+  setDirection(1);
+  const inverse=previewCamera.quaternion.clone().invert();
+  const tanVertical=Math.tan(THREE.MathUtils.degToRad(previewCamera.fov/2));
+  const tanHorizontal=tanVertical*previewCamera.aspect;
+  const corner=new THREE.Vector3();
+  let distance=1;
+  for(const x of [bounds.min.x,bounds.max.x])
+    for(const y of [bounds.min.y,bounds.max.y])
+      for(const z of [bounds.min.z,bounds.max.z]){
+        corner.set(x-center.x,y-center.y,z-center.z).applyQuaternion(inverse);
+        distance=Math.max(distance,
+          corner.z+Math.abs(corner.x)/(tanHorizontal*.84),
+          corner.z+Math.abs(corner.y)/(tanVertical*.82)
+        );
+      }
+  setDirection(distance);
+  previewCamera.far=Math.max(1000,distance*10);
+  previewCamera.updateProjectionMatrix();
+  const targetTexture=new THREE.WebGLRenderTarget(w,h,{depthBuffer:true,stencilBuffer:false});
+  targetTexture.texture.colorSpace=THREE.SRGBColorSpace;
+  const previousTarget=renderer.getRenderTarget();
+  const previousScissor=renderer.getScissorTest();
+  try{
+    renderer.setScissorTest(false);
+    renderer.setRenderTarget(targetTexture);
+    renderer.render(scene,previewCamera);
+    const pixels=new Uint8Array(w*h*4);
+    renderer.readRenderTargetPixels(targetTexture,0,0,w,h,pixels);
+    const output=document.createElement('canvas');
+    output.width=w;output.height=h;
+    const context=output.getContext('2d');
+    const image=context.createImageData(w,h);
+    for(let row=0;row<h;row++)
+      image.data.set(pixels.subarray((h-1-row)*w*4,(h-row)*w*4),row*w*4);
+    context.putImageData(image,0,0);
+    return output.toDataURL('image/webp',.82);
+  }finally{
+    renderer.setRenderTarget(previousTarget);
+    renderer.setScissorTest(previousScissor);
+    targetTexture.dispose();
+  }
+}
+
 // ── SELEÇÃO ──────────────────────────────────────────────────────────────────
 const raycaster = new THREE.Raycaster();
 const meshMeta  = new Map(); // mesh → meta
@@ -724,7 +787,8 @@ const layerMap=new Map();
 const modelDefs=[{id:'ARQ',label:'Arquitetura',file:'CANIL.ifc',color:'#75dfab'},{id:'EST',label:'Estrutural',file:'ESTRUTURAL.ifc',color:'#a6b8d0'},{id:'ELE',label:'Elétrico',file:'ELETRICO.ifc',color:'#e8cb79'},{id:'HID',label:'Hidráulico',file:'HIDRAULICO.ifc',color:'#62b8ed'},{id:'ESG',label:'Esgoto',file:'ESGOTO.IFC',color:'#e4a16c'}];
 let sharedAnchor=null,loadingQueue=Promise.resolve();
 function enqueueLoad(buf,name){const def=modelDefs.find(d=>d.file.toUpperCase()===name.toUpperCase());if(!def)throw new Error('Use um dos nomes: '+modelDefs.map(d=>d.file).join(', '));loadingQueue=loadingQueue.catch(()=>{}).then(()=>loadBuffer(buf,def.file));return loadingQueue;}
-function updateModelVisibility(def){for(const [key,l] of layerMap)if(l.model===def.id){l.group.visible=def.visible&&l.visible;for(const mesh of l.group.children){mesh.material.opacity=mesh.userData.baseOpacity*def.opacity;mesh.material.transparent=mesh.material.opacity<1;mesh.material.depthWrite=mesh.material.opacity>=1;}}if(selected&&!selected.parent.visible){selected.material.emissive.set(0);selected=null;infoEl.style.display='none';}}
+let refreshViewPreview=()=>{};
+function updateModelVisibility(def){for(const [key,l] of layerMap)if(l.model===def.id){l.group.visible=def.visible&&l.visible;for(const mesh of l.group.children){mesh.material.opacity=mesh.userData.baseOpacity*def.opacity;mesh.material.transparent=mesh.material.opacity<1;mesh.material.depthWrite=mesh.material.opacity>=1;}}if(selected&&!selected.parent.visible){selected.material.emissive.set(0);selected=null;infoEl.style.display='none';}refreshViewPreview();}
 for(const d of modelDefs){
  d.visible=true;d.opacity=1;d.count=0;
  const card=document.createElement('section');card.className='model-card';
@@ -971,9 +1035,11 @@ async function listPdfs(){
 document.getElementById('refresh-pdfs').onclick=listPdfs;
 listPdfs();
 
-initInterface({THREE,camera,modelDefs,meshMeta,layerMap,categoryLabel,getSelected:()=>selected,hideSelectedElement,restoreAllHidden,hiddenMeshes,updateHiddenButton,fitView,leaveWalk,closeMobilePanels,
+const workbenchInterface=initInterface({THREE,camera,modelDefs,meshMeta,layerMap,categoryLabel,getSelected:()=>selected,hideSelectedElement,restoreAllHidden,hiddenMeshes,updateHiddenButton,fitView,leaveWalk,closeMobilePanels,captureViewThumbnail,
   setView(view){fitView(view);}
 });
+refreshViewPreview=workbenchInterface.refreshViewThumbnails;
+refreshViewPreview();
 // ── BOOT ──────────────────────────────────────────────────────────────────────
 tryFetch().catch(window.showViewerError);
 </script>
