@@ -287,6 +287,8 @@ export function initPdfWorkspace({dialog,onChoose}){
       lib=await loadPdfJs();if(seq!==documentSeq)return;
       loadingTask=lib.getDocument({data:new Uint8Array(bytes)});
       doc=await loadingTask.promise;if(seq!==documentSeq)return;
+      // Reinicia prévias após PDF.js estar pronto, evitando miniaturas vazias.
+      renderFileList(seq);
       updatePageNav();await render();
     }catch(error){
       if(seq!==documentSeq)return;
