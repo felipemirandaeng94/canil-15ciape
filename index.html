@@ -97,7 +97,7 @@
     #info{left:10px;right:10px;bottom:64px;max-width:none}#hint{bottom:8px;right:8px;max-width:calc(100% - 16px);font-size:9px;line-height:1.55;padding:6px 9px}#hidden-alert{top:68px;left:10px;right:10px;max-width:none}#shortcut-toast{bottom:66px}#pdf-dialog{width:96vw;height:92dvh;padding:14px}.pdf-bar{flex-wrap:wrap}
   }
 </style>
-<link rel="stylesheet" href="./assets/interface.css">
+<link rel="stylesheet" href="./assets/interface.css?v=ifc-layout-2">
 <link rel="stylesheet" href="./assets/pdf-workspace.css">
 </head>
 <body>
@@ -259,7 +259,7 @@ self.onmessage=async ({data})=>{
 <script type="module">
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
 import { RoomEnvironment } from 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/environments/RoomEnvironment.js';
-import { initInterface } from './assets/interface.js?v=20261108-viewcube';
+import { initInterface } from './assets/interface.js?v=ifc-layout-2';
 import { mountViewCube } from './assets/view-cube.js';
 import { initPdfWorkspace } from './assets/pdf-workspace.js?v=20261108-resizefix';
 
@@ -1106,6 +1106,7 @@ document.getElementById('refresh-pdfs').onclick=listPdfs;
 listPdfs();
 
 const workbenchInterface=initInterface({THREE,camera,modelDefs,meshMeta,layerMap,categoryLabel,getSelected:()=>selected,hideSelectedElement,restoreAllHidden,hiddenMeshes,updateHiddenButton,fitView,leaveWalk,closeMobilePanels,captureViewThumbnail,
+  reframeCurrentView(){if(!walking && meshMeta.size)fitView({phi,theta});},
   setView(view){fitView(view);}
 });
 // ViewCube follows the same camera as the IFC and invokes the existing fit logic.
