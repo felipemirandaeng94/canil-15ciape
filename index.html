@@ -554,19 +554,37 @@ document.getElementById('btn-wire').addEventListener('click', function(){
   this.classList.toggle('on', wireframe);
   for(const mesh of meshMeta.keys())mesh.material.wireframe=wireframe;
 });
-function fitView(){
+function fitView(view='iso'){
+  // Fit the visible bounding box in the selected camera orientation rather than
+  // its bounding sphere. The latter keeps long, narrow buildings too far away.
   leaveWalk();
   const box=new THREE.Box3();
   for(const mesh of meshMeta.keys())if(mesh.visible&&mesh.parent.visible)box.expandByObject(mesh);
-  if(box.isEmpty()) return;
-  const center=box.getCenter(new THREE.Vector3());
-  const size=box.getSize(new THREE.Vector3());
-  target.copy(center);
-  const sphereRadius=size.length()/2;
-  const halfFov=Math.min(THREE.MathUtils.degToRad(camera.fov/2),Math.atan(Math.tan(THREE.MathUtils.degToRad(camera.fov/2))*camera.aspect));
-  radius=Math.max(1,sphereRadius/Math.sin(halfFov)*1.1);
-  camera.far=Math.max(1000,radius*10);camera.updateProjectionMatrix();
-  phi=Math.PI/4; theta=Math.PI/4;
+  if(box.isEmpty())return;
+  target.copy(box.getCenter(new THREE.Vector3()));
+  phi=view==='top'?.02:view==='front'||view==='side'?Math.PI/2:Math.PI/4;
+  theta=view==='top'||view==='front'?0:view==='side'?Math.PI/2:Math.PI/4;
+  radius=1;
+  camUpdate(); // Updates camera.quaternion for the chosen direction.
+  const inverse=camera.quaternion.clone().invert();
+  const tanVertical=Math.tan(THREE.MathUtils.degToRad(camera.fov/2));
+  const tanHorizontal=tanVertical*Math.max(.1,camera.aspect);
+  // Reserve room for the floating toolbar and the preset-view footer.
+  const visibleY=Math.max(.58,Math.min(.82,1-220/Math.max(400,wrap.clientHeight)));
+  const visibleX=.85;
+  const corner=new THREE.Vector3();
+  let requiredRadius=1;
+  for(const x of [box.min.x,box.max.x])
+    for(const y of [box.min.y,box.max.y])
+      for(const z of [box.min.z,box.max.z]){
+        corner.set(x-target.x,y-target.y,z-target.z).applyQuaternion(inverse);
+        requiredRadius=Math.max(requiredRadius,
+          corner.z+Math.abs(corner.x)/(tanHorizontal*visibleX),
+          corner.z+Math.abs(corner.y)/(tanVertical*visibleY));
+      }
+  radius=Math.max(1,requiredRadius);
+  camera.far=Math.max(1000,radius*10);
+  camera.updateProjectionMatrix();
   camUpdate();
 }
 
@@ -929,7 +947,7 @@ document.getElementById('refresh-pdfs').onclick=listPdfs;
 listPdfs();
 
 initInterface({THREE,camera,modelDefs,meshMeta,layerMap,categoryLabel,getSelected:()=>selected,hideSelectedElement,restoreAllHidden,hiddenMeshes,updateHiddenButton,fitView,leaveWalk,closeMobilePanels,
-  setView(view){fitView();if(view==='top'){phi=.02;theta=0;}if(view==='front'){phi=Math.PI/2;theta=0;}if(view==='side'){phi=Math.PI/2;theta=Math.PI/2;}camUpdate();}
+  setView(view){fitView(view);}
 });
 // ── BOOT ──────────────────────────────────────────────────────────────────────
 tryFetch().catch(window.showViewerError);
