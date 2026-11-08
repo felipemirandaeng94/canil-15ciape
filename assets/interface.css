@@ -506,3 +506,52 @@ button,a,summary{ -webkit-tap-highlight-color:transparent}button:disabled{opacit
   }
   #main.panel-collapsed #preset-views{min-height:116px}
 }
+
+/* IFC canvas full width + ViewCube readable without overlap. */
+#canvas-wrap{
+  min-width:0;
+  background:#071c29;
+}
+#canvas-wrap > canvas#c{
+  display:block;
+  position:absolute;
+  inset:0;
+  width:100% !important;
+  height:100% !important;
+  max-width:none;
+  max-height:none;
+}
+#main.panel-collapsed #canvas-wrap{
+  flex:1 1 auto;
+  min-width:0;
+  width:auto;
+}
+#orientation.viewcube-widget{
+  width:156px;
+  height:181px;
+}
+#orientation.viewcube-widget svg{
+  width:146px;
+  height:141px;
+  flex:0 0 141px;
+}
+#orientation .viewcube-face-label{
+  font-weight:800;
+  font-size:9px;
+  fill:#233239;
+  paint-order:stroke;
+  stroke:#edf2f3;
+  stroke-width:.4;
+  stroke-linejoin:round;
+}
+#orientation .viewcube-rotate{
+  width:106px;
+  height:34px;
+  margin-top:-5px;
+}
+@media(max-width:800px){
+  #orientation.viewcube-widget{
+    transform:scale(.74);
+    transform-origin:top right;
+  }
+}
