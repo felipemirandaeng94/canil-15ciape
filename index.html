@@ -672,11 +672,11 @@ function hideSelectedElement(){
   if(!selected)return;
   const meta=meshMeta.get(selected);if(!meta)return;
   for(const [mesh,item] of meshMeta)if(item.id===meta.id&&item.discipline===meta.discipline){mesh.material.emissive?.set(0);mesh.visible=false;hiddenMeshes.add(mesh);}
-  selected=null;infoEl.style.display='none';shortcutToast.classList.remove('show');updateHiddenButton();
+  selected=null;infoEl.style.display='none';shortcutToast.classList.remove('show');updateHiddenButton();refreshViewPreview();
 }
 function restoreAllHidden(){
   for(const mesh of hiddenMeshes)if(meshMeta.has(mesh))mesh.visible=true;
-  hiddenMeshes.clear();updateHiddenButton();showShortcutToast('Elementos restaurados',1000);
+  hiddenMeshes.clear();updateHiddenButton();refreshViewPreview();showShortcutToast('Elementos restaurados',1000);
 }
 restoreHiddenButton.addEventListener('click',restoreAllHidden);document.getElementById('hidden-alert-restore').addEventListener('click',restoreAllHidden);
 window.addEventListener('keydown',e=>{
