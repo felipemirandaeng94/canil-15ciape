@@ -178,7 +178,15 @@ window.showViewerError = function(error){
   box.querySelector('h2').textContent='Não foi possível abrir o modelo';
   box.querySelector('p').textContent=error?.message||String(error);
 };
-window.addEventListener('error',e=>window.showViewerError(e.error||e.message));
+// Browser notification, not a failure to load IFC. Opening/closing the PDF
+// dialog can cause this harmless ResizeObserver delivery warning.
+window.addEventListener('error',e=>{
+  if(/^ResizeObserver loop (completed with undelivered notifications|limit exceeded)/i.test(e.message||'')){
+    e.preventDefault();
+    return;
+  }
+  window.showViewerError(e.error||e.message);
+});
 window.addEventListener('unhandledrejection',e=>window.showViewerError(e.reason));
 window.viewerBootTimer=setTimeout(()=>window.showViewerError(new Error('A biblioteca 3D não iniciou. Verifique sua conexão e recarregue a página.')),30000);
 </script>
@@ -538,11 +546,22 @@ canvas.addEventListener('wheel', e=>{
 }, {passive:false});
 window.addEventListener('keydown', e=>shifting=e.shiftKey);
 window.addEventListener('keyup',   e=>shifting=e.shiftKey);
+// Resize outside the observer callback, and do not write CSS dimensions
+// of the canvas: both measures prevent a resize/paint feedback loop.
+let viewerResizeFrame=0;
+let lastViewerWidth=W,lastViewerHeight=H;
 new ResizeObserver(()=>{
-  W=wrap.clientWidth; H=wrap.clientHeight;
-  if(!W||!H)return;
-  camera.aspect=W/H; camera.updateProjectionMatrix();
-  renderer.setSize(W,H);
+  if(viewerResizeFrame)return;
+  viewerResizeFrame=requestAnimationFrame(()=>{
+    viewerResizeFrame=0;
+    const width=Math.round(wrap.clientWidth);
+    const height=Math.round(wrap.clientHeight);
+    if(width<=0||height<=0||(width===lastViewerWidth&&height===lastViewerHeight))return;
+    lastViewerWidth=width;lastViewerHeight=height;
+    W=width;H=height;
+    camera.aspect=W/H;camera.updateProjectionMatrix();
+    renderer.setSize(W,H,false);
+  });
 }).observe(wrap);
 
 // ── TOOLBAR ──────────────────────────────────────────────────────────────────
