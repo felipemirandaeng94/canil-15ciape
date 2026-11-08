@@ -251,7 +251,7 @@ self.onmessage=async ({data})=>{
 <script type="module">
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
 import { RoomEnvironment } from 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/environments/RoomEnvironment.js';
-import { initInterface } from './assets/interface.js';
+import { initInterface } from './assets/interface.js?v=20261108-ifc403';
 import { initPdfWorkspace } from './assets/pdf-workspace.js';
 
 
@@ -959,6 +959,31 @@ async function publishPdf(file,token,replace,category,request=fetch){
   if(!response.ok)throw new Error('Envio não concluído: GitHub HTTP '+response.status+(response.status===409?'. O arquivo mudou; atualize e tente novamente.':'. Confira as permissões da chave de acesso.'));
   return name;
 }
+async function updatePdfManifest(token,category,completed,files){
+  if(!completed.length)return;
+  const url=REPO_API+'plantas/manifest.json';
+  const headers={Accept:'application/vnd.github+json',Authorization:'Bearer '+token,'X-GitHub-Api-Version':'2022-11-28'};
+  const current=await fetch(url+'?ref=main',{headers,cache:'no-store',signal:AbortSignal.timeout(30000)});
+  if(!current.ok)throw new Error('Pranchas enviadas, mas o catálogo não pôde ser atualizado (HTTP '+current.status+').');
+  const content=await current.json();
+  const bytes=Uint8Array.from(atob(String(content.content||'').replace(/\s/g,'')),char=>char.charCodeAt(0));
+  const manifest=JSON.parse(new TextDecoder().decode(bytes));
+  if(!manifest.categories)manifest.categories={};
+  const currentCategory=Array.isArray(manifest.categories[category])?manifest.categories[category]:[];
+  const entries=new Map(currentCategory.map(item=>[item.name,item]));
+  for(const name of completed){
+    const localFile=files.find(file=>file.name.normalize('NFC').replace(/[^\p{L}\p{N}._ -]/gu,'_')===name);
+    entries.set(name,{name,size:localFile?.size||entries.get(name)?.size||0});
+  }
+  manifest.categories[category]=[...entries.values()].sort((a,b)=>a.name.localeCompare(b.name,'pt-BR',{numeric:true}));
+  manifest.version=1;manifest.updatedAt=new Date().toISOString();
+  const encoded=new TextEncoder().encode(JSON.stringify(manifest,null,2)+'\n');
+  let binary='';for(let i=0;i<encoded.length;i+=32768)binary+=String.fromCharCode(...encoded.subarray(i,i+32768));
+  const result=await fetch(url,{method:'PUT',headers:{...headers,'Content-Type':'application/json'},signal:AbortSignal.timeout(90000),body:JSON.stringify({
+    message:'Atualiza catálogo de PDFs: '+category,content:btoa(binary),sha:content.sha,branch:'main'
+  })});
+  if(!result.ok)throw new Error('Pranchas enviadas, mas catálogo não atualizado (HTTP '+result.status+').');
+}
 uploadForm.onsubmit=async e=>{
   e.preventDefault();if(uploadBusy)return;
   let token=document.getElementById('github-token').value.trim();document.getElementById('github-token').value='';
@@ -968,6 +993,7 @@ uploadForm.onsubmit=async e=>{
   let completed=[];
   try{
     for(const file of files){uploadResult.textContent=completed.map(n=>'Enviado: '+n).join('\n')+'\nEnviando '+file.name+'...';completed.push(await publishPdf(file,token,replace,category));}
+    await updatePdfManifest(token,category,completed,files);
     uploadResult.textContent=completed.map(n=>'Enviado: '+n).join('\n')+'\nOs PDFs já estão no GitHub. A publicação no Pages pode levar alguns minutos.';
     document.getElementById('pdf-files').value='';await listPdfs();
   }catch(error){uploadResult.textContent=completed.map(n=>'Enviado: '+n).join('\n')+'\n'+error.message;}
@@ -989,8 +1015,7 @@ pdfDialog.addEventListener('close',()=>{
 async function viewPdf(category,name,button=null){
   if(button)button.disabled=true;
   try{
-    const response=await fetch(REPO_API+'plantas/'+encodeURIComponent(category)+'/'+encodeURIComponent(name)+'?ref=main',{
-      headers:{Accept:'application/vnd.github.raw+json'},
+    const response=await fetch(new URL('./plantas/'+encodeURIComponent(category)+'/'+encodeURIComponent(name),location.href),{
       signal:AbortSignal.timeout(60000)
     });
     if(!response.ok)throw new Error('PDF indisponível: HTTP '+response.status);
@@ -1013,24 +1038,36 @@ async function viewPdf(category,name,button=null){
 }
 async function listPdfs(){
   pdfCatalog.clear();
-  const list=document.getElementById('pdf-list');list.textContent='Consultando plantas...';
+  const list=document.getElementById('pdf-list');
+  list.textContent='Consultando plantas...';
+  let manifest;
+  try{
+    // Static GitHub Pages file: no unauthenticated GitHub API quota.
+    const response=await fetch(new URL('./plantas/manifest.json',location.href),{
+      cache:'no-store',signal:AbortSignal.timeout(30000)
+    });
+    if(!response.ok)throw new Error('Catálogo de pranchas indisponível (HTTP '+response.status+').');
+    manifest=await response.json();
+    if(!manifest||!manifest.categories||typeof manifest.categories!=='object')throw new Error('Catálogo PDF inválido.');
+  }catch(error){
+    list.replaceChildren();
+    const message=document.createElement('p');message.className='panel-note';
+    message.textContent='Não foi possível carregar a lista de pranchas: '+error.message;
+    list.append(message);
+    return;
+  }
   list.replaceChildren();
-  const loads=PDF_CATEGORIES.map(async(category,index)=>{
+  for(const [index,category] of PDF_CATEGORIES.entries()){
     const folder=document.createElement('details');folder.className='pdf-folder';folder.open=index===0;
     const summary=document.createElement('summary'),icon=document.createElement('span'),heading=document.createElement('span'),title=document.createElement('span'),subtitle=document.createElement('span'),count=document.createElement('span'),body=document.createElement('div');
-    icon.className='pdf-folder-icon';icon.setAttribute('aria-hidden','true');title.className='pdf-folder-title';title.textContent=category.label;subtitle.className='pdf-folder-subtitle';subtitle.textContent=category.subtitle;count.className='pdf-folder-count';count.textContent='Consultando';body.className='pdf-folder-body';heading.append(title,subtitle);summary.append(icon,heading,count);folder.append(summary,body);list.appendChild(folder);
-    try{
-      const response=await fetch(REPO_API+'plantas/'+encodeURIComponent(category.slug)+'?ref=main',{cache:'no-store',signal:AbortSignal.timeout(30000)});
-      if(response.status===404){count.textContent='0 pranchas';body.innerHTML='<p class="pdf-folder-state">Ainda sem pranchas publicadas.</p>';return;}
-      if(!response.ok)throw new Error('Consulta indisponível (HTTP '+response.status+').');
-      const entries=(await response.json()).filter(entry=>entry.type==='file'&&/\.pdf$/i.test(entry.name)).sort((a,b)=>a.name.localeCompare(b.name,'pt-BR',{numeric:true}));
-      pdfCatalog.set(category.slug,entries.map(entry=>({name:entry.name,size:entry.size||0})));
-      count.textContent=entries.length+' '+(entries.length===1?'prancha':'pranchas');
-      if(!entries.length){body.innerHTML='<p class="pdf-folder-state">Ainda sem pranchas publicadas.</p>';return;}
-      for(const entry of entries){const button=document.createElement('button');button.className='action pdf-link';button.textContent=entry.name;button.onclick=()=>viewPdf(category.slug,entry.name,button);body.appendChild(button);}
-    }catch(error){count.textContent='Indisponível';body.innerHTML='<p class="pdf-folder-state"></p>';body.firstChild.textContent=error.message;}
-  });
-  await Promise.all(loads);
+    icon.className='pdf-folder-icon';icon.setAttribute('aria-hidden','true');title.className='pdf-folder-title';title.textContent=category.label;subtitle.className='pdf-folder-subtitle';subtitle.textContent=category.subtitle;count.className='pdf-folder-count';body.className='pdf-folder-body';heading.append(title,subtitle);summary.append(icon,heading,count);folder.append(summary,body);list.append(folder);
+    const raw=manifest.categories[category.slug];
+    const entries=(Array.isArray(raw)?raw:[]).filter(item=>item&&typeof item.name==='string'&&/\.pdf$/i.test(item.name)).sort((a,b)=>a.name.localeCompare(b.name,'pt-BR',{numeric:true}));
+    pdfCatalog.set(category.slug,entries.map(entry=>({name:entry.name,size:entry.size||0})));
+    count.textContent=entries.length+' '+(entries.length===1?'prancha':'pranchas');
+    if(!entries.length){const empty=document.createElement('p');empty.className='pdf-folder-state';empty.textContent='Ainda sem pranchas publicadas.';body.append(empty);continue;}
+    for(const entry of entries){const button=document.createElement('button');button.className='action pdf-link';button.textContent=entry.name;button.onclick=()=>viewPdf(category.slug,entry.name,button);body.append(button);}
+  }
 }
 document.getElementById('refresh-pdfs').onclick=listPdfs;
 listPdfs();
@@ -1038,7 +1075,9 @@ listPdfs();
 const workbenchInterface=initInterface({THREE,camera,modelDefs,meshMeta,layerMap,categoryLabel,getSelected:()=>selected,hideSelectedElement,restoreAllHidden,hiddenMeshes,updateHiddenButton,fitView,leaveWalk,closeMobilePanels,captureViewThumbnail,
   setView(view){fitView(view);}
 });
-refreshViewPreview=workbenchInterface.refreshViewThumbnails;
+// Compatibility with an older interface module held in the browser cache.
+refreshViewPreview=typeof workbenchInterface?.refreshViewThumbnails==='function'
+  ?workbenchInterface.refreshViewThumbnails:()=>{};
 refreshViewPreview();
 // ── BOOT ──────────────────────────────────────────────────────────────────────
 tryFetch().catch(window.showViewerError);

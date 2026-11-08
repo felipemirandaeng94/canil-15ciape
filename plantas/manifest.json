@@ -1,0 +1,76 @@
+{
+  "version": 1,
+  "updatedAt": "2026-11-08",
+  "categories": {
+    "arquitetonico": [
+      {
+        "name": "CANIL 01 PLANTA BAIXA.pdf",
+        "size": 1359775
+      },
+      {
+        "name": "CANIL 02 FACHADAS.pdf",
+        "size": 160899
+      },
+      {
+        "name": "CANIL 03 VISTA 3D.pdf",
+        "size": 945514
+      }
+    ],
+    "estrutural": [
+      {
+        "name": "1.1 - TERREO - FORMAS.pdf",
+        "size": 63147
+      },
+      {
+        "name": "1.2 - TERREO - ARMACAO - PRANCHA 1.pdf",
+        "size": 100010
+      },
+      {
+        "name": "1.3 - TERREO - ARMACAO - PRANCHA 2.pdf",
+        "size": 97519
+      },
+      {
+        "name": "1.4 - TERREO - ARMACAO - PRANCHA 3.pdf",
+        "size": 97493
+      },
+      {
+        "name": "1.5 - TERREO - ARMACAO - PRANCHA 4.pdf",
+        "size": 45720
+      },
+      {
+        "name": "1.6 - TERREO - ARMACAO - PRANCHA 5.pdf",
+        "size": 59297
+      },
+      {
+        "name": "2.1 - MURO - FORMAS.pdf",
+        "size": 62971
+      },
+      {
+        "name": "2.2 - MURO - ARMACAO - PRANCHA 1.pdf",
+        "size": 95129
+      },
+      {
+        "name": "3.1 - TELHADO CANIL E LAJE DEPOSITO - FORMAS.pdf",
+        "size": 59423
+      },
+      {
+        "name": "3.2 - TELHADO CANIL E LAJE DEPOSITO - ARMACAO - PRANCHA 1.pdf",
+        "size": 107067
+      },
+      {
+        "name": "3.3 - TELHADO CANIL E LAJE DEPOSITO - ARMACAO - PRANCHA 2.pdf",
+        "size": 63140
+      },
+      {
+        "name": "4.1 - TELHADO DEPOSITO - FORMAS.pdf",
+        "size": 40331
+      },
+      {
+        "name": "4.2 - TELHADO DEPOSITO - ARMACAO - PRANCHA 1.pdf",
+        "size": 64841
+      }
+    ],
+    "eletrico": [],
+    "hidrossanitario": []
+  }
+}
