@@ -67,7 +67,7 @@ export function initInterface(api){
   for(const id of ['btn-top','btn-front','btn-side'])$(id).hidden=true;
   toolbar.querySelectorAll('.tool-section').forEach(e=>e.hidden=true);
   const select=button('Selecionar','arrow',()=>{api.leaveWalk();showPanel('properties');},'tb');select.classList.add('on');toolbar.prepend(select);
-  const hide=button('Ocultar','eye',api.hideSelectedElement,'tb'),isolate=button('Isolar elemento','layers',()=>{const m=api.meshMeta.get(api.getSelected());if(!m)return;for(const [mesh,meta] of api.meshMeta)if(mesh.visible&&mesh.parent.visible&&(meta.id!==m.id||meta.discipline!==m.discipline)){mesh.visible=false;api.hiddenMeshes.add(mesh);}api.updateHiddenButton();},'tb');toolbar.append(hide,isolate,button('Disciplinas','layers',()=>showPanel('disciplines'),'tb'));
+  const hide=button('Ocultar','eye',api.hideSelectedElement,'tb'),isolate=button('Isolar elemento','layers',()=>{const m=api.meshMeta.get(api.getSelected());if(!m)return;for(const [mesh,meta] of api.meshMeta)if(mesh.visible&&mesh.parent.visible&&(meta.id!==m.id||meta.discipline!==m.discipline)){mesh.visible=false;api.hiddenMeshes.add(mesh);}api.updateHiddenButton();refreshViewThumbnails();},'tb');toolbar.append(hide,isolate,button('Disciplinas','layers',()=>showPanel('disciplines'),'tb'));
   const restore=button('Restaurar câmera','reset',api.fitView,'tb');toolbar.append(restore);
   const footer=document.createElement('div');footer.id='viewer-footer';const status=document.createElement('div');status.id='workspace-status';footer.append(status,views);wrap.append(footer);
   const reopen=button('Abrir painel','folder',()=>showPanel('pdf'));reopen.id='reopen-panel';wrap.append(reopen);
