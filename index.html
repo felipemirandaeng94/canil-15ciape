@@ -896,7 +896,10 @@ async function loadBuffer(buf,fileName='CANIL.ifc'){
       }
       if(data.kind==='done'){
         clearTimeout(timer);worker.terminate();activeWorker=null;
-        if(!meshMeta.size)throw new Error('O IFC não contém geometria renderizável.');
+        const ownElementCount=Object.values(data.rendered||{}).reduce((sum,count)=>sum+count,0);
+        if(!ownElementCount)throw new Error(
+          fileName+' não contém geometria 3D renderizável. Verifique a exportação IFC dos componentes desta disciplina.'
+        );
         const excluded=applyCanilGeometryRules(def);
         if(excluded.size&&data.rendered.IFCMEMBER)data.rendered.IFCMEMBER=Math.max(0,data.rendered.IFCMEMBER-excluded.size);
         const box=new THREE.Box3();for(const mesh of meshMeta.keys()){mesh.position.set(0,0,0);mesh.updateMatrixWorld(true);if(mesh.visible&&mesh.parent.visible)box.expandByObject(mesh);}
@@ -906,7 +909,7 @@ async function loadBuffer(buf,fileName='CANIL.ifc'){
         sun.target.position.set(0,modelSize.y*0.25,0);sun.position.set(-shadowExtent*0.65,shadowExtent*1.2,shadowExtent*0.85);
         Object.assign(sun.shadow.camera,{left:-shadowExtent,right:shadowExtent,top:shadowExtent,bottom:-shadowExtent,near:0.1,far:shadowExtent*5});sun.shadow.camera.updateProjectionMatrix();
         fitView();statusEl.style.display='none';
-        def.count=Object.values(data.rendered).reduce((a,b)=>a+b,0);def.status.textContent=fileName+' · '+def.count+(def.count===1?' elemento':' elementos')+(data.missing.length?' · '+data.missing.length+' sem malha':'');
+        def.count=ownElementCount;def.status.textContent=fileName+' · '+def.count+(def.count===1?' elemento':' elementos')+(data.missing.length?' · '+data.missing.length+' sem malha':'');
         for(const [type,count] of Object.entries(data.rendered))layerMap.get(def.id+':'+type).count.textContent=count;
         updateModelVisibility(def);resolve();
         console.info('IFC carregado',data.rendered);
