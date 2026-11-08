@@ -10,8 +10,9 @@ export function mountViewCube({wrap,camera,THREE,setView,getViewAngles}){
   root.id='orientation';
   root.className='viewcube-widget';
   root.setAttribute('aria-label','Cubo de navegação 3D');
-  const svg=make('svg',{viewBox:'0 0 140 108','aria-label':'Orientação 3D do modelo',role:'img'});
+  const svg=make('svg',{viewBox:'0 0 140 140','aria-label':'Orientação 3D do modelo',role:'img'});
   root.append(svg);
+  const defs=make('defs');svg.append(defs);
   const specs=[
     ['top','TOPO',[0,1,0],'#edf2f3',[[1,1,-1],[1,1,1],[-1,1,1],[-1,1,-1]]],
     ['bottom','BASE',[0,-1,0],'#a5b3b8',[[1,-1,-1],[-1,-1,-1],[-1,-1,1],[1,-1,1]]],
@@ -23,14 +24,17 @@ export function mountViewCube({wrap,camera,THREE,setView,getViewAngles}){
   const faces=specs.map(([key,label,normal,fill,vertices])=>{
     const group=make('g',{'class':'viewcube-face',role:'button',tabindex:'0','aria-label':'Vista '+label.toLowerCase()});
     const poly=make('polygon',{fill,stroke:'#62737b','stroke-width':'1.3','stroke-linejoin':'round'});
-    const text=make('text',{'class':'viewcube-face-label','text-anchor':'middle','dominant-baseline':'middle'});
+    // Face clipping keeps labels within the visible polygon at oblique angles.
+    const clip=make('clipPath',{id:'viewcube-face-clip-'+key,clipPathUnits:'userSpaceOnUse'});
+    const clipPoly=make('polygon');clip.append(clipPoly);defs.append(clip);
+    const text=make('text',{'class':'viewcube-face-label','text-anchor':'middle','dominant-baseline':'middle','clip-path':'url(#viewcube-face-clip-'+key+')'});
     text.textContent=label;
     const title=make('title');title.textContent='Mostrar '+label.toLowerCase();
     group.append(poly,text,title);
     const activate=()=>setView(key);
     group.addEventListener('click',activate);
     group.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();activate();}});
-    return {key,normal:new THREE.Vector3(...normal),vertices,group,poly,text};
+    return {key,normal:new THREE.Vector3(...normal),vertices,group,poly,clipPoly,text};
   });
   const corners=[];
   for(const x of [-1,1])for(const y of [-1,1])for(const z of [-1,1]){
@@ -60,8 +64,9 @@ export function mountViewCube({wrap,camera,THREE,setView,getViewAngles}){
   const inverse=new THREE.Quaternion(),vector=new THREE.Vector3();
   const project=point=>{
     vector.set(...point).applyQuaternion(inverse);
-    const factor=25/(1-.12*vector.z);
-    return {x:70+vector.x*factor,y:52-vector.y*factor,z:vector.z};
+    // Wider cuboid (~100 px) so FRENTE/DIREITA remain legible.
+    const factor=31/(1-.12*vector.z);
+    return {x:70+vector.x*factor,y:64-vector.y*factor,z:vector.z};
   };
   const previous=new THREE.Quaternion(0,0,0,0);
   let frame=0;
@@ -77,10 +82,17 @@ export function mountViewCube({wrap,camera,THREE,setView,getViewAngles}){
       if(normal.z<=.001){face.group.style.display='none';continue;}
       face.group.style.display='';
       const points=face.vertices.map(project);
-      face.poly.setAttribute('points',points.map(p=>p.x.toFixed(1)+','+p.y.toFixed(1)).join(' '));
+      const polygonPoints=points.map(p=>p.x.toFixed(1)+','+p.y.toFixed(1)).join(' ');
+      face.poly.setAttribute('points',polygonPoints);
+      face.clipPoly.setAttribute('points',polygonPoints);
       face.text.setAttribute('x',(points.reduce((n,p)=>n+p.x,0)/4).toFixed(1));
       face.text.setAttribute('y',(points.reduce((n,p)=>n+p.y,0)/4).toFixed(1));
-      face.text.setAttribute('font-size',face.key==='left'?'8':'9');
+      const spanX=Math.max(...points.map(p=>p.x))-Math.min(...points.map(p=>p.x));
+      const labelWidth=Math.min(face.text.textContent.length*5.6,spanX*.68);
+      face.text.setAttribute('font-size','9');
+      face.text.setAttribute('lengthAdjust','spacingAndGlyphs');
+      face.text.setAttribute('textLength',Math.max(6,labelWidth).toFixed(1));
+      face.text.style.visibility=spanX<17?'hidden':'visible';
       visible.push({group:face.group,depth:points.reduce((n,p)=>n+p.z,0)/4});
     }
     visible.sort((a,b)=>a.depth-b.depth);
