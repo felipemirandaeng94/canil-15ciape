@@ -297,6 +297,8 @@ export function initPdfWorkspace({dialog,onChoose}){
     }
   }
   function dispose(){
+    // Cancel pending resize render when the modal is closed.
+    if(stageResizeFrame){cancelAnimationFrame(stageResizeFrame);stageResizeFrame=0;}
     documentSeq++;renderSeq++;
     thumbObserver?.disconnect();thumbObserver=null;
     if(renderTask){renderTask.cancel();renderTask=null;}
@@ -305,7 +307,24 @@ export function initPdfWorkspace({dialog,onChoose}){
     if(document.fullscreenElement===dialog)document.exitFullscreen().catch(()=>{});
   }
   function showError(error){status(error);paper.hidden=true;frame.hidden=true;}
-  const resize=new ResizeObserver(()=>{if(doc&&(mode==='fit-width'||mode==='fit-page'))render();});
+  // Rendering changes the dimensions of the PDF canvas. Never render from
+  // inside ResizeObserver itself; only react to actual viewport size changes.
+  let stageResizeFrame=0,stageWidth=0,stageHeight=0;
+  const resize=new ResizeObserver(entries=>{
+    if(!dialog.open)return;
+    const rect=entries[0]?.contentRect;
+    const width=rect?.width||stage.clientWidth;
+    const height=rect?.height||stage.clientHeight;
+    if(width<10||height<10)return;
+    if(Math.abs(width-stageWidth)<1&&Math.abs(height-stageHeight)<1)return;
+    stageWidth=width;stageHeight=height;
+    if(!doc||(mode!=='fit-width'&&mode!=='fit-page'))return;
+    if(stageResizeFrame)cancelAnimationFrame(stageResizeFrame);
+    stageResizeFrame=requestAnimationFrame(()=>{
+      stageResizeFrame=0;
+      if(dialog.open&&doc&&(mode==='fit-width'||mode==='fit-page'))render();
+    });
+  });
   resize.observe(stage);
   return {open,dispose,showError};
 }
