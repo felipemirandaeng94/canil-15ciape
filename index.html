@@ -259,7 +259,8 @@ self.onmessage=async ({data})=>{
 <script type="module">
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
 import { RoomEnvironment } from 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/environments/RoomEnvironment.js';
-import { initInterface } from './assets/interface.js?v=20261108-ifc403';
+import { initInterface } from './assets/interface.js?v=20261108-viewcube';
+import { mountViewCube } from './assets/view-cube.js';
 import { initPdfWorkspace } from './assets/pdf-workspace.js?v=20261108-resizefix';
 
 
@@ -583,8 +584,18 @@ function fitView(view='iso'){
   for(const mesh of meshMeta.keys())if(mesh.visible&&mesh.parent.visible)box.expandByObject(mesh);
   if(box.isEmpty())return;
   target.copy(box.getCenter(new THREE.Vector3()));
-  phi=view==='top'?.02:view==='front'||view==='side'?Math.PI/2:Math.PI/4;
-  theta=view==='top'||view==='front'?0:view==='side'?Math.PI/2:Math.PI/4;
+  const viewAngles={
+    iso:[Math.PI/4,Math.PI/4],
+    top:[.02,0],
+    bottom:[Math.PI-.02,0],
+    front:[Math.PI/2,0],
+    back:[Math.PI/2,Math.PI],
+    side:[Math.PI/2,Math.PI/2],
+    right:[Math.PI/2,Math.PI/2],
+    left:[Math.PI/2,-Math.PI/2]
+  };
+  const custom=view&&typeof view==='object'&&Number.isFinite(view.phi)&&Number.isFinite(view.theta);
+  [phi,theta]=custom?[Math.min(Math.PI-.02,Math.max(.02,view.phi)),view.theta]:(viewAngles[view]||viewAngles.iso);
   radius=1;
   camUpdate(); // Updates camera.quaternion for the chosen direction.
   const inverse=camera.quaternion.clone().invert();
@@ -1094,6 +1105,8 @@ listPdfs();
 const workbenchInterface=initInterface({THREE,camera,modelDefs,meshMeta,layerMap,categoryLabel,getSelected:()=>selected,hideSelectedElement,restoreAllHidden,hiddenMeshes,updateHiddenButton,fitView,leaveWalk,closeMobilePanels,captureViewThumbnail,
   setView(view){fitView(view);}
 });
+// ViewCube follows the same camera as the IFC and invokes the existing fit logic.
+mountViewCube({wrap,camera,THREE,setView:fitView,getViewAngles:()=>({phi,theta})});
 // Compatibility with an older interface module held in the browser cache.
 refreshViewPreview=typeof workbenchInterface?.refreshViewThumbnails==='function'
   ?workbenchInterface.refreshViewThumbnails:()=>{};
