@@ -71,12 +71,7 @@ export function initInterface(api){
   const restore=button('Restaurar câmera','reset',api.fitView,'tb');toolbar.append(restore);
   const footer=document.createElement('div');footer.id='viewer-footer';const status=document.createElement('div');status.id='workspace-status';footer.append(status,views);wrap.append(footer);
   const reopen=button('Abrir painel','folder',()=>showPanel('pdf'));reopen.id='reopen-panel';wrap.append(reopen);
-  // Camera-aligned axis indicator. Y is vertical in the current Three.js world.
-  const axes=document.createElement('div');axes.id='orientation';axes.title='Eixos do visualizador (Y vertical)';axes.innerHTML='<svg viewBox="0 0 90 90" aria-label="Orientação 3D"></svg>';wrap.append(axes);
-  const axesSvg=axes.firstChild,axisItems=[];
-  for(const [label,color,vector] of [['X','#ee8c87',[1,0,0]],['Y','#7ee5ab',[0,1,0]],['Z','#80b8ef',[0,0,1]]]){const line=document.createElementNS('http://www.w3.org/2000/svg','line'),text=document.createElementNS('http://www.w3.org/2000/svg','text');line.setAttribute('stroke',color);line.setAttribute('stroke-width','2');text.setAttribute('fill',color);text.textContent=label;axesSvg.append(line,text);axisItems.push({line,text,v:new api.THREE.Vector3(...vector)});}
-  const inverse=new api.THREE.Quaternion(),direction=new api.THREE.Vector3();
-  function orient(){inverse.copy(api.camera.quaternion).invert();for(const a of axisItems){direction.copy(a.v).applyQuaternion(inverse);const x=45+direction.x*29,y=45-direction.y*29;a.line.setAttribute('x1','45');a.line.setAttribute('y1','45');a.line.setAttribute('x2',x);a.line.setAttribute('y2',y);a.text.setAttribute('x',x+3);a.text.setAttribute('y',y-3);}requestAnimationFrame(orient);}orient();
+  // A orientação é controlada pelo ViewCube dedicado no módulo principal.
   function field(parent,label,value){const row=document.createElement('div');row.className='property-row';const term=document.createElement('span'),val=document.createElement('span');term.textContent=label;val.textContent=value??'Não informado';row.append(term,val);parent.append(row);}
   function scalar(value){if(value==null)return 'Não informado';if(Array.isArray(value))return value.map(scalar).join(', ');if(typeof value==='object'){if('value' in value)return scalar(value.value);if('_internalValue' in value)return scalar(value._internalValue);return Object.entries(value).filter(([k,v])=>!['expressID','type','_representationValue'].includes(k)&&v!=null).map(([k,v])=>k+': '+scalar(v)).join('; ');}return typeof value==='number'?value.toLocaleString('pt-BR',{maximumFractionDigits:6}):String(value);}
   let lastSelection;

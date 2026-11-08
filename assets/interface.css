@@ -299,3 +299,102 @@ button,a,summary{ -webkit-tap-highlight-color:transparent}button:disabled{opacit
   #hint{bottom:132px}
   #shortcut-toast{bottom:137px}
 }
+
+/* ViewCube interativo com faces e rotação em 90 graus. */
+#orientation.viewcube-widget{
+  position:absolute;
+  top:122px;
+  right:17px;
+  z-index:8;
+  width:146px;
+  height:139px;
+  padding:0;
+  background:transparent;
+  border:0;
+  border-radius:0;
+  box-shadow:none;
+  overflow:visible;
+  pointer-events:auto;
+  display:flex;
+  align-items:center;
+  flex-direction:column;
+  gap:0;
+  filter:drop-shadow(0 4px 7px #000a);
+}
+#orientation.viewcube-widget svg{
+  display:block;
+  width:139px;
+  height:105px;
+  flex:0 0 105px;
+  overflow:visible;
+}
+#orientation .viewcube-face{
+  cursor:pointer;
+  outline:0;
+}
+#orientation .viewcube-face-label{
+  fill:#27383d;
+  font-family:'Segoe UI',system-ui,sans-serif;
+  font-weight:800;
+  font-size:9px;
+  letter-spacing:0;
+  pointer-events:none;
+  user-select:none;
+}
+#orientation .viewcube-face:hover polygon,
+#orientation .viewcube-face:focus-visible polygon{
+  fill:#9deec1;
+  stroke:#1c9b67;
+  stroke-width:2;
+}
+#orientation .viewcube-corner{
+  fill:#d4e6e0;
+  stroke:#60766e;
+  stroke-width:.5;
+  cursor:pointer;
+  opacity:0;
+}
+#orientation .viewcube-corner:hover,
+#orientation .viewcube-corner:focus-visible{
+  fill:#74f0ab;
+  opacity:1;
+  stroke:#168451;
+  stroke-width:1.5;
+}
+#orientation .viewcube-rotate{
+  width:94px;
+  height:30px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-top:-3px;
+}
+#orientation .viewcube-rotate-button{
+  flex:0 0 32px;
+  width:32px;
+  height:30px;
+  padding:0;
+  border:1px solid transparent;
+  border-radius:8px;
+  background:#0e2527c4;
+  color:#e4f3ee;
+  font-size:27px;
+  line-height:1;
+  font-weight:500;
+  cursor:pointer;
+  transition:color .15s,background .15s,border-color .15s;
+}
+#orientation .viewcube-rotate-button:hover,
+#orientation .viewcube-rotate-button:focus-visible{
+  color:#79f3ac;
+  background:#164639;
+  border-color:#5da783;
+}
+@media(max-width:800px){
+  #orientation.viewcube-widget{
+    top:70px;
+    right:5px;
+    transform:scale(.8);
+    transform-origin:top right;
+  }
+}
