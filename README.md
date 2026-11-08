@@ -51,4 +51,4 @@ Terreno identificado como grama é verde. Coberturas identificadas pelo tipo/pre
 - O projeto usa modelos de arquitetura e estrutura presentes na raiz; os números de elementos exibidos dependem dos arquivos publicados.
 - A integração geométrica entre disciplinas depende dos arquivos IFC exportados com a mesma origem e orientação.
 - Envio PDF: criação, proteção contra sobrescrita, atualização com SHA, base64, erros de autorização, tamanho e assinatura PDF verificados com respostas simuladas; sem gravar arquivos de teste no GitHub.
-- Os modelos reais de estrutura, hidráulica e esgoto ainda precisam ser publicados para validar seu alinhamento real. O primeiro envio pelo painel requer o token do administrador.
+- A estrutura já está publicada; os modelos elétrico, hidráulico e de esgoto ainda precisam ser enviados para validar a compatibilização real de cada disciplina. O primeiro envio de PDF pelo painel requer uma credencial de escrita autorizada no GitHub.
