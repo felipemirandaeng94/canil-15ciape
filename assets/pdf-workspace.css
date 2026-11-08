@@ -1,0 +1,188 @@
+/* Leitor profissional de pranchas BIM — isolado do visualizador IFC. */
+#pdf-dialog{
+  width:calc(100vw - 28px);
+  max-width:none;
+  height:calc(100dvh - 28px);
+  max-height:none;
+  padding:0;
+  overflow:hidden;
+  border:1px solid #286451;
+  border-radius:16px;
+  background:#081b1b;
+  box-shadow:0 28px 110px #000d;
+  color:#f1fbf7;
+}
+#pdf-dialog::backdrop{background:#020a0edd;backdrop-filter:blur(9px)}
+#pdf-dialog:fullscreen{width:100vw;height:100vh;max-width:none;max-height:none;margin:0;border:0;border-radius:0}
+#pdf-dialog .pdfw-shell{height:100%;min-height:0;display:flex;flex-direction:column;isolation:isolate}
+#pdf-dialog .pdfw-header{
+  position:relative;
+  display:flex;align-items:center;gap:16px;
+  min-height:88px;padding:13px 20px;
+  border-bottom:1px solid #245a4b;
+  background:
+    linear-gradient(90deg,#071b19 0%,#0b3027ec 41%,#0c342cb8 55%,#071a1af7 81%,#071b19 100%),
+    url('./banner-canil.svg') 66% center/auto 100% no-repeat,
+    #09241f;
+}
+#pdf-dialog .pdfw-filemark{
+  flex-shrink:0;width:43px;height:51px;display:flex;align-items:flex-end;justify-content:center;
+  padding:0 0 12px;border-radius:6px;
+  background:#e02d45;clip-path:polygon(0 0,69% 0,100% 26%,100% 100%,0 100%);
+  color:#fff;font-size:12px;font-weight:900;letter-spacing:.4px;filter:drop-shadow(0 3px 5px #0005);
+}
+#pdf-dialog .pdfw-identity{flex:1;min-width:0}
+#pdf-dialog .pdfw-kicker{color:#76efab;font-weight:800;font-size:11px;letter-spacing:1.2px}
+#pdf-dialog #pdf-title{color:#fff;font-size:clamp(16px,1.55vw,23px);line-height:1.25;font-weight:800;letter-spacing:.12px;margin:4px 0 0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#pdf-dialog .pdfw-header-actions{display:flex;align-items:center;gap:8px;flex-shrink:0}
+#pdf-dialog .pdfw-action{
+  display:flex;align-items:center;justify-content:center;gap:7px;white-space:nowrap;
+  min-height:40px;padding:9px 11px;
+  border:1px solid #426659;border-radius:9px;background:#102c2ae6;
+  color:#eef8f5;text-decoration:none;font-weight:600;font-size:12px;line-height:1;
+}
+#pdf-dialog .pdfw-action:hover,#pdf-dialog .pdfw-action:focus-visible{background:#215844;border-color:#7ee8a9;color:#fff}
+#pdf-dialog .pdfw-action:first-child{border-color:#65ec9b;box-shadow:inset 0 0 0 1px #28774e}
+#pdf-dialog .pdfw-close{font-size:19px}
+#pdf-dialog .pdfw-close span{font-size:12px}
+#pdf-dialog .pdfw-main{display:flex;flex:1;min-height:0;position:relative;overflow:hidden;gap:0}
+#pdf-dialog .pdfw-sidebar{
+  width:295px;flex:0 0 295px;min-height:0;position:relative;
+  display:flex;flex-direction:column;border-right:1px solid #215e4f;
+  background:linear-gradient(160deg,#0c3027 0%,#09231f 38%,#071b1b 100%);
+}
+#pdf-dialog .pdfw-side-heading{
+  display:flex;align-items:center;justify-content:space-between;gap:8px;
+  padding:17px 15px;border-bottom:1px solid #23493f;
+}
+#pdf-dialog .pdfw-side-heading strong{display:block;font-size:13px;color:#fff}
+#pdf-dialog .pdfw-side-heading span{display:block;margin-top:4px;color:#a3d1bf;font-size:11px}
+#pdf-dialog #pdfw-hide-sidebar{width:30px;height:30px;border:1px solid #366d55;border-radius:8px;background:#153a2d;color:#e5fff1;font-size:20px}
+#pdf-dialog .pdfw-files{padding:12px 11px;overflow:auto;min-height:0;flex:1;scrollbar-color:#326e58 #0b2722;scrollbar-width:thin}
+#pdf-dialog .pdfw-file-item{
+  display:flex;width:100%;min-height:103px;align-items:center;gap:10px;text-align:left;
+  margin:0 0 9px;padding:10px;border:1px solid #2d5d51;border-radius:12px;
+  background:linear-gradient(140deg,#112f2e,#0e2429);
+  color:#edf8f4;transition:background .16s,border-color .16s,box-shadow .16s;
+}
+#pdf-dialog .pdfw-file-item:hover{background:#1b4239;border-color:#7ad4a1}
+#pdf-dialog .pdfw-file-item.active{background:linear-gradient(135deg,#154832,#0f2c29);border-color:#61efa0;box-shadow:inset 0 0 0 1px #44a970,0 0 0 2px #43c47a18}
+#pdf-dialog .pdfw-thumb{
+  flex:0 0 87px;width:87px;height:76px;border-radius:7px;overflow:hidden;
+  background:#f1f4f1;border:2px solid #c8dfd7;color:#bd3849;display:flex;align-items:center;justify-content:center;
+  font-size:15px;font-weight:900;box-shadow:0 3px 10px #0005;
+}
+#pdf-dialog .pdfw-thumb canvas{width:auto;height:auto;max-width:100%;max-height:100%;object-fit:contain}
+#pdf-dialog .pdfw-file-info{display:flex;flex:1;flex-direction:column;min-width:0;gap:4px}
+#pdf-dialog .pdfw-file-number{width:max-content;padding:3px 7px;background:#70e9a4;color:#08321d;border-radius:99px;font-weight:800;font-size:10px}
+#pdf-dialog .pdfw-file-info strong{font-size:11px;line-height:1.4;overflow-wrap:anywhere}
+#pdf-dialog .pdfw-file-info small{font-size:10px;color:#9fbfb4;line-height:1.2}
+#pdf-dialog .pdfw-file-check{display:none;flex:0 0 22px;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:#6dee9f;color:#0b3623;font-weight:900}
+#pdf-dialog .pdfw-file-item.active .pdfw-file-check{display:flex}
+#pdf-dialog .pdfw-side-decoration{position:absolute;pointer-events:none;bottom:15px;right:16px;font-size:58px;color:#1e614833;line-height:1}
+#pdf-dialog .pdfw-reader{min-width:0;flex:1;display:flex;flex-direction:column;background:#102326}
+#pdf-dialog .pdfw-toolbar{
+  display:flex;align-items:center;gap:9px;min-height:59px;padding:9px 14px;
+  background:linear-gradient(160deg,#102d2a,#0b2427);border-bottom:1px solid #254d43;
+  overflow-x:auto;scrollbar-width:thin;flex-shrink:0;
+}
+#pdf-dialog .pdfw-tools-group{display:flex;align-items:center;gap:6px;flex-shrink:0}
+#pdf-dialog .pdfw-tool{
+  display:inline-flex;align-items:center;justify-content:center;gap:7px;
+  flex-shrink:0;min-width:33px;min-height:34px;padding:6px 9px;border-radius:7px;
+  color:#eaf7f2;background:transparent;border:1px solid transparent;
+  font-size:18px;line-height:1;font-weight:600;
+}
+#pdf-dialog .pdfw-tool span{font-size:11px}
+#pdf-dialog .pdfw-tool:hover:not(:disabled){border-color:#4b9273;background:#20513d}
+#pdf-dialog .pdfw-tool.active{background:#165d3f;color:#c4ffda;border-color:#26895d}
+#pdf-dialog .pdfw-tool:disabled{opacity:.33;cursor:default}
+#pdf-dialog #pdfw-page-input{
+  width:44px;min-width:44px;min-height:31px;padding:5px 2px;text-align:center;
+  background:#081b20;color:#fff;border:1px solid #476659;border-radius:5px;
+  font-size:12px;appearance:textfield;
+}
+#pdf-dialog #pdfw-page-input::-webkit-outer-spin-button,#pdf-dialog #pdfw-page-input::-webkit-inner-spin-button{appearance:none}
+#pdf-dialog .pdfw-page-count{color:#bbd8cb;font-size:12px;white-space:nowrap}
+#pdf-dialog #pdfw-zoom{
+  width:158px;min-height:34px;background:#10282a;color:#e8faef;
+  border:1px solid #41695d;border-radius:7px;padding:5px 8px;font-weight:650;font-size:11px;
+}
+#pdf-dialog .pdfw-divider{display:block;flex:0 0 1px;height:26px;background:#3e6a5c;margin:0 4px}
+#pdf-dialog .pdfw-toolbar-spacer{flex:1;min-width:6px}
+#pdf-dialog .pdfw-stage{
+  position:relative;flex:1;min-height:0;overflow:auto;
+  display:flex;align-items:safe center;justify-content:safe center;
+  padding:24px;background:#26383b;
+  scrollbar-color:#6e8f88 #1e3437;scrollbar-width:thin;
+}
+#pdf-dialog .pdfw-stage.pdfw-panning{cursor:grab}
+#pdf-dialog .pdfw-stage.pdfw-panning:active{cursor:grabbing}
+#pdf-dialog .pdfw-paper{
+  flex:0 0 auto;min-width:0;min-height:0;margin:auto;
+  box-shadow:0 7px 35px #0007;border:1px solid #d9e0e1;
+  background:#fff;
+}
+#pdf-dialog #pdfw-canvas{display:block;width:auto;height:auto;max-width:none;max-height:none;pointer-events:none}
+#pdf-dialog #pdf-frame{display:block;position:absolute;inset:0;width:100%;height:100%;margin:0;border:0;background:#fff}
+#pdf-dialog .pdfw-loading{
+  position:absolute;z-index:2;left:50%;top:50%;transform:translate(-50%,-50%);
+  padding:15px 20px;background:#102723ee;border:1px solid #447a69;border-radius:10px;
+  color:#c6f4dd;font-size:13px;text-align:center;box-shadow:0 12px 45px #0006;
+}
+#pdf-dialog .pdfw-footer{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  min-height:55px;padding:9px 16px;border-top:1px solid #2b7052;background:#09211c;
+}
+#pdf-dialog .pdfw-document-data{display:flex;gap:18px;align-items:center;flex-wrap:wrap;font-size:10px;color:#b0ccbf}
+#pdf-dialog .pdfw-document-data span+span{border-left:1px solid #355e51;padding-left:16px}
+#pdf-dialog .pdfw-document-nav{display:flex;align-items:center;gap:10px;flex-shrink:0}
+#pdf-dialog .pdfw-document-nav span{font-size:11px;color:#e1f7ed;white-space:nowrap}
+#pdf-dialog .pdfw-document-nav button{
+  min-height:34px;padding:7px 11px;border:1px solid #418767;border-radius:8px;
+  background:#175b3c;color:#effff4;font-size:11px;font-weight:700;
+}
+#pdf-dialog .pdfw-document-nav button:hover:not(:disabled){background:#238353}
+#pdf-dialog .pdfw-document-nav button:disabled{background:#152a29;border-color:#34504a;color:#7d9f91;cursor:default}
+#pdf-dialog.pdfw-sidebar-closed .pdfw-sidebar{display:none}
+#pdf-dialog .pdfw-toggle-thumbs{display:none}
+#pdf-dialog .pdfw-toggle-thumbs{display:none}
+#pdf-dialog .pdfw-toolbar .pdfw-toggle-thumbs{display:none}
+#pdf-dialog.pdfw-sidebar-closed .pdfw-toolbar .pdfw-toggle-thumbs{display:inline-flex}
+@media(max-width:1150px){
+  #pdf-dialog .pdfw-sidebar{width:235px;flex-basis:235px}
+  #pdf-dialog .pdfw-thumb{width:66px;flex-basis:66px;height:65px}
+  #pdf-dialog .pdfw-file-item{gap:8px;padding:8px}
+  #pdf-dialog .pdfw-header{padding:10px 12px}
+  #pdf-dialog .pdfw-header-actions{gap:5px}
+  #pdf-dialog .pdfw-action{padding:8px;font-size:11px}
+  #pdf-dialog .pdfw-toolbar{gap:4px;padding:7px}
+  #pdf-dialog .pdfw-toolbar .pdfw-tool-labeled span{display:none}
+  #pdf-dialog .pdfw-footer{padding:8px 10px}
+}
+@media(max-width:800px){
+  #pdf-dialog{margin:0;width:100vw;height:100dvh;max-height:none;border-radius:0;border:0}
+  #pdf-dialog .pdfw-header{min-height:68px;gap:9px;padding:8px}
+  #pdf-dialog .pdfw-filemark{width:29px;height:38px;font-size:9px;padding-bottom:9px}
+  #pdf-dialog .pdfw-kicker{font-size:9px;letter-spacing:.3px}
+  #pdf-dialog #pdf-title{font-size:12px}
+  #pdf-dialog .pdfw-header-actions{gap:3px}
+  #pdf-dialog .pdfw-action{min-height:32px;padding:6px}
+  #pdf-dialog .pdfw-action span{display:none}
+  #pdf-dialog .pdfw-close{font-size:22px}
+  #pdf-dialog .pdfw-sidebar{position:absolute;z-index:4;top:0;left:0;bottom:0;width:min(285px,88vw);height:100%;box-shadow:12px 0 34px #0009}
+  #pdf-dialog .pdfw-reader{width:100%}
+  #pdf-dialog .pdfw-toolbar .pdfw-toggle-thumbs{display:inline-flex}
+  #pdf-dialog .pdfw-toolbar{min-height:49px;gap:3px}
+  #pdf-dialog .pdfw-divider{margin:0 1px}
+  #pdf-dialog #pdfw-zoom{width:113px}
+  #pdf-dialog .pdfw-stage{padding:12px}
+  #pdf-dialog .pdfw-footer{min-height:51px}
+  #pdf-dialog .pdfw-document-data{display:none}
+}
+@media(max-width:520px){
+  #pdf-dialog .pdfw-toolbar .pdfw-tool-labeled{display:none}
+  #pdf-dialog .pdfw-tools-group{gap:2px}
+  #pdf-dialog .pdfw-document-nav{width:100%;justify-content:space-between}
+  #pdf-dialog .pdfw-header{background-image:linear-gradient(90deg,#071b19,#0c3128bd,#071b19)}
+}
