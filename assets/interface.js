@@ -29,9 +29,41 @@ export function initInterface(api){
   const badge=document.querySelector('#header .badge');const coordination=button('Coordenação BIM','layers',()=>showPanel('disciplines'));coordination.classList.add('coordination');badge.replaceWith(coordination);
   const title=$('header').querySelector('h1');title.innerHTML='<strong>OP RICARDO FRANCO</strong><span>EXTENSÃO DO CANIL DA 15ª CIA PE</span>';
   // Keep the original controls and event handlers, changing only their placement.
-  const views=document.createElement('div');views.id='preset-views';views.setAttribute('aria-label','Vistas predefinidas');views.append(note('VISTAS PREDEFINIDAS'));
+  const views=document.createElement('div');views.id='preset-views';views.setAttribute('aria-label','Vistas predefinidas');
+  const viewsHeading=document.createElement('span');viewsHeading.className='view-strip-heading';viewsHeading.textContent='VISTAS PREDEFINIDAS';views.append(viewsHeading);
   const viewControls=[['iso','Isométrica','cube'],['top','Superior','layers'],['front','Frontal','cube'],['side','Lateral','cube']];
-  for(const [key,label,symbol] of viewControls){views.append(button(label,symbol,()=>{api.setView(key);views.querySelectorAll('button').forEach(x=>x.classList.remove('active'));views.querySelector(`[data-view="${key}"]`).classList.add('active');}));views.lastChild.dataset.view=key;}
+  const viewCards=new Map();
+  let previewTimer=0;
+  for(const [key,label,symbol] of viewControls){
+    const card=document.createElement('button');card.type='button';card.className='ui-button view-card';
+    card.dataset.view=key;card.title='Exibir vista '+label.toLowerCase();
+    card.setAttribute('aria-label','Exibir vista '+label.toLowerCase());
+    card.setAttribute('aria-pressed',String(key==='iso'));
+    if(key==='iso')card.classList.add('active');
+    const thumbnail=document.createElement('span');thumbnail.className='view-preview';
+    const placeholder=document.createElement('span');placeholder.className='view-placeholder';placeholder.innerHTML=icon(symbol);
+    const image=document.createElement('img');image.alt='Prévia da vista '+label.toLowerCase()+' do modelo IFC';image.hidden=true;
+    thumbnail.append(placeholder,image);
+    const caption=document.createElement('span');caption.className='view-caption';caption.textContent=label;
+    card.append(thumbnail,caption);
+    card.onclick=()=>{api.setView(key);for(const [name,node] of viewCards){node.classList.toggle('active',name===key);node.setAttribute('aria-pressed',String(name===key));}};
+    views.append(card);viewCards.set(key,card);
+  }
+  function refreshViewThumbnails(){
+    clearTimeout(previewTimer);
+    previewTimer=setTimeout(()=>{
+      if(!api.meshMeta.size)return;
+      for(const [key,card] of viewCards){
+        try{
+          const data=api.captureViewThumbnail(key,256,138);
+          if(!data)continue;
+          const image=card.querySelector('.view-preview img');
+          image.src=data;image.hidden=false;
+          card.classList.add('has-preview');
+        }catch(error){console.warn('Prévia IFC indisponível:',key,error);}
+      }
+    },240);
+  }
   for(const id of ['btn-top','btn-front','btn-side'])$(id).hidden=true;
   toolbar.querySelectorAll('.tool-section').forEach(e=>e.hidden=true);
   const select=button('Selecionar','arrow',()=>{api.leaveWalk();showPanel('properties');},'tb');select.classList.add('on');toolbar.prepend(select);
@@ -61,4 +93,5 @@ export function initInterface(api){
   new MutationObserver(()=>{for(const b of pdf.querySelectorAll('.pdf-link:not([data-actions])')){b.dataset.actions='true';const folder=b.closest('.pdf-folder'),index=[...pdf.children].indexOf(folder),slug=['arquitetonico','estrutural','eletrico','hidrossanitario'][index];if(!slug)continue;const name=b.textContent,url=new URL('./plantas/'+slug+'/'+encodeURIComponent(name),location.href);const row=document.createElement('div');row.className='pdf-entry';b.replaceWith(row);row.append(b);for(const [label,symbol,download] of [['Abrir em nova aba','external',false],['Baixar PDF','download',true]]){const a=document.createElement('a');a.className='pdf-action';a.title=label+' — '+name;a.setAttribute('aria-label',a.title);a.innerHTML=icon(symbol);a.href=url.href;if(download)a.download=name;else{a.target='_blank';a.rel='noopener';}row.append(a);}}}).observe(pdf,{childList:true,subtree:true});
   function refreshSummary(){const elems=uniqueElements(),loaded=api.modelDefs.filter(d=>d.count>0);summary.textContent='RESUMO DO MODELO\n'+elems.length.toLocaleString('pt-BR')+' elementos\n'+new Set(elems.map(m=>m.type)).size+' classes IFC\n'+loaded.length+' modelos carregados';const m=api.meshMeta.get(api.getSelected());status.textContent=(m?m.disciplineLabel+' · '+api.modelDefs.find(d=>d.id===m.discipline)?.file:loaded.map(d=>d.file).join(' + ')||'Aguardando modelos')+' · '+elems.length.toLocaleString('pt-BR')+' elementos · '+($('status').style.display==='none'?'Pronto':$('status-text').textContent);for(const d of api.modelDefs){const card=d.check.closest('.model-card');card.classList.toggle('unavailable',!d.count);card.querySelectorAll('input,button').forEach(c=>c.disabled=!d.count);}updateSelection();}
   setInterval(refreshSummary,800);refreshSummary();showPanel('pdf');api.closeMobilePanels();
+  return {refreshViewThumbnails};
 }
