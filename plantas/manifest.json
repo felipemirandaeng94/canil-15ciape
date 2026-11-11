@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-11-08",
+  "updatedAt": "2026-11-11",
   "categories": {
     "arquitetonico": [
       {
@@ -71,6 +71,27 @@
       }
     ],
     "eletrico": [],
-    "hidrossanitario": []
+    "hidrossanitario": [
+      {
+        "name": "PRANCHA 01 TERREO.pdf",
+        "size": 209667
+      },
+      {
+        "name": "PRANCHA 02 BOX.pdf",
+        "size": 59655
+      },
+      {
+        "name": "PRANCHA 03 ISOMETRICA TERREO.pdf",
+        "size": 275712
+      },
+      {
+        "name": "PRANCHA 04 LAJE.pdf",
+        "size": 109826
+      },
+      {
+        "name": "PRANCHA 05 ISOMETRICA CAIXA D'ÁGUA.pdf",
+        "size": 102779
+      }
+    ]
   }
 }
