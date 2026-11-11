@@ -1118,6 +1118,9 @@ async function listPdfs(){
       const button=document.createElement('button');button.className='action pdf-link';button.textContent=entry.name.replace(/\.pdf$/i,'').replace(/\(1\)$/,'');button.title='Visualizar '+entry.name;button.onclick=()=>viewPdf(category.slug,entry.name,button);
       row.append(button);body.append(row);
     }
+    if(category.slug==='hidrossanitario'&&!entries.some(e=>/SANITÁRIO|SANITARIO|ESGOTO|PLUVIAL/i.test(e.name))){
+      const missing=document.createElement('p');missing.className='pdf-folder-state';missing.textContent='As pranchas de esgoto sanitário e pluvial ainda não foram publicadas nesta pasta.';body.append(missing);
+    }
   }
 }
 document.getElementById('refresh-pdfs').onclick=listPdfs;
