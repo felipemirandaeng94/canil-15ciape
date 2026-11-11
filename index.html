@@ -827,7 +827,7 @@ for(const d of modelDefs){
  const card=document.createElement('section');card.className='model-card';
  const head=document.createElement('label');head.className='model-head';const check=document.createElement('input');check.type='checkbox';check.checked=true;check.setAttribute('aria-label','Exibir '+d.label);head.append(check,document.createTextNode(d.label));head.style.borderLeft='3px solid '+d.color;
  const status=document.createElement('p');status.className='model-status';status.textContent=d.file+' · Aguardando';d.status=status;
- const controls=document.createElement('div');controls.className='model-controls';const downloadIfc=document.createElement('a');downloadIfc.className='action ifc-download';downloadIfc.href=new URL('./'+encodeURIComponent(d.file),location.href).href;downloadIfc.download=d.file;downloadIfc.textContent='Baixar IFC';downloadIfc.title='Baixar modelo '+d.label+' ('+d.file+')';downloadIfc.setAttribute('aria-label',downloadIfc.title);const isolate=document.createElement('button');isolate.className='action';isolate.textContent='Isolar';
+ const controls=document.createElement('div');controls.className='model-controls';const downloadIfc=document.createElement('a');downloadIfc.className='action ifc-download';downloadIfc.href=new URL('./'+encodeURIComponent(d.file),location.href).href;downloadIfc.download=d.file;downloadIfc.hidden=true;d.downloadIfc=downloadIfc;downloadIfc.textContent='Baixar IFC';downloadIfc.title='Baixar modelo '+d.label+' ('+d.file+')';downloadIfc.setAttribute('aria-label',downloadIfc.title);const isolate=document.createElement('button');isolate.className='action';isolate.textContent='Isolar';
  isolate.onclick=()=>{const alone=modelDefs.every(o=>o===d||!o.visible);for(const o of modelDefs){o.visible=alone||o===d;o.check.checked=o.visible;updateModelVisibility(o);}};
  const opacity=document.createElement('input');opacity.type='range';opacity.min='10';opacity.max='100';opacity.value='100';opacity.title='Opacidade de '+d.label;opacity.setAttribute('aria-label',opacity.title);opacity.oninput=()=>{d.opacity=Number(opacity.value)/100;updateModelVisibility(d);};
  controls.append(isolate,opacity,downloadIfc);const details=document.createElement('details');const summary=document.createElement('summary');summary.textContent='Categorias do modelo';details.append(summary);const rows=document.createElement('div');details.append(rows);d.rows=rows;
@@ -951,7 +951,7 @@ async function tryFetch(){
       if(response.status===404){def.status.textContent=def.file+' · Ainda não publicado';continue;}
       if(!response.ok)throw new Error('HTTP '+response.status);
       const buf=await response.arrayBuffer();clearTimeout(timer);
-      await enqueueLoad(buf,def.file);
+      await enqueueLoad(buf,def.file);if(def.downloadIfc)def.downloadIfc.hidden=false;
     }catch(error){def.status.textContent=def.file+' · Falha: '+error.message;console.warn(def.file,error.message);}
     finally{clearTimeout(timer);}
   }
