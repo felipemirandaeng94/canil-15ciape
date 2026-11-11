@@ -96,7 +96,7 @@
     #sidebar{position:absolute;top:0;right:0;bottom:0;z-index:40;width:min(330px,88vw);max-width:none;transform:translateX(100%);transition:transform .22s ease;box-shadow:-16px 0 45px #0009}#sidebar.mobile-open{transform:translateX(0)}#sidebar.mobile-open .mobile-panel-close{display:flex;width:100%;position:sticky;top:0;z-index:2}
     #info{left:10px;right:10px;bottom:64px;max-width:none}#hint{bottom:8px;right:8px;max-width:calc(100% - 16px);font-size:9px;line-height:1.55;padding:6px 9px}#hidden-alert{top:68px;left:10px;right:10px;max-width:none}#shortcut-toast{bottom:66px}#pdf-dialog{width:96vw;height:92dvh;padding:14px}.pdf-bar{flex-wrap:wrap}
   }
-</style>
+  .ifc-download{display:inline-flex;align-items:center;justify-content:center;text-decoration:none;min-height:32px;white-space:nowrap;border-color:#43856a;color:#b8f5d5;background:#17382e} .ifc-download:hover{background:#245643;color:white}\n  .model-controls{flex-wrap:wrap} .hydro-pdf-section{font-size:11px;letter-spacing:.3px;color:#9fe6c3;padding:10px 3px 4px;border-top:1px solid #355548;margin-top:7px}.hydro-pdf-row{display:flex;min-width:0}.hydro-pdf-row .pdf-link{flex:1;min-width:0;margin-top:0}\n</style>
 <link rel="stylesheet" href="./assets/interface.css?v=ifc-canvas-fullwidth-3">
 <link rel="stylesheet" href="./assets/pdf-workspace.css">
 </head>
@@ -827,10 +827,10 @@ for(const d of modelDefs){
  const card=document.createElement('section');card.className='model-card';
  const head=document.createElement('label');head.className='model-head';const check=document.createElement('input');check.type='checkbox';check.checked=true;check.setAttribute('aria-label','Exibir '+d.label);head.append(check,document.createTextNode(d.label));head.style.borderLeft='3px solid '+d.color;
  const status=document.createElement('p');status.className='model-status';status.textContent=d.file+' · Aguardando';d.status=status;
- const controls=document.createElement('div');controls.className='model-controls';const isolate=document.createElement('button');isolate.className='action';isolate.textContent='Isolar';
+ const controls=document.createElement('div');controls.className='model-controls';const downloadIfc=document.createElement('a');downloadIfc.className='action ifc-download';downloadIfc.href=new URL('./'+encodeURIComponent(d.file),location.href).href;downloadIfc.download=d.file;downloadIfc.textContent='Baixar IFC';downloadIfc.title='Baixar modelo '+d.label+' ('+d.file+')';downloadIfc.setAttribute('aria-label',downloadIfc.title);const isolate=document.createElement('button');isolate.className='action';isolate.textContent='Isolar';
  isolate.onclick=()=>{const alone=modelDefs.every(o=>o===d||!o.visible);for(const o of modelDefs){o.visible=alone||o===d;o.check.checked=o.visible;updateModelVisibility(o);}};
  const opacity=document.createElement('input');opacity.type='range';opacity.min='10';opacity.max='100';opacity.value='100';opacity.title='Opacidade de '+d.label;opacity.setAttribute('aria-label',opacity.title);opacity.oninput=()=>{d.opacity=Number(opacity.value)/100;updateModelVisibility(d);};
- controls.append(isolate,opacity);const details=document.createElement('details');const summary=document.createElement('summary');summary.textContent='Categorias do modelo';details.append(summary);const rows=document.createElement('div');details.append(rows);d.rows=rows;
+ controls.append(isolate,opacity,downloadIfc);const details=document.createElement('details');const summary=document.createElement('summary');summary.textContent='Categorias do modelo';details.append(summary);const rows=document.createElement('div');details.append(rows);d.rows=rows;
  check.onchange=()=>{d.visible=check.checked;updateModelVisibility(d);};d.check=check;card.append(head,status,controls,details);document.getElementById('layers').append(card);
 }
 function ensureLayer(type,def){
@@ -968,7 +968,7 @@ const PDF_CATEGORIES=[
   {slug:'arquitetonico',label:'Arquitetônico',subtitle:'Plantas, fachadas e vistas'},
   {slug:'estrutural',label:'Estrutural',subtitle:'Formas e armações'},
   {slug:'eletrico',label:'Elétrico',subtitle:'Instalações e distribuição'},
-  {slug:'hidrossanitario',label:'Hidrossanitário',subtitle:'Água, esgoto sanitário e águas pluviais'}
+  {slug:'hidrossanitario',label:'Hidrossanitário',subtitle:'Pranchas de água fria, esgoto sanitário e pluvial'}
 ];
 const admin=document.getElementById('admin-dialog'),pinForm=document.getElementById('pin-form'),uploadForm=document.getElementById('upload-form'),uploadResult=document.getElementById('upload-result');
 let uploadBusy=false,pdfObjectURL=null;
@@ -1102,7 +1102,18 @@ async function listPdfs(){
     pdfCatalog.set(category.slug,entries.map(entry=>({name:entry.name,size:entry.size||0})));
     count.textContent=entries.length+' '+(entries.length===1?'prancha':'pranchas');
     if(!entries.length){const empty=document.createElement('p');empty.className='pdf-folder-state';empty.textContent='Ainda sem pranchas publicadas.';body.append(empty);continue;}
-    for(const entry of entries){const button=document.createElement('button');button.className='action pdf-link';button.textContent=entry.name;button.onclick=()=>viewPdf(category.slug,entry.name,button);body.append(button);}
+    let previousGroup='';
+    for(const entry of entries){
+      if(category.slug==='hidrossanitario'){
+        const group=/SANITÁRIO|SANITARIO|ESGOTO|PLUVIAL/i.test(entry.name)?'Esgoto sanitário e águas pluviais':'Água fria e abastecimento';
+        if(group!==previousGroup){
+          const label=document.createElement('h3');label.className='hydro-pdf-section';label.textContent=group;body.append(label);previousGroup=group;
+        }
+      }
+      const row=document.createElement('div');row.className='hydro-pdf-row';
+      const button=document.createElement('button');button.className='action pdf-link';button.textContent=entry.name.replace(/\\.pdf$/i,'').replace(/\\(1\\)$/,'');button.title='Visualizar '+entry.name;button.onclick=()=>viewPdf(category.slug,entry.name,button);
+      row.append(button);body.append(row);
+    }
   }
 }
 document.getElementById('refresh-pdfs').onclick=listPdfs;
