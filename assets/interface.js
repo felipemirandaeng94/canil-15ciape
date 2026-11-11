@@ -46,7 +46,7 @@ export function initInterface(api){
     const card=def.check.closest('.model-card');
     if(!card)continue;
     const open=button('Visualizar no 3D','cube',()=>{
-      def.visible=true;def.check.checked=true;
+      def.visible=true;def.check.checked=true;def.check.dispatchEvent(new Event('change'));
       api.closeMobilePanels();main.classList.add('panel-collapsed');reframeAfterLayout();
       api.fitView();
     },'ui-button ifc-view-action');
