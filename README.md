@@ -37,6 +37,14 @@ O projeto utiliza **um único arquivo IFC hidrossanitário**, `HIDRAULICO.ifc`, 
 
 As pranchas permanecem organizadas na categoria **Hidrossanitário** do catálogo PDF (`plantas/manifest.json`), sem alteração dos arquivos ou da listagem. Se os sistemas precisarem ser diferenciados visualmente, utilize as categorias ou propriedades IFC exportadas dentro do modelo unificado, conforme estiverem disponíveis.
 
+## Interface do visualizador e download IFC
+
+Na aba **Disciplinas**, cada modelo carregado oferece **Visualizar no 3D** e **Baixar IFC**, além de visibilidade, isolamento e opacidade. O download aponta diretamente para o IFC publicado na raiz da branch `main`; o link aparece após o carregamento bem-sucedido do arquivo. Os documentos originais não são modificados.
+
+Na seção **Plantas PDF → Hidrossanitário**, as pranchas são separadas em **Água fria e abastecimento** e **Esgoto sanitário e águas pluviais**. A numeração repetida de pranchas corresponde a sistemas diferentes e não deve motivar exclusão. O botão da prancha abre o visualizador integrado e os controles permitem abrir em outra aba ou baixar PDF.
+
+As pranchas novas de esgoto/pluvial precisam ser efetivamente enviadas à pasta `plantas/hidrossanitario/` e acrescentadas ao `plantas/manifest.json` antes de aparecerem no site. Não cadastrar arquivos no manifesto antes de sua publicação.
+
 ## Publicar plantas PDF
 
 As plantas ficam na pasta `plantas/` da branch `main`. É possível enviar PDFs diretamente pelo GitHub ou pelo botão **Gerenciar PDFs** do site.
