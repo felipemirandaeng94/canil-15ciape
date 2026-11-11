@@ -817,7 +817,7 @@ const CATEGORY_LABELS={
 };
 function categoryLabel(type){return CATEGORY_LABELS[type]||'Outros elementos';}
 const layerMap=new Map();
-const modelDefs=[{id:'ARQ',label:'Arquitetura',file:'CANIL.ifc',color:'#75dfab'},{id:'EST',label:'Estrutural',file:'ESTRUTURAL.ifc',color:'#a6b8d0'},{id:'ELE',label:'Elétrico',file:'ELETRICO.ifc',color:'#e8cb79'},{id:'HID',label:'Hidrossanitário (água fria + esgoto)',file:'HIDRAULICO.ifc',color:'#62b8ed'}];
+const modelDefs=[{id:'ARQ',label:'Arquitetura',file:'CANIL.ifc',color:'#75dfab'},{id:'EST',label:'Estrutural',file:'ESTRUTURAL.ifc',color:'#a6b8d0'},{id:'ELE',label:'Elétrico',file:'ELETRICO.ifc',color:'#e8cb79'},{id:'HID',label:'Hidrossanitário (água fria + esgoto + pluvial)',file:'HIDRAULICA.ifc',color:'#62b8ed'}];
 let sharedAnchor=null,loadingQueue=Promise.resolve();
 function enqueueLoad(buf,name){const def=modelDefs.find(d=>d.file.toUpperCase()===name.toUpperCase());if(!def)throw new Error('Use um dos nomes: '+modelDefs.map(d=>d.file).join(', '));loadingQueue=loadingQueue.catch(()=>{}).then(()=>loadBuffer(buf,def.file));return loadingQueue;}
 let refreshViewPreview=()=>{};
