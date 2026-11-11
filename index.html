@@ -1099,6 +1099,10 @@ async function listPdfs(){
     icon.className='pdf-folder-icon';icon.setAttribute('aria-hidden','true');title.className='pdf-folder-title';title.textContent=category.label;subtitle.className='pdf-folder-subtitle';subtitle.textContent=category.subtitle;count.className='pdf-folder-count';body.className='pdf-folder-body';heading.append(title,subtitle);summary.append(icon,heading,count);folder.append(summary,body);list.append(folder);
     const raw=manifest.categories[category.slug];
     const entries=(Array.isArray(raw)?raw:[]).filter(item=>item&&typeof item.name==='string'&&/\.pdf$/i.test(item.name)).sort((a,b)=>a.name.localeCompare(b.name,'pt-BR',{numeric:true}));
+    if(category.slug==='hidrossanitario'){
+      const isSewer=name=>/SANITÁRIO|SANITARIO|ESGOTO|PLUVIAL/i.test(name);
+      entries.sort((a,b)=>Number(isSewer(a.name))-Number(isSewer(b.name))||a.name.localeCompare(b.name,'pt-BR',{numeric:true}));
+    }
     pdfCatalog.set(category.slug,entries.map(entry=>({name:entry.name,size:entry.size||0})));
     count.textContent=entries.length+' '+(entries.length===1?'prancha':'pranchas');
     if(!entries.length){const empty=document.createElement('p');empty.className='pdf-folder-state';empty.textContent='Ainda sem pranchas publicadas.';body.append(empty);continue;}
@@ -1111,7 +1115,7 @@ async function listPdfs(){
         }
       }
       const row=document.createElement('div');row.className='hydro-pdf-row';
-      const button=document.createElement('button');button.className='action pdf-link';button.textContent=entry.name.replace(/\\.pdf$/i,'').replace(/\\(1\\)$/,'');button.title='Visualizar '+entry.name;button.onclick=()=>viewPdf(category.slug,entry.name,button);
+      const button=document.createElement('button');button.className='action pdf-link';button.textContent=entry.name.replace(/\.pdf$/i,'').replace(/\(1\)$/,'');button.title='Visualizar '+entry.name;button.onclick=()=>viewPdf(category.slug,entry.name,button);
       row.append(button);body.append(row);
     }
   }
