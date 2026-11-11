@@ -199,7 +199,7 @@ self.onmessage=async ({data})=>{
     api.SetWasmPath('https://cdn.jsdelivr.net/npm/web-ifc@0.0.78/',true);
     await api.Init(undefined,true);
     self.postMessage({kind:'progress',text:'Interpretando sólidos e recortes IFC...',pct:12});
-    model=api.OpenModel(new Uint8Array(data),{COORDINATE_TO_ORIGIN:false,CIRCLE_SEGMENTS:24});
+    model=api.OpenModel(new Uint8Array(data),{COORDINATE_TO_ORIGIN:false,CIRCLE_SEGMENTS:16});
     if(model<0) throw new Error('O motor IFC não conseguiu abrir o arquivo.');
     const storeys=new Map(), parents=new Map();
     const list=(type)=>{const v=api.GetLineIDsWithType(model,type); const a=Array.from({length:v.size()},(_,i)=>v.get(i));v.delete?.();return a;};
@@ -364,8 +364,10 @@ const QUALITY_MODES=[
   {label:'Equilibrada',pixelRatio:1.35,shadowSize:1024,textures:true},
   {label:'Alta',pixelRatio:2,shadowSize:2048,textures:true}
 ];
-let qualityIndex=Number.parseInt(localStorage.getItem('canil-render-quality')??(mobileQuery.matches?'0':'1'),10);
-if(!QUALITY_MODES[qualityIndex])qualityIndex=1;
+let qualityIndex=Number.parseInt(localStorage.getItem('canil-render-quality')??'0',10);
+if(!QUALITY_MODES[qualityIndex])qualityIndex=0;
+// Apply the lighter preset once to existing visitors, without blocking later manual selections.
+if(localStorage.getItem('canil-performance-preset')!=='2026-11'){qualityIndex=0;localStorage.setItem('canil-performance-preset','2026-11');}
 const qualityButton=document.getElementById('btn-quality');
 function applyQualityMode(updateMaterials=true){
   const mode=QUALITY_MODES[qualityIndex];
@@ -961,7 +963,16 @@ async function tryFetch(){
 
 // ── RENDER LOOP ───────────────────────────────────────────────────────────────
 const frameClock=new THREE.Clock();
-(function loop(){ requestAnimationFrame(loop);stepWalk(Math.min(frameClock.getDelta(),0.05)); renderer.render(scene,camera); })();
+let lastRenderAt=0;
+(function loop(now){
+ requestAnimationFrame(loop);
+ // 30 FPS in standard/low quality limits GPU work; high quality retains 60 FPS.
+ const interval=qualityIndex===2?1000/60:1000/30;
+ if(now-lastRenderAt<interval)return;
+ lastRenderAt=now-(now-lastRenderAt)%interval;
+ stepWalk(Math.min(frameClock.getDelta(),0.05));
+ renderer.render(scene,camera);
+})();
 
 const REPO_API='https://api.github.com/repos/felipemirandaeng94/canil-15ciape/contents/';
 const PDF_CATEGORIES=[
