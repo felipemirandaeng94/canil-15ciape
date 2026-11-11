@@ -41,6 +41,18 @@ export function initInterface(api){
   panels.pdf.append(note('Escolha uma disciplina para consultar suas pranchas.'),pdf,refresh);
   panels.disciplines.append(note('Sobreponha os modelos e ajuste a visibilidade e a transparência.'),layers,note('Compatibilização visual. Exporte os IFCs com a mesma origem e orientação.'));
   const hydro=document.createElement('section');hydro.className='hydro-group';hydro.innerHTML='<h3>Hidrossanitário</h3>';for(const def of api.modelDefs.filter(d=>['HID','ESG'].includes(d.id)))hydro.append(def.check.closest('.model-card'));layers.append(hydro);
+  // Each discipline offers a direct path back to the interactive 3D viewer.
+  for(const def of api.modelDefs){
+    const card=def.check.closest('.model-card');
+    if(!card)continue;
+    const open=button('Visualizar no 3D','cube',()=>{
+      def.visible=true;def.check.checked=true;
+      api.closeMobilePanels();main.classList.add('panel-collapsed');reframeAfterLayout();
+      api.fitView();
+    },'ui-button ifc-view-action');
+    open.title='Abrir o visualizador IFC de '+def.label;
+    card.append(open);
+  }
   side.replaceChildren(panelHeader,tabs,...Object.values(panels));
   const navItems=[['Modelo IFC','cube',()=>{api.closeMobilePanels();main.classList.add('panel-collapsed');reframeAfterLayout();}],['Plantas (PDF)','folder',()=>showPanel('pdf')],['Disciplinas','layers',()=>showPanel('disciplines')],['Quantitativos','chart',()=>showOverview('counts')],['Compatibilização','layers',()=>showPanel('disciplines')],['Documentos','folder',()=>showPanel('pdf')],['Dados do Projeto','info',()=>showOverview('project')]];
   for(const [label,symbol,action] of navItems){const b=button(label,symbol,()=>{nav.querySelectorAll('.nav-item').forEach(x=>x.classList.remove('active'));b.classList.add('active');action();},'ui-button nav-item');nav.append(b);}
