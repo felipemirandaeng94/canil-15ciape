@@ -136,6 +136,7 @@
     <nav id="toolbar" aria-label="Ferramentas 3D">
       <span class="tool-section">VISUALIZAÇÃO</span>
       <button class="tb" id="btn-fit" title="Enquadrar todo o modelo"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 8V3h5m8 0h5v5M3 16v5h5m8 0h5v-5"/></svg><span class="tb-label">Enquadrar modelo</span></button>
+      <button class="tb quick-systems" id="btn-quick-systems" type="button" aria-pressed="false" title="Mostrar estrutura, elétrica e hidrossanitário sem arquitetura"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m12 2 9 5-9 5-9-5 9-5Zm-9 9 9 5 9-5M3 16l9 5 9-5"/><path d="M7 7l10 10" stroke-width="2"/></svg><span class="tb-label">Só instalações + estrutura</span></button>
       <button class="tb" id="btn-top" title="Olhar o projeto por cima"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 4h16v16H4zM4 10h16M10 4v16"/></svg><span class="tb-label">Vista superior</span></button>
       <button class="tb" id="btn-front" title="Abrir a vista frontal"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 20V8l8-5 8 5v12H4zM9 20v-8h6v8"/></svg><span class="tb-label">Vista frontal</span></button>
       <button class="tb" id="btn-side" title="Abrir a vista lateral"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M5 20V5h14v15zM5 11h14"/></svg><span class="tb-label">Vista lateral</span></button>
@@ -823,7 +824,32 @@ const modelDefs=[{id:'ARQ',label:'Arquitetura',file:'CANIL.ifc',color:'#75dfab'}
 let sharedAnchor=null,loadingQueue=Promise.resolve();
 function enqueueLoad(buf,name){const def=modelDefs.find(d=>d.file.toUpperCase()===name.toUpperCase());if(!def)throw new Error('Use um dos nomes: '+modelDefs.map(d=>d.file).join(', '));loadingQueue=loadingQueue.catch(()=>{}).then(()=>loadBuffer(buf,def.file));return loadingQueue;}
 let refreshViewPreview=()=>{};
-function updateModelVisibility(def){for(const [key,l] of layerMap)if(l.model===def.id){l.group.visible=def.visible&&l.visible;for(const mesh of l.group.children){mesh.material.opacity=mesh.userData.baseOpacity*def.opacity;mesh.material.transparent=mesh.material.opacity<1;mesh.material.depthWrite=mesh.material.opacity>=1;}}if(selected&&!selected.parent.visible){selected.material.emissive.set(0);selected=null;infoEl.style.display='none';}refreshViewPreview();}
+function syncQuickSystemsButton(){
+ const button=document.getElementById('btn-quick-systems');
+ if(!button)return;
+ const active=modelDefs.every(d=>d.visible===(d.id!=='ARQ'));
+ button.classList.toggle('on',active);
+ button.setAttribute('aria-pressed',String(active));
+ button.querySelector('.tb-label').textContent=active?'Mostrar arquitetura':'Só instalações + estrutura';
+ button.title=active?'Restaurar a arquitetura e mostrar todas as disciplinas':'Exibir estrutura, elétrica e hidrossanitário, ocultando arquitetura';
+}
+document.getElementById('btn-quick-systems').addEventListener('click',()=>{
+ const active=modelDefs.every(d=>d.visible===(d.id!=='ARQ'));
+ for(const d of modelDefs){
+   d.visible=active||d.id!=='ARQ';
+   d.check.checked=d.visible;
+   if(d.visible){
+     for(const layer of layerMap.values()){
+       if(layer.model!==d.id)continue;
+       layer.visible=true;
+     }
+     for(const input of d.rows.querySelectorAll('input[type="checkbox"]'))input.checked=true;
+   }
+   updateModelVisibility(d);
+ }
+ syncQuickSystemsButton();
+});
+function updateModelVisibility(def){for(const [key,l] of layerMap)if(l.model===def.id){l.group.visible=def.visible&&l.visible;for(const mesh of l.group.children){mesh.material.opacity=mesh.userData.baseOpacity*def.opacity;mesh.material.transparent=mesh.material.opacity<1;mesh.material.depthWrite=mesh.material.opacity>=1;}}if(selected&&!selected.parent.visible){selected.material.emissive.set(0);selected=null;infoEl.style.display='none';}refreshViewPreview();syncQuickSystemsButton();}
 for(const d of modelDefs){
  d.visible=true;d.opacity=1;d.count=0;
  const card=document.createElement('section');card.className='model-card';
