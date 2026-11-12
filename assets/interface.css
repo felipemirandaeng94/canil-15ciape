@@ -555,3 +555,11 @@ button,a,summary{ -webkit-tap-highlight-color:transparent}button:disabled{opacit
     transform-origin:top right;
   }
 }
+
+/* Acesso rápido às disciplinas técnicas (sem arquitetura) */
+#toolbar #btn-quick-systems{min-width:146px;max-width:178px;padding:7px 12px!important;background:linear-gradient(135deg,#f7cb61,#e5a836)!important;border:2px solid #ffe2a0!important;color:#242016!important;font-weight:800!important;box-shadow:0 0 0 2px #ffcd5930,0 5px 20px #d7a02c55!important}
+#toolbar #btn-quick-systems .icon{color:#242016!important;width:24px;height:24px}
+#toolbar #btn-quick-systems:hover{background:linear-gradient(135deg,#ffe29a,#f4c557)!important;box-shadow:0 0 0 3px #ffe1a766,0 8px 24px #d7a02c66!important}
+#toolbar #btn-quick-systems.on{background:linear-gradient(135deg,#85ecc1,#47c992)!important;border-color:#beffe0!important;color:#103e2b!important;box-shadow:0 0 0 2px #54da9d33,0 7px 20px #1d8d6050!important}
+#toolbar #btn-quick-systems.on .icon{color:#103e2b!important}
+@media(max-width:800px){#toolbar #btn-quick-systems{width:calc(66% - 3px)!important;max-width:none;min-height:62px}}
