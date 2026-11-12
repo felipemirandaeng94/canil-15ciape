@@ -563,3 +563,61 @@ button,a,summary{ -webkit-tap-highlight-color:transparent}button:disabled{opacit
 #toolbar #btn-quick-systems.on{background:linear-gradient(135deg,#85ecc1,#47c992)!important;border-color:#beffe0!important;color:#103e2b!important;box-shadow:0 0 0 2px #54da9d33,0 7px 20px #1d8d6050!important}
 #toolbar #btn-quick-systems.on .icon{color:#103e2b!important}
 @media(max-width:800px){#toolbar #btn-quick-systems{width:calc(66% - 3px)!important;max-width:none;min-height:62px}}
+
+/* Menu esquerdo: painéis executivos de quantitativos, orçamento e cronograma. */
+#project-dashboard{position:absolute;inset:0;z-index:35;overflow-y:auto;overscroll-behavior:contain;
+  padding:30px clamp(16px,3.2vw,48px) 60px;background:linear-gradient(155deg,#0d2026,#09171d 65%,#0a2022);
+  color:#e7f2ed;scrollbar-color:#396354 transparent}
+#project-dashboard[hidden]{display:none!important}
+.dashboard-open #toolbar,.dashboard-open #viewer-footer,.dashboard-open #orientation,.dashboard-open #hint,
+.dashboard-open #reopen-panel,.dashboard-open #hidden-alert{display:none!important}
+.pd-header{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:23px}
+.pd-header h2{font-size:clamp(23px,2.3vw,36px);font-weight:800;letter-spacing:-.4px;margin:5px 0 7px}
+.pd-header p{font-size:12px;line-height:1.6;color:#9bbeb3}
+.pd-kicker{color:#71dfa3!important;font-size:10px!important;font-weight:800;letter-spacing:1.8px}
+.pd-button{border:1px solid #4c8269;color:#c6f8dc;background:#153c31;border-radius:8px;padding:10px 14px;cursor:pointer;font-size:12px}
+.pd-button:hover{background:#25644d}
+.pd-close{flex-shrink:0}
+.pd-section{margin-bottom:22px;padding:20px;border:1px solid #2c4b4b;border-radius:15px;
+ background:linear-gradient(155deg,#122b30,#102126);box-shadow:0 8px 28px #0002}
+.pd-section h3{font-size:15px;margin-bottom:13px;color:#ddf3e6}
+.pd-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:11px}
+.pd-metric{display:flex;flex-direction:column;gap:7px;padding:15px;border:1px solid #325448;
+ background:#112e2b;border-radius:11px;min-width:0}
+.pd-metric strong{font-size:clamp(18px,1.55vw,25px);color:#a9f1c9;line-height:1.1;overflow-wrap:anywhere;letter-spacing:-.3px}
+.pd-metric span{font-size:11px;color:#d8eae1;font-weight:700}
+.pd-metric small,.pd-small{color:#94b4aa;font-size:11px;line-height:1.65}
+.pd-metric small{font-size:10px}
+.pd-table-wrap{overflow-x:auto}
+.pd-table{width:100%;border-collapse:collapse;text-align:left;font-size:12px}
+.pd-table th{font-size:10px;letter-spacing:.8px;color:#8db8aa;text-transform:uppercase;padding:10px;border-bottom:1px solid #466158}
+.pd-table td{padding:11px 10px;border-bottom:1px solid #284441}
+.pd-table tr:last-child td{border-bottom:0}
+.pd-table .pd-amount{text-align:right;white-space:nowrap;font-weight:750;color:#b9f2d0}
+.pd-discipline-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.pd-discipline-grid>div{padding:14px;border:1px solid #305248;border-radius:10px}
+.pd-discipline-grid strong{font-size:12px;color:#ade8c4}
+.pd-discipline-grid p{margin-top:7px;font-size:11px;line-height:1.6;color:#abc1b9}
+.pd-total{padding:14px 5px;display:flex;flex-direction:column;gap:8px}
+.pd-total span{font-size:11px;letter-spacing:1.4px;color:#afcfbf;font-weight:750}
+.pd-total strong{font-size:clamp(30px,4vw,58px);letter-spacing:-1.2px;color:#9df4bf;line-height:1.1;text-shadow:0 0 30px #56cc7742}
+.pd-total small{font-size:11px;color:#9ab7af}
+.pd-budget-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:22px;row-gap:14px}
+.pd-budget-top,.pd-period,.pd-schedule-foot{display:flex;justify-content:space-between;gap:10px;align-items:baseline;font-size:11px}
+.pd-budget-top span{color:#d0e0dc}.pd-budget-top strong{color:#a8f0c7;font-variant-numeric:tabular-nums}
+.pd-progress{height:8px;border-radius:999px;background:#24423d;overflow:hidden;margin-top:7px}
+.pd-progress>span{display:block;height:100%;background:linear-gradient(90deg,#269e6b,#8de6a8);border-radius:inherit;max-width:100%}
+.pd-schedule{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:13px;margin-top:17px}
+.pd-schedule-item{padding:14px;background:#0c2929;border:1px solid #355447;border-radius:11px}
+.pd-period,.pd-schedule-foot{display:block}.pd-period strong{display:block;font-size:17px;color:#c4f7d8}
+.pd-period span{display:block;font-size:11px;color:#bdcfc9;margin-top:6px}
+.pd-schedule-bar{height:12px;margin:20px 0 11px}
+.pd-schedule-foot strong,.pd-schedule-foot span{display:block;color:#a4e5bf;font-size:11px;margin:4px 0}
+.pd-schedule-foot span{color:#a9c0b8}
+.pd-docs{display:flex;flex-wrap:wrap;gap:10px}
+.pd-document{display:flex;flex-direction:column;gap:5px;text-decoration:none;color:#cef8df;font-size:12px;
+ border:1px solid #448765;background:#174332;padding:13px 16px;border-radius:9px}
+.pd-document small{color:#98c2aa;font-size:10px}.pd-document.unavailable{opacity:.65;cursor:not-allowed;border-color:#56706a;background:#263834}
+@media(max-width:1100px){.pd-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.pd-schedule{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:800px){#project-dashboard{padding:20px 12px 80px}.pd-section{padding:13px}.pd-budget-list,.pd-discipline-grid{grid-template-columns:1fr}
+.pd-header{flex-direction:column}.pd-close{align-self:flex-end}}
