@@ -160,7 +160,7 @@
   </div>
   <div id="sidebar">
     <button class="mobile-panel-close" id="close-mobile-sidebar">FECHAR <span>×</span></button>
-    <h2>PLANTAS · PDF</h2><div id="pdf-list">Consultando plantas...</div><button class="action" id="refresh-pdfs" style="margin:0 12px 20px">Atualizar plantas</button><h2>DISCIPLINAS</h2><p class="panel-note">Sobreponha os modelos, isole disciplinas e ajuste a transparência para inspeção visual.</p><div id="layers"></div><p class="panel-note">Exporte todos os IFCs com as mesmas coordenadas. A sobreposição visual não substitui uma análise automática de interferências.</p>
+    <h2>PLANTAS · PDF</h2><div id="pdf-list">Consultando plantas...</div><button class="action" id="refresh-pdfs" style="margin:0 12px 20px">Atualizar plantas</button><h2>DISCIPLINAS</h2><p class="panel-note" id="glb-mode-hint">Visualização rápida (GLB) quando disponível. <a href="?modelo=ifc" style="color:#a7efcb">Abrir IFC detalhado</a> para consultar elementos individualmente.</p><p class="panel-note">Sobreponha os modelos, isole disciplinas e ajuste a transparência para inspeção visual.</p><div id="layers"></div><p class="panel-note">Exporte todos os IFCs com as mesmas coordenadas. A sobreposição visual não substitui uma análise automática de interferências.</p>
   </div>
   <div id="mobile-backdrop" aria-hidden="true"></div>
 </div>
@@ -969,7 +969,67 @@ function setStatus(msg,pct){
 function tick(){ return new Promise(r=>setTimeout(r,0)); }
 
 // ── FETCH REMOTO ──────────────────────────────────────────────────────────────
+// Visualizacao leve: GLB preconvertido no GitHub Actions. Um link ?modelo=ifc
+// mantem o leitor IFC integral, com identificacao de elementos e propriedades.
+async function tryOptimizedModels(){
+  if(new URLSearchParams(location.search).get('modelo')==='ifc')return false;
+  let manifest;
+  try{
+    const response=await fetch(new URL('./models/manifest.json',location.href),{cache:'no-store',signal:AbortSignal.timeout(12000)});
+    if(!response.ok)return false;
+    manifest=await response.json();
+    if(manifest.version!==1||!modelDefs.every(d=>manifest.models?.[d.id]?.file===d.file.replace(/\\.ifc$/i,'.glb')))return false;
+  }catch(error){console.info('GLB nao disponivel; usando IFC original.',error);return false;}
+  try{
+    setStatus('Abrindo modelos 3D otimizados...',10);
+    const {GLTFLoader}=await import('https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/loaders/GLTFLoader.js');
+    const loader=new GLTFLoader();
+    for(let i=0;i<modelDefs.length;i++){
+      const def=modelDefs[i],entry=manifest.models[def.id];
+      setStatus('Abrindo '+def.label+' (GLB)...',12+75*i/modelDefs.length);
+      const gltf=await loader.loadAsync(new URL('./models/'+encodeURIComponent(entry.file),location.href).href);
+      gltf.scene.updateMatrixWorld(true);
+      let meshes=0;
+      gltf.scene.traverse(node=>{
+        if(!node.isMesh)return;
+        const type=(node.name||node.parent?.name||'IFCBUILDINGELEMENTPROXY').toUpperCase();
+        const geometry=node.geometry.clone();
+        geometry.applyMatrix4(node.matrixWorld);
+        const material=(Array.isArray(node.material)?node.material[0]:node.material).clone();
+        const mesh=new THREE.Mesh(geometry,material);
+        mesh.userData.baseOpacity=material.opacity??1;
+        mesh.castShadow=QUALITY_MODES[qualityIndex].shadowSize>0;
+        mesh.receiveShadow=QUALITY_MODES[qualityIndex].shadowSize>0;
+        meshMeta.set(mesh,{id:type,name:categoryLabel(type)+' (modelo otimizado)',type,discipline:def.id,disciplineLabel:def.label});
+        ensureLayer(type,def).add(mesh);
+        meshes++;
+      });
+      if(!meshes)throw new Error('GLB sem malhas: '+entry.file);
+      def.count=entry.elements||meshes;
+      def.status.textContent=def.file+' · '+def.count+' elementos (visualizacao otimizada)';
+      for(const [type,count] of Object.entries(entry.categories||{})){
+        const layer=layerMap.get(def.id+':'+type);
+        if(layer)layer.count.textContent=count;
+      }
+      def.downloadIfc.hidden=false;
+      updateModelVisibility(def);
+    }
+    fitView();
+    statusEl.style.display='none';
+    console.info('Visualizacao GLB otimizada carregada. Use ?modelo=ifc para selecao IFC por elemento.');
+    return true;
+  }catch(error){
+    console.warn('GLB indisponivel ou invalido; retornando aos IFCs.',error);
+    for(const [mesh] of meshMeta){mesh.parent?.remove(mesh);mesh.geometry.dispose();mesh.material.dispose();}
+    meshMeta.clear();
+    for(const [key,layer] of layerMap){scene.remove(layer.group);layerMap.delete(key);}
+    for(const def of modelDefs){def.rows.replaceChildren();def.count=0;def.status.textContent=def.file+' · Aguardando';def.downloadIfc.hidden=true;}
+    statusEl.style.display='flex';
+    return false;
+  }
+}
 async function tryFetch(){
+  if(await tryOptimizedModels())return;
   for(const def of modelDefs){
 
     const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),90000);
