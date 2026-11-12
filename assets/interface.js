@@ -1,3 +1,4 @@
+import {mountProjectDashboard} from './project-dashboard.js?v=20261112';
 // Interface components; geometry, materials and navigation remain in index.html.
 export function initInterface(api){
   const $=id=>document.getElementById(id);
@@ -54,7 +55,8 @@ export function initInterface(api){
     card.append(open);
   }
   side.replaceChildren(panelHeader,tabs,...Object.values(panels));
-  const navItems=[['Modelo 3D','cube',()=>{api.closeMobilePanels();main.classList.add('panel-collapsed');reframeAfterLayout();}],['Plantas (PDF)','folder',()=>showPanel('pdf')],['Disciplinas','layers',()=>showPanel('disciplines')],['Quantitativos','chart',()=>showOverview('counts')],['Compatibilização','layers',()=>showPanel('disciplines')],['Documentos','folder',()=>showPanel('pdf')],['Dados do Projeto','info',()=>showOverview('project')]];
+  const projectDashboard=mountProjectDashboard($('canvas-wrap'),main);
+  const navItems=[['Modelo 3D','cube',()=>{projectDashboard.hide();api.closeMobilePanels();main.classList.add('panel-collapsed');reframeAfterLayout();}],['Plantas (PDF)','folder',()=>{projectDashboard.hide();showPanel('pdf')}],['Disciplinas','layers',()=>{projectDashboard.hide();showPanel('disciplines')}],['Quantitativos','chart',()=>projectDashboard.show('quant')],['Custo e Prazo','chart',()=>projectDashboard.show('cost')],['Compatibilização','layers',()=>{projectDashboard.hide();showPanel('disciplines')}],['Documentos','folder',()=>{projectDashboard.hide();showPanel('pdf')}],['Dados do Projeto','info',()=>{projectDashboard.hide();showOverview('project')}]];
   for(const [label,symbol,action] of navItems){const b=button(label,symbol,()=>{nav.querySelectorAll('.nav-item').forEach(x=>x.classList.remove('active'));b.classList.add('active');action();},'ui-button nav-item');nav.append(b);}
   nav.querySelector('.nav-item').classList.add('active');
   const overview=document.createElement('dialog');overview.className='overview-dialog';document.body.append(overview);
