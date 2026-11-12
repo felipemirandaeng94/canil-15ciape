@@ -6,7 +6,7 @@
       "file": "CANIL.glb",
       "source": "CANIL.ifc",
       "sourceSHA256": "a0959779ac56b6cd7b64241053332c3a23611f357886bc9b1767b31872c84958",
-      "glbSHA256": "5ae612f1056406adb7d54157a25b3de258f67dbab0f8cce5f8af02d849898cd3",
+      "glbSHA256": "0e82fd51a92d1a01cef05b40bc7875e42420dc7b0673292e4389ecd9ab8dc9eb",
       "categories": {
         "IFCWALL": 35,
         "IFCDOOR": 32,
@@ -23,6 +23,18 @@
     }
   },
   "coordinates": "ifc-world-zup-to-gltf-yup",
+  "entryDoor": {
+    "min": [
+      14.738799999999998,
+      0.06999999999999952,
+      4.950000000000055
+    ],
+    "max": [
+      14.9424,
+      2.255000000000002,
+      6.935000000000056
+    ]
+  },
   "anchor": [
     29.102025267561764,
     -0.06999999999999952,

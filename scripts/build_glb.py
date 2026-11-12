@@ -102,6 +102,7 @@ def pieces_for_model(path, anchor):
         raise RuntimeError(f"Nao foi possivel processar a geometria de {path.name}")
     elements = []
     terrain_bounds = []
+    entry_doors = []
     while True:
         shape = iterator.get()
         try:
@@ -131,6 +132,9 @@ def pieces_for_model(path, anchor):
             role = str(getattr(obj, "PredefinedType", "") or "") if hasattr(obj, "PredefinedType") else ""
             mat_ids = np.asarray(geo.material_ids, dtype=np.int64)
             materials = list(geo.materials)
+            # Porta de entrada usada como posicao inicial do modo Explorar em 3D.
+            if kind == "IFCDOOR" and re.search(r"porta.*(?:02|2).*folhas.*visor", name, re.I):
+                entry_doors.append((name.endswith(":3828930"), vertices.min(axis=0), vertices.max(axis=0)))
             if kind == "IFCSLAB" and re.search(r"grama|terreno|grass|relva", name, re.I):
                 terrain_bounds.append((vertices.min(axis=0), vertices.max(axis=0)))
             elements.append((kind, name, role, vertices, faces, mat_ids, materials, normals))
@@ -181,7 +185,12 @@ def pieces_for_model(path, anchor):
                     normals[used].astype(np.float32) if normals is not None else None,
                 )
             )
-    return groups, dict(counts), anchor
+    entry = None
+    if entry_doors:
+        # Preferencia: porta :3828930; senao, a de maior X (mesmo criterio do site).
+        _pref, dmin, dmax = sorted(entry_doors, key=lambda d: (d[0], (d[1][0] + d[2][0]) / 2))[-1]
+        entry = {"min": [float(v) for v in dmin], "max": [float(v) for v in dmax]}
+    return groups, dict(counts), anchor, entry
 
 
 def build():
@@ -198,7 +207,9 @@ def build():
         if not path.exists():
             raise FileNotFoundError(path)
         print(f"Convertendo {filename}...", flush=True)
-        groups, counts, anchor = pieces_for_model(path, anchor)
+        groups, counts, anchor, entry = pieces_for_model(path, anchor)
+        if entry and discipline == "ARQ":
+            manifest["entryDoor"] = entry
         if not groups:
             raise RuntimeError(f"IFC sem malhas validas: {filename}")
         scene = trimesh.Scene()

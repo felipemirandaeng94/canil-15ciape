@@ -492,8 +492,10 @@ function toggleWalk(){
     if(!entryDoors.has(meta.id))entryDoors.set(meta.id,new THREE.Box3());entryDoors.get(meta.id).expandByObject(mesh);
   }
   const preferredDoor=[...meshMeta].find(([,meta])=>meta.type==='IFCDOOR'&&/:3828930$/.test(meta.name||''))?.[1];
-  const entry=preferredDoor?entryDoors.get(preferredDoor.id):[...entryDoors.values()].sort((a,b)=>b.getCenter(new THREE.Vector3()).x-a.getCenter(new THREE.Vector3()).x)[0];
-  if(entry){const doorCenter=entry.getCenter(new THREE.Vector3());camera.position.set(entry.max.x+7,box.min.y+1.7,doorCenter.z-5);const direction=doorCenter.clone().sub(camera.position);walkYaw=Math.atan2(-direction.x,-direction.z);}
+  let entry=preferredDoor?entryDoors.get(preferredDoor.id):[...entryDoors.values()].sort((a,b)=>b.getCenter(new THREE.Vector3()).x-a.getCenter(new THREE.Vector3()).x)[0];
+  if(!entry&&glbEntryDoor){const arq=[...meshMeta].find(([,meta])=>meta.discipline==='ARQ')?.[0];if(arq)entry=glbEntryDoor.clone().translate(arq.position);}
+  // De frente para a porta de entrada, a ~8,5 m, na altura dos olhos.
+  if(entry){const doorCenter=entry.getCenter(new THREE.Vector3());camera.position.set(entry.max.x+8.5,box.min.y+1.7,doorCenter.z+.8);walkYaw=Math.PI/2;}
   else{const center=box.getCenter(new THREE.Vector3());camera.position.set(center.x,box.min.y+1.7,box.max.z+2);walkYaw=0;}
   walkPitch=0;walking=true;movementKeys.clear();walkLook();
   speedButton.style.display='flex';
@@ -840,7 +842,7 @@ const CATEGORY_LABELS={
 function categoryLabel(type){return CATEGORY_LABELS[type]||'Outros elementos';}
 const layerMap=new Map();
 const modelDefs=[{id:'ARQ',label:'Arquitetura',file:'CANIL.ifc',color:'#75dfab'},{id:'EST',label:'Estrutural',file:'ESTRUTURAL.ifc',color:'#a6b8d0'},{id:'ELE',label:'Elétrico',file:'ELETRICO.ifc',color:'#e8cb79'},{id:'HID',label:'Hidrossanitário (água fria + esgoto + pluvial)',file:'HIDRAULICA.ifc',color:'#62b8ed'}];
-let sharedAnchor=null,loadingQueue=Promise.resolve();
+let glbEntryDoor=null,sharedAnchor=null,loadingQueue=Promise.resolve();
 function enqueueLoad(buf,name){const def=modelDefs.find(d=>d.file.toUpperCase()===name.toUpperCase());if(!def)throw new Error('Use um dos nomes: '+modelDefs.map(d=>d.file).join(', '));loadingQueue=loadingQueue.catch(()=>{}).then(()=>loadBuffer(buf,def.file));return loadingQueue;}
 let refreshViewPreview=()=>{};
 function syncQuickSystemsButton(){
@@ -1032,6 +1034,8 @@ async function tryOptimizedModels(){
     const loader=new GLTFLoader();
     // Mesma origem do conversor, para os IFCs carregados depois coincidirem com o GLB.
     if(Array.isArray(manifest.anchor))sharedAnchor=new THREE.Vector3(...manifest.anchor);
+    // No GLB as portas ficam agrupadas; a porta de entrada vem do conversor.
+    if(manifest.entryDoor)glbEntryDoor=new THREE.Box3(new THREE.Vector3(...manifest.entryDoor.min),new THREE.Vector3(...manifest.entryDoor.max));
     for(let i=0;i<defs.length;i++){
       const def=defs[i],entry=manifest.models[def.id];
       setStatus('Abrindo '+def.label+' (GLB)...',12+75*i/defs.length);
