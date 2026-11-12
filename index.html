@@ -106,7 +106,7 @@
   .format-switch.active{background:#286b4b;border-color:#63dd9a;color:#fff;pointer-events:none}
   @media(max-width:800px){.format-switcher{gap:3px}.format-switch{min-height:28px;padding:4px 5px;font-size:9px}.format-switcher #model-format{padding:4px 5px}}
 </style>
-<link rel="stylesheet" href="./assets/interface.css?v=quick-systems-20261112">
+<link rel="stylesheet" href="./assets/interface.css?v=glb-colors-20261112">
 <link rel="stylesheet" href="./assets/pdf-workspace.css">
 </head>
 <body>
@@ -329,7 +329,7 @@ mobilePdfButton.addEventListener('click',()=>{toggleMobilePanel(sidebarEl,mobile
 mobileQuery.addEventListener('change',closeMobilePanels);closeMobilePanels();
 
 const scene    = new THREE.Scene();
-function darkSky(){const c=document.createElement('canvas');c.width=32;c.height=512;const x=c.getContext('2d'),g=x.createLinearGradient(0,0,0,512);g.addColorStop(0,'#d8edf7');g.addColorStop(.58,'#eef8fc');g.addColorStop(1,'#ffffff');x.fillStyle=g;x.fillRect(0,0,32,512);const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;return t;}
+function darkSky(){const c=document.createElement('canvas');c.width=32;c.height=512;const x=c.getContext('2d'),g=x.createLinearGradient(0,0,0,512);g.addColorStop(0,'#0b1825');g.addColorStop(.58,'#1a364b');g.addColorStop(1,'#294f65');x.fillStyle=g;x.fillRect(0,0,32,512);const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;return t;}
 scene.background=darkSky();
 // web-ifc supplies Three.js-compatible transforms including axis and unit conversion.
 
@@ -1022,7 +1022,25 @@ async function tryOptimizedModels(){
         const type=(node.name||node.parent?.name||'IFCBUILDINGELEMENTPROXY').toUpperCase();
         const geometry=node.geometry.clone();
         geometry.applyMatrix4(node.matrixWorld);
-        const material=(Array.isArray(node.material)?node.material[0]:node.material).clone();
+        geometry.deleteAttribute('color');
+        // Atribuir uma paleta suave e legivel ao GLB, por disciplina e categoria IFC.
+        const baseMaterial=Array.isArray(node.material)?node.material[0]:node.material;
+        const opacity=baseMaterial?.opacity??1;
+        const categoryColors={
+          ARQ:{IFCWALL:0xd4bd9d,IFCWALLSTANDARDCASE:0xd4bd9d,IFCSLAB:0x9baaaa,
+            IFCROOF:0x826e60,IFCCOVERING:0x857c70,IFCDOOR:0xb08b56,
+            IFCWINDOW:0x8bbfce,IFCRAILING:0x546b73,IFCMEMBER:0x9d9586,
+            IFCBUILDINGELEMENTPROXY:0x98a69c,IFCFLOWTERMINAL:0x77a8b9},
+          EST:{IFCBEAM:0x8496a7,IFCCOLUMN:0x9cabb6,IFCFOOTING:0x808e98,IFCSLAB:0x91a0ac},
+          ELE:{IFCFLOWFITTING:0xc6a35e,IFCFLOWSEGMENT:0xd3b774,IFCFLOWTERMINAL:0xe0c78a},
+          HID:{IFCPIPESEGMENT:0x4d9dc7,IFCPIPEFITTING:0x5aafcd,IFCFLOWSEGMENT:0x61abce,
+            IFCFLOWFITTING:0x65a7c6,IFCFLOWTERMINAL:0x72b8d6,IFCWASTETERMINAL:0x7599b5}
+        };
+        const material=new THREE.MeshStandardMaterial({
+          color:categoryColors[def.id]?.[type]??COLORS[type]??0x9ba8ad,
+          roughness:.82,metalness:.06,opacity,
+          transparent:opacity<1,depthWrite:opacity>=1,side:THREE.DoubleSide
+        });
         const mesh=new THREE.Mesh(geometry,material);
         mesh.userData.baseOpacity=material.opacity??1;
         mesh.castShadow=QUALITY_MODES[qualityIndex].shadowSize>0;
