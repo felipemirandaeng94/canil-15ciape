@@ -1,12 +1,12 @@
 {
-  "version": 1,
-  "paletteVersion": 2,
+  "version": 2,
+  "materials": "canil-kinds",
   "models": {
     "ARQ": {
       "file": "CANIL.glb",
       "source": "CANIL.ifc",
       "sourceSHA256": "8051d7384c2772b4baa812927d84ad23ea7b68bafe0e1fa1c32a2f8686807be7",
-      "glbSHA256": "3ffd614acbd732077b69e2dcaf8f5b2f8db0e35a388a4baa02b1d40cbe7bf9e6",
+      "glbSHA256": "83d36430d278e8ee4ba8dee4b040b6a6b80894bc5d286f8558b321e28db8f1f4",
       "categories": {
         "IFCWALLSTANDARDCASE": 35,
         "IFCDOOR": 32,
@@ -19,50 +19,7 @@
         "IFCRAILING": 1
       },
       "elements": 1495,
-      "sizeBytes": 13537568
-    },
-    "EST": {
-      "file": "ESTRUTURAL.glb",
-      "source": "ESTRUTURAL.ifc",
-      "sourceSHA256": "68b1de4ea5bc802c0932e1ec0e537e77089f00741f2677061dd7e26aa65066c7",
-      "glbSHA256": "6ecb10ca7a842aa635e487160fd102ea05a27cbc48e19cd120325192b92b4419",
-      "categories": {
-        "IFCBEAM": 108,
-        "IFCCOLUMN": 91,
-        "IFCFOOTING": 32,
-        "IFCSLAB": 1
-      },
-      "elements": 232,
-      "sizeBytes": 101412
-    },
-    "ELE": {
-      "file": "ELETRICO.glb",
-      "source": "ELETRICO.ifc",
-      "sourceSHA256": "3d39d5e889f1160bd198ee961ec8ed8e0127f7707ba5c3daead56921d7610037",
-      "glbSHA256": "9c55b624c75881410eb3414bb6d13937e5aeb8ce13b94d32584ed53a351f9e88",
-      "categories": {
-        "IFCFLOWFITTING": 20,
-        "IFCFLOWSEGMENT": 40,
-        "IFCFLOWTERMINAL": 21
-      },
-      "elements": 81,
-      "sizeBytes": 1688916
-    },
-    "HID": {
-      "file": "HIDRAULICA.glb",
-      "source": "HIDRAULICA.ifc",
-      "sourceSHA256": "06100065307deee9d59026a42d3914b2f3fa2033d8949ad14e38d028ba523a65",
-      "glbSHA256": "c423bdc9dfad70bec726e01f66a2d380241bb1803cfa5b5fd44f4ee111c9a333",
-      "categories": {
-        "IFCBUILDINGELEMENTPROXY": 60,
-        "IFCFLOWFITTING": 25,
-        "IFCFLOWSEGMENT": 139,
-        "IFCFLOWTERMINAL": 46,
-        "IFCFLOWCONTROLLER": 3,
-        "IFCFLOWSTORAGEDEVICE": 1
-      },
-      "elements": 274,
-      "sizeBytes": 3163800
+      "sizeBytes": 15319144
     }
   },
   "coordinates": "ifc-world-zup-to-gltf-yup",

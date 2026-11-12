@@ -125,7 +125,7 @@
   </div>
   <div class="format-switcher" aria-label="Modo de visualização 3D">
     <div id="model-format" class="model-format loading" role="status" aria-live="polite" title="Formato efetivamente carregado no visualizador"><span class="model-format-dot"></span><span id="model-format-label">CARREGANDO</span></div>
-    <a id="switch-glb" class="format-switch" href="./" title="Visualização GLB leve, cores representativas e maior fluidez">GLB · Rápido</a>
+    <a id="switch-glb" class="format-switch" href="./" title="Arquitetura em GLB leve com os mesmos materiais do IFC; demais disciplinas em IFC">GLB · Rápido</a>
     <a id="switch-ifc" class="format-switch" href="?modelo=ifc" title="Abrir IFC original com qualidade detalhada e seleção de elementos BIM">IFC · Detalhado</a>
   </div>
 </div>
@@ -174,7 +174,7 @@
   </div>
   <div id="sidebar">
     <button class="mobile-panel-close" id="close-mobile-sidebar">FECHAR <span>×</span></button>
-    <h2>PLANTAS · PDF</h2><div id="pdf-list">Consultando plantas...</div><button class="action" id="refresh-pdfs" style="margin:0 12px 20px">Atualizar plantas</button><h2>DISCIPLINAS</h2><p class="panel-note" id="glb-mode-hint">Visualização rápida (GLB) quando disponível. <a href="?modelo=ifc" style="color:#a7efcb">Abrir IFC detalhado</a> para consultar elementos individualmente.</p><p class="panel-note">Sobreponha os modelos, isole disciplinas e ajuste a transparência para inspeção visual.</p><div id="layers"></div><p class="panel-note">Exporte todos os IFCs com as mesmas coordenadas. A sobreposição visual não substitui uma análise automática de interferências.</p>
+    <h2>PLANTAS · PDF</h2><div id="pdf-list">Consultando plantas...</div><button class="action" id="refresh-pdfs" style="margin:0 12px 20px">Atualizar plantas</button><h2>DISCIPLINAS</h2><p class="panel-note" id="glb-mode-hint">Arquitetura em GLB (rápido); estrutura, elétrica e hidráulica direto do IFC. <a href="?modelo=ifc" style="color:#a7efcb">Abrir IFC detalhado</a> para consultar elementos individualmente.</p><p class="panel-note">Sobreponha os modelos, isole disciplinas e ajuste a transparência para inspeção visual.</p><div id="layers"></div><p class="panel-note">Exporte todos os IFCs com as mesmas coordenadas. A sobreposição visual não substitui uma análise automática de interferências.</p>
   </div>
   <div id="mobile-backdrop" aria-hidden="true"></div>
 </div>
@@ -438,12 +438,17 @@ const CANIL_MATERIAL_RULES=[
   {kind:'metal',test:m=>/IFCMEMBER|IFCPLATE|IFCFLOWSEGMENT|IFCFLOWFITTING|IFCPIPE|IFCDUCT/.test(m.type)}
 ];
 function canilMaterialKind(meta,opacity){const text=`${meta.name||''} ${meta.role||''} ${meta.type||''}`;return CANIL_MATERIAL_RULES.find(r=>r.test(meta,text,opacity))?.kind||'ifc';}
-function createCanilMaterial(meta,nativeColor,opacity,geometry){
-  const kind=canilMaterialKind(meta,opacity),presets={grass:{color:0x78934c,map:grassTexture,roughness:1,bump:.018,scale:1.3},roof:{color:0x515b63,map:roofSurfaceTexture,roughness:.82,bump:.028,scale:1.2},fence:{color:0x8e9498,roughness:.72,metalness:.12},gate:{color:0x111417,roughness:.3,metalness:.82},'window-frame':{color:0x7f8b94,roughness:.2,metalness:.9},glass:{color:0x91c4d4,roughness:.08,metalness:0},stair:{color:0x87929a,roughness:.22,metalness:.86},wood:{color:0x8a6243,map:woodTexture,roughness:.72,bump:.012,scale:.65},door:{color:0x555c60,roughness:.38,metalness:.48},wall:{color:0xc8c6bf,map:plasterTexture,roughness:.92,bump:.006,scale:.8},concrete:{color:0x9a9b98,map:concreteTexture,roughness:.94,bump:.016,scale:1.15},metal:{roughness:.4,metalness:.62}},p=presets[kind]||{};
-  const color=p.color!==undefined?new THREE.Color(p.color):(nativeColor?nativeColor.clone():new THREE.Color(COLORS[meta.type]||COLORS.DEFAULT));
-  if(kind==='glass')return new THREE.MeshPhysicalMaterial({color,opacity:Math.min(opacity,.38),transparent:true,depthWrite:false,side:THREE.DoubleSide,roughness:.08,metalness:0,transmission:.18,thickness:.02,envMapIntensity:1.3,wireframe});
+// Acabamentos foscos: metais com reflexo contido para evitar brilho estourado.
+// forcedKind vem do GLB (o conversor ja classificou a peca); vertexColors indica
+// que a cor nativa do IFC esta nas cores de vertice da malha agrupada.
+function createCanilMaterial(meta,nativeColor,opacity,geometry,forcedKind=null,vertexColors=false){
+  const kind=forcedKind||canilMaterialKind(meta,opacity),presets={grass:{color:0x78934c,map:grassTexture,roughness:1,bump:.018,scale:1.3},roof:{color:0x5f686f,map:roofSurfaceTexture,roughness:.9,bump:.028,scale:1.2},fence:{color:0x8e9498,roughness:.78,metalness:.1},gate:{color:0x24292d,roughness:.6,metalness:.35},'window-frame':{color:0x7f8b94,roughness:.55,metalness:.35},glass:{color:0x91c4d4,roughness:.2,metalness:0},stair:{color:0x87929a,roughness:.55,metalness:.35},wood:{color:0x8a6243,map:woodTexture,roughness:.8,bump:.012,scale:.65},door:{color:0x5d6468,roughness:.6,metalness:.25},wall:{color:0xc8c6bf,map:plasterTexture,roughness:.95,bump:.006,scale:.8},concrete:{color:0x9a9b98,map:concreteTexture,roughness:.95,bump:.016,scale:1.15},metal:{roughness:.6,metalness:.3}},p=presets[kind]||{};
+  const useVertex=vertexColors&&p.color===undefined;
+  if(vertexColors&&!useVertex)geometry.deleteAttribute('color');
+  const color=useVertex?new THREE.Color(0xffffff):p.color!==undefined?new THREE.Color(p.color):(nativeColor?nativeColor.clone():new THREE.Color(COLORS[meta.type]||COLORS.DEFAULT));
+  if(kind==='glass')return new THREE.MeshPhysicalMaterial({color,opacity:Math.min(opacity,.38),transparent:true,depthWrite:false,side:THREE.DoubleSide,roughness:.2,metalness:0,transmission:.18,thickness:.02,envMapIntensity:.5,wireframe});
   if(p.map){surfaceUV(geometry,p.scale);}
-  const material=new THREE.MeshStandardMaterial({color,map:p.map||null,opacity,transparent:opacity<1,depthWrite:opacity>=1,side:THREE.DoubleSide,wireframe,roughness:p.roughness??.82,metalness:p.metalness??0,envMapIntensity:(p.metalness||0)>.4?.95:.42});
+  const material=new THREE.MeshStandardMaterial({color,vertexColors:useVertex,map:p.map||null,opacity,transparent:opacity<1,depthWrite:opacity>=1,side:THREE.DoubleSide,wireframe,roughness:p.roughness??.85,metalness:p.metalness??0,envMapIntensity:(p.metalness||0)>.2?.45:.25});
   if(p.bump){material.bumpMap=p.map||grainTexture;material.bumpScale=p.bump;}if(kind==='wall'||kind==='concrete')material.roughnessMap=grainTexture;
   material.userData.canilKind=kind;material.userData.qualityMaps={map:material.map,bumpMap:material.bumpMap,roughnessMap:material.roughnessMap};
   if(!QUALITY_MODES[qualityIndex].textures){material.map=null;material.bumpMap=null;material.roughnessMap=null;}return material;
@@ -1002,22 +1007,28 @@ function updateModelFormat(format){
   }
 }
 async function tryOptimizedModels(){
-  const loadStarted=performance.now();
-  if(new URLSearchParams(location.search).get('modelo')==='ifc')return false;
+  // Somente o arquitetonico (arquivo pesado) usa GLB; as demais disciplinas
+  // sao leves e seguem pelo leitor IFC completo. Retorna os ids carregados.
+  const loadStarted=performance.now(),loaded=new Set();
+  if(new URLSearchParams(location.search).get('modelo')==='ifc')return loaded;
   let manifest;
   try{
     const response=await fetch(new URL('./models/manifest.json',location.href),{cache:'no-store',signal:AbortSignal.timeout(12000)});
-    if(!response.ok)return false;
+    if(!response.ok)return loaded;
     manifest=await response.json();
-    if(manifest.version!==1||!modelDefs.every(d=>manifest.models?.[d.id]?.file===d.file.replace(/\.ifc$/i,'.glb')))return false;
-  }catch(error){console.info('GLB nao disponivel; usando IFC original.',error);return false;}
+    if(manifest.version!==2||manifest.materials!=='canil-kinds')return loaded;
+  }catch(error){console.info('GLB nao disponivel; usando IFC original.',error);return loaded;}
+  const defs=modelDefs.filter(d=>manifest.models?.[d.id]?.file===d.file.replace(/\.ifc$/i,'.glb'));
+  if(!defs.length)return loaded;
   try{
     setStatus('Abrindo modelos 3D otimizados...',10);
     const {GLTFLoader}=await import('https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/loaders/GLTFLoader.js');
     const loader=new GLTFLoader();
-    for(let i=0;i<modelDefs.length;i++){
-      const def=modelDefs[i],entry=manifest.models[def.id];
-      setStatus('Abrindo '+def.label+' (GLB)...',12+75*i/modelDefs.length);
+    // Mesma origem do conversor, para os IFCs carregados depois coincidirem com o GLB.
+    if(Array.isArray(manifest.anchor))sharedAnchor=new THREE.Vector3(...manifest.anchor);
+    for(let i=0;i<defs.length;i++){
+      const def=defs[i],entry=manifest.models[def.id];
+      setStatus('Abrindo '+def.label+' (GLB)...',12+75*i/defs.length);
       const modelUrl=new URL('./models/'+encodeURIComponent(entry.file),location.href);
       modelUrl.searchParams.set('v',entry.glbSHA256||entry.sourceSHA256);
       const gltf=await loader.loadAsync(modelUrl.href);
@@ -1025,45 +1036,20 @@ async function tryOptimizedModels(){
       let meshes=0;
       gltf.scene.traverse(node=>{
         if(!node.isMesh)return;
-        const type=(node.name||node.parent?.name||'IFCBUILDINGELEMENTPROXY').toUpperCase();
+        // Nome do no: CATEGORIA|tipo de material|opacidade (ver scripts/build_glb.py).
+        const [rawType,kind,rawOpacity]=String(node.name||node.parent?.name||'IFCBUILDINGELEMENTPROXY').split('|');
+        const type=rawType.toUpperCase(),opacity=Number.parseFloat(rawOpacity)||1;
         const geometry=node.geometry;
         geometry.applyMatrix4(node.matrixWorld);
         if(!geometry.getAttribute('normal'))geometry.computeVertexNormals();
-        const useVertexColors=manifest.paletteVersion===2&&!!geometry.getAttribute('color');
-        if(!useVertexColors)geometry.deleteAttribute('color');
-        else {
-          // A paleta do conversor usa bytes sRGB; o shader espera cores lineares.
-          const colors=geometry.getAttribute('color'),linear=new THREE.Color();
-          for(let v=0;v<colors.count;v++){
-            linear.setRGB(colors.getX(v),colors.getY(v),colors.getZ(v),THREE.SRGBColorSpace);
-            colors.setXYZ(v,linear.r,linear.g,linear.b);
-          }
-          colors.needsUpdate=true;
-        }
-        // Atribuir uma paleta suave e legivel ao GLB, por disciplina e categoria IFC.
-        const baseMaterial=Array.isArray(node.material)?node.material[0]:node.material;
-        const opacity=type==='IFCWINDOW'?.55:(baseMaterial?.opacity??1);
-        const categoryColors={
-          ARQ:{IFCWALL:0xd4bd9d,IFCWALLSTANDARDCASE:0xd4bd9d,IFCSLAB:0x9baaaa,
-            IFCROOF:0x826e60,IFCCOVERING:0x857c70,IFCDOOR:0xb08b56,
-            IFCWINDOW:0x8bbfce,IFCRAILING:0x546b73,IFCMEMBER:0x9d9586,
-            IFCBUILDINGELEMENTPROXY:0x98a69c,IFCFLOWTERMINAL:0x77a8b9},
-          EST:{IFCBEAM:0x8496a7,IFCCOLUMN:0x9cabb6,IFCFOOTING:0x808e98,IFCSLAB:0x91a0ac},
-          ELE:{IFCFLOWFITTING:0xc6a35e,IFCFLOWSEGMENT:0xd3b774,IFCFLOWTERMINAL:0xe0c78a},
-          HID:{IFCPIPESEGMENT:0x4d9dc7,IFCPIPEFITTING:0x5aafcd,IFCFLOWSEGMENT:0x61abce,
-            IFCFLOWFITTING:0x65a7c6,IFCFLOWTERMINAL:0x72b8d6,IFCWASTETERMINAL:0x7599b5}
-        };
-        const material=new THREE.MeshStandardMaterial({
-          color:useVertexColors?0xffffff:(categoryColors[def.id]?.[type]??COLORS[type]??0x9ba8ad),
-          vertexColors:useVertexColors,
-          roughness:.82,metalness:.06,envMapIntensity:.35,opacity,
-          transparent:opacity<1,depthWrite:opacity>=1,side:THREE.DoubleSide
-        });
+        const hasColors=!!geometry.getAttribute('color');
+        const meta={type,name:categoryLabel(type)+' (modelo otimizado)',role:''};
+        const material=createCanilMaterial(meta,null,opacity,geometry,kind||null,hasColors);
         const mesh=new THREE.Mesh(geometry,material);
-        mesh.userData.baseOpacity=material.opacity??1;
-        mesh.castShadow=QUALITY_MODES[qualityIndex].shadowSize>0;
+        mesh.userData.baseOpacity=opacity;
+        mesh.castShadow=QUALITY_MODES[qualityIndex].shadowSize>0&&opacity>=1;
         mesh.receiveShadow=QUALITY_MODES[qualityIndex].shadowSize>0;
-        meshMeta.set(mesh,{id:type,name:categoryLabel(type)+' (modelo otimizado)',type,discipline:def.id,disciplineLabel:def.label,elementCount:entry.categories?.[type]||1});
+        meshMeta.set(mesh,{id:type,name:meta.name,type,discipline:def.id,disciplineLabel:def.label,elementCount:entry.categories?.[type]||1});
         const sourceMaterials=Array.isArray(node.material)?node.material:[node.material];
         sourceMaterials.forEach(m=>m?.dispose());
         ensureLayer(type,def).add(mesh);
@@ -1078,27 +1064,24 @@ async function tryOptimizedModels(){
       }
       def.downloadIfc.hidden=false;
       updateModelVisibility(def);
+      loaded.add(def.id);
     }
     fitView();
-    statusEl.style.display='none';
-    updateModelFormat('GLB');
-    renderer.render(scene,camera);
-    console.info('GLB metrics '+JSON.stringify({loadMs:Math.round(performance.now()-loadStarted),meshes:meshMeta.size,triangles:[...meshMeta.keys()].reduce((n,m)=>n+(m.geometry.index?.count||m.geometry.attributes.position.count)/3,0),drawCalls:renderer.info.render.calls}));
-    console.info('Visualizacao GLB otimizada carregada. Use ?modelo=ifc para selecao IFC por elemento.');
-    return true;
+    console.info('GLB metrics '+JSON.stringify({loadMs:Math.round(performance.now()-loadStarted),meshes:meshMeta.size,triangles:[...meshMeta.keys()].reduce((n,m)=>n+(m.geometry.index?.count||m.geometry.attributes.position.count)/3,0)}));
+    return loaded;
   }catch(error){
     console.warn('GLB indisponivel ou invalido; retornando aos IFCs.',error);
     for(const [mesh] of meshMeta){mesh.parent?.remove(mesh);mesh.geometry.dispose();mesh.material.dispose();}
-    meshMeta.clear();
+    meshMeta.clear();sharedAnchor=null;
     for(const [key,layer] of layerMap){scene.remove(layer.group);layerMap.delete(key);}
     for(const def of modelDefs){def.rows.replaceChildren();def.count=0;def.status.textContent=def.file+' · Aguardando';def.downloadIfc.hidden=true;}
-    statusEl.style.display='flex';
-    return false;
+    return new Set();
   }
 }
 async function tryFetch(){
-  if(await tryOptimizedModels())return;
+  const optimized=await tryOptimizedModels();
   for(const def of modelDefs){
+    if(optimized.has(def.id))continue;
 
     const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),90000);
     try{
@@ -1112,7 +1095,7 @@ async function tryFetch(){
     finally{clearTimeout(timer);}
   }
   statusEl.style.display='none';
-  updateModelFormat(meshMeta.size?'IFC':'ERRO');
+  updateModelFormat(!meshMeta.size?'ERRO':optimized.size?'GLB':'IFC');
   if(!meshMeta.size)window.showViewerError(new Error('Nenhum IFC disponível. Publique os modelos no GitHub com os nomes indicados no painel.'));
 }
 

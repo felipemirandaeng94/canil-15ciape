@@ -1,13 +1,10 @@
-name: Gerar modelos GLB otimizados
+name: Gerar GLB otimizado (arquitetura)
 on:
   workflow_dispatch:
   push:
     branches: [main]
     paths:
       - 'CANIL.ifc'
-      - 'ESTRUTURAL.ifc'
-      - 'ELETRICO.ifc'
-      - 'HIDRAULICA.ifc'
       - 'scripts/build_glb.py'
       - '.github/workflows/build-glb.yml'
 concurrency:
@@ -46,7 +43,7 @@ jobs:
             git commit -m "build: atualizar modelos GLB otimizados"
             for attempt in 1 2 3; do
               git fetch origin main
-              if ! git diff --quiet "$built_from" origin/main -- CANIL.ifc ESTRUTURAL.ifc ELETRICO.ifc HIDRAULICA.ifc scripts/build_glb.py; then
+              if ! git diff --quiet "$built_from" origin/main -- CANIL.ifc scripts/build_glb.py; then
                 echo "Fontes IFC ou conversor mudaram durante a geracao; nova execucao necessaria."
                 exit 1
               fi
