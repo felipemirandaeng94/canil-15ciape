@@ -33,7 +33,7 @@ jobs:
         with:
           python-version: '3.11'
       - name: Instalar conversor
-        run: python -m pip install --no-cache-dir "ifcopenshell==0.8.3" "numpy<2" "trimesh>=4,<5"
+        run: python -m pip install --no-cache-dir "ifcopenshell==0.8.3" "numpy<2" "trimesh>=4,<5" "scipy>=1.11,<2"
       - name: Converter IFC para GLB
         run: python scripts/build_glb.py
       - name: Publicar modelos gerados
