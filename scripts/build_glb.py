@@ -111,9 +111,8 @@ def triangles_for_model(path, anchor):
             kept = []
             for vertices, faces, name in pieces:
                 wood = re.search(r"madeira.*(?:ripa|caibro)|(?:ripa|caibro).*madeira", name, re.I)
-                center = (vertices.min(axis=0) + vertices.max(axis=0)) / 2.0
-                outside = np.any(center[[0, 2]] < terrain_min[[0, 2]]) or np.any(
-                    center[[0, 2]] > terrain_max[[0, 2]]
+                outside = np.any(vertices.max(axis=0)[[0, 2]] < terrain_min[[0, 2]]) or np.any(
+                    vertices.min(axis=0)[[0, 2]] > terrain_max[[0, 2]]
                 )
                 if wood and outside:
                     print(f"Removida peca orfa fora do terreno: {name}")
@@ -127,7 +126,7 @@ def triangles_for_model(path, anchor):
 
 def build():
     OUT.mkdir(exist_ok=True)
-    manifest = {"version": 1, "models": {}, "coordinates": "ifc-world-zup-to-gltf-yup"}
+    manifest = {"version": 1, "paletteVersion": 2, "models": {}, "coordinates": "ifc-world-zup-to-gltf-yup"}
     anchor = None
     for discipline, filename in FILES.items():
         path = ROOT / filename
@@ -141,27 +140,40 @@ def build():
         for kind, pieces in sorted(segments.items()):
             # Agrupa todos os objetos da mesma categoria em um unico draw call.
             # Retem a categoria para camadas, mas nao a selecao individual.
-            vertices_list, faces_list = [], []
+            vertices_list, faces_list, colors_list = [], [], []
             offset = 0
             for vertices, faces, _name in pieces:
                 vertices_list.append(vertices)
                 faces_list.append(faces + offset)
                 offset += len(vertices)
+                color = COLORS.get(kind, DEFAULT)
+                if discipline == "ELE":
+                    color = [211, 183, 116, 255]
+                elif discipline == "HID":
+                    color = [97, 171, 206, 255]
+                elif discipline == "EST":
+                    color = [145, 160, 172, 255]
+                elif re.search(r"grama|terreno|grass|relva", _name, re.I):
+                    color = [100, 139, 91, 255]
+                elif re.search(r"alambrado|gradil|tela|metal", _name, re.I):
+                    color = [84, 107, 115, 255]
+                elif re.search(r"madeira|ripa|caibro", _name, re.I):
+                    color = [143, 125, 101, 255]
+                colors_list.append(np.tile(color, (len(vertices), 1)))
             combined = trimesh.Trimesh(
                 vertices=np.concatenate(vertices_list),
                 faces=np.concatenate(faces_list),
                 process=False,
             )
-            combined.visual.vertex_colors = np.tile(
-                COLORS.get(kind, DEFAULT), (len(combined.vertices), 1)
-            )
+            combined.visual.vertex_colors = np.concatenate(colors_list).astype(np.uint8)
             scene.add_geometry(combined, node_name=kind, geom_name=kind)
         target = OUT / (path.stem + ".glb")
-        target.write_bytes(scene.export(file_type="glb"))
+        target.write_bytes(scene.export(file_type="glb", include_normals=True))
         manifest["models"][discipline] = {
             "file": target.name,
             "source": filename,
             "sourceSHA256": hash_file(path),
+            "glbSHA256": hash_file(target),
             "categories": counts,
             "elements": sum(counts.values()),
             "sizeBytes": target.stat().st_size,
@@ -175,3 +187,4 @@ def build():
 
 if __name__ == "__main__":
     build()
+

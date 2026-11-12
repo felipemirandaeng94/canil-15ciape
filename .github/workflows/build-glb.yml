@@ -10,14 +10,25 @@ on:
       - 'HIDRAULICA.ifc'
       - 'scripts/build_glb.py'
       - '.github/workflows/build-glb.yml'
+concurrency:
+  group: build-glb-main
+  cancel-in-progress: false
 permissions:
   contents: write
+  pages: write
+  id-token: write
 jobs:
   convert:
     runs-on: ubuntu-latest
     timeout-minutes: 45
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
@@ -29,8 +40,29 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          built_from=$(git rev-parse HEAD)
           git add models/
           if ! git diff --cached --quiet; then
             git commit -m "build: atualizar modelos GLB otimizados"
-            git push
+            for attempt in 1 2 3; do
+              git fetch origin main
+              if ! git diff --quiet "$built_from" origin/main -- CANIL.ifc ESTRUTURAL.ifc ELETRICO.ifc HIDRAULICA.ifc scripts/build_glb.py; then
+                echo "Fontes IFC ou conversor mudaram durante a geracao; nova execucao necessaria."
+                exit 1
+              fi
+              git rebase origin/main
+              if git push origin HEAD:main; then break; fi
+              if [ "$attempt" -eq 3 ]; then exit 1; fi
+            done
           fi
+
+      # Commits feitos com GITHUB_TOKEN nao iniciam outro workflow de Pages.
+      - name: Configurar Pages
+        uses: actions/configure-pages@v5
+      - name: Preparar site atualizado
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: '.'
+      - name: Publicar Pages com os GLBs novos
+        id: deployment
+        uses: actions/deploy-pages@v4

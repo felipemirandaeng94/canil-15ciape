@@ -274,7 +274,7 @@ self.onmessage=async ({data})=>{
 <script type="module">
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
 import { RoomEnvironment } from 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/environments/RoomEnvironment.js';
-import { initInterface } from './assets/interface.js?v=ifc-layout-2';
+import { initInterface } from './assets/interface.js?v=bim-audit-20261112';
 import { mountViewCube } from './assets/view-cube.js?v=20261108-cube-2';
 import { initPdfWorkspace } from './assets/pdf-workspace.js?v=20261108-resizefix';
 
@@ -891,8 +891,11 @@ function applyCanilGeometryRules(def){
   const excluded=new Set();
   for(const [mesh,meta] of meshMeta){
     if(meta.discipline!==def.id||meta.type!=='IFCMEMBER'||!/madeira.*(?:ripa|caibro)|(?:ripa|caibro).*madeira/i.test(meta.name||''))continue;
-    const center=new THREE.Box3().setFromObject(mesh).getCenter(new THREE.Vector3());
-    if(center.x<terrain.min.x||center.x>terrain.max.x||center.z<terrain.min.z||center.z>terrain.max.z){mesh.visible=false;mesh.userData.autoExcluded=true;excluded.add(meta.id);}
+    const bounds=new THREE.Box3().setFromObject(mesh);
+    if(bounds.max.x<terrain.min.x||bounds.min.x>terrain.max.x||bounds.max.z<terrain.min.z||bounds.min.z>terrain.max.z){
+      excluded.add(meta.id);hiddenMeshes.delete(mesh);mesh.parent.remove(mesh);
+      mesh.geometry.dispose();mesh.material.dispose();meshMeta.delete(mesh);
+    }
   }
   if(excluded.size)console.info(`Biblioteca do canil: ${excluded.size} peças de cobertura órfãs fora do terreno foram ignoradas.`);
   return excluded;
@@ -965,7 +968,7 @@ async function loadBuffer(buf,fileName='CANIL.ifc'){
         sun.target.position.set(0,modelSize.y*0.25,0);sun.position.set(-shadowExtent*0.65,shadowExtent*1.2,shadowExtent*0.85);
         Object.assign(sun.shadow.camera,{left:-shadowExtent,right:shadowExtent,top:shadowExtent,bottom:-shadowExtent,near:0.1,far:shadowExtent*5});sun.shadow.camera.updateProjectionMatrix();
         fitView();statusEl.style.display='none';
-        def.count=ownElementCount;def.status.textContent=fileName+' · '+def.count+(def.count===1?' elemento':' elementos')+(data.missing.length?' · '+data.missing.length+' sem malha':'');
+        def.count=ownElementCount-excluded.size;def.status.textContent=fileName+' · '+def.count+(def.count===1?' elemento':' elementos')+(data.missing.length?' · '+data.missing.length+' sem malha':'');
         for(const [type,count] of Object.entries(data.rendered))layerMap.get(def.id+':'+type).count.textContent=count;
         updateModelVisibility(def);resolve();
         console.info('IFC carregado',data.rendered);
@@ -999,6 +1002,7 @@ function updateModelFormat(format){
   }
 }
 async function tryOptimizedModels(){
+  const loadStarted=performance.now();
   if(new URLSearchParams(location.search).get('modelo')==='ifc')return false;
   let manifest;
   try{
@@ -1014,18 +1018,22 @@ async function tryOptimizedModels(){
     for(let i=0;i<modelDefs.length;i++){
       const def=modelDefs[i],entry=manifest.models[def.id];
       setStatus('Abrindo '+def.label+' (GLB)...',12+75*i/modelDefs.length);
-      const gltf=await loader.loadAsync(new URL('./models/'+encodeURIComponent(entry.file),location.href).href);
+      const modelUrl=new URL('./models/'+encodeURIComponent(entry.file),location.href);
+      modelUrl.searchParams.set('v',entry.glbSHA256||entry.sourceSHA256);
+      const gltf=await loader.loadAsync(modelUrl.href);
       gltf.scene.updateMatrixWorld(true);
       let meshes=0;
       gltf.scene.traverse(node=>{
         if(!node.isMesh)return;
         const type=(node.name||node.parent?.name||'IFCBUILDINGELEMENTPROXY').toUpperCase();
-        const geometry=node.geometry.clone();
+        const geometry=node.geometry;
         geometry.applyMatrix4(node.matrixWorld);
-        geometry.deleteAttribute('color');
+        if(!geometry.getAttribute('normal'))geometry.computeVertexNormals();
+        const useVertexColors=manifest.paletteVersion===2&&!!geometry.getAttribute('color');
+        if(!useVertexColors)geometry.deleteAttribute('color');
         // Atribuir uma paleta suave e legivel ao GLB, por disciplina e categoria IFC.
         const baseMaterial=Array.isArray(node.material)?node.material[0]:node.material;
-        const opacity=baseMaterial?.opacity??1;
+        const opacity=type==='IFCWINDOW'?.55:(baseMaterial?.opacity??1);
         const categoryColors={
           ARQ:{IFCWALL:0xd4bd9d,IFCWALLSTANDARDCASE:0xd4bd9d,IFCSLAB:0x9baaaa,
             IFCROOF:0x826e60,IFCCOVERING:0x857c70,IFCDOOR:0xb08b56,
@@ -1037,7 +1045,8 @@ async function tryOptimizedModels(){
             IFCFLOWFITTING:0x65a7c6,IFCFLOWTERMINAL:0x72b8d6,IFCWASTETERMINAL:0x7599b5}
         };
         const material=new THREE.MeshStandardMaterial({
-          color:categoryColors[def.id]?.[type]??COLORS[type]??0x9ba8ad,
+          color:useVertexColors?0xffffff:(categoryColors[def.id]?.[type]??COLORS[type]??0x9ba8ad),
+          vertexColors:useVertexColors,
           roughness:.82,metalness:.06,opacity,
           transparent:opacity<1,depthWrite:opacity>=1,side:THREE.DoubleSide
         });
@@ -1045,7 +1054,9 @@ async function tryOptimizedModels(){
         mesh.userData.baseOpacity=material.opacity??1;
         mesh.castShadow=QUALITY_MODES[qualityIndex].shadowSize>0;
         mesh.receiveShadow=QUALITY_MODES[qualityIndex].shadowSize>0;
-        meshMeta.set(mesh,{id:type,name:categoryLabel(type)+' (modelo otimizado)',type,discipline:def.id,disciplineLabel:def.label});
+        meshMeta.set(mesh,{id:type,name:categoryLabel(type)+' (modelo otimizado)',type,discipline:def.id,disciplineLabel:def.label,elementCount:entry.categories?.[type]||1});
+        const sourceMaterials=Array.isArray(node.material)?node.material:[node.material];
+        sourceMaterials.forEach(m=>m?.dispose());
         ensureLayer(type,def).add(mesh);
         meshes++;
       });
@@ -1062,6 +1073,8 @@ async function tryOptimizedModels(){
     fitView();
     statusEl.style.display='none';
     updateModelFormat('GLB');
+    renderer.render(scene,camera);
+    console.info('GLB metrics '+JSON.stringify({loadMs:Math.round(performance.now()-loadStarted),meshes:meshMeta.size,triangles:[...meshMeta.keys()].reduce((n,m)=>n+(m.geometry.index?.count||m.geometry.attributes.position.count)/3,0),drawCalls:renderer.info.render.calls}));
     console.info('Visualizacao GLB otimizada carregada. Use ?modelo=ifc para selecao IFC por elemento.');
     return true;
   }catch(error){
@@ -1259,7 +1272,7 @@ async function listPdfs(){
         }
       }
       const row=document.createElement('div');row.className='hydro-pdf-row';
-      const button=document.createElement('button');button.className='action pdf-link';button.textContent=entry.name.replace(/\.pdf$/i,'').replace(/\(1\)$/,'');button.title='Visualizar '+entry.name;button.onclick=()=>viewPdf(category.slug,entry.name,button);
+      const button=document.createElement('button');button.className='action pdf-link';button.textContent=entry.name.replace(/\.pdf$/i,'').replace(/\(1\)$/,'');button.dataset.pdfUrl=new URL('./plantas/'+encodeURIComponent(category.slug)+'/'+encodeURIComponent(entry.name),location.href).href;button.title='Visualizar '+entry.name;button.onclick=()=>viewPdf(category.slug,entry.name,button);
       row.append(button);body.append(row);
     }
     if(category.slug==='hidrossanitario'&&!entries.some(e=>/SANITÁRIO|SANITARIO|ESGOTO|PLUVIAL/i.test(e.name))){
@@ -1285,3 +1298,4 @@ tryFetch().catch(window.showViewerError);
 </script>
 </body>
 </html>
+
