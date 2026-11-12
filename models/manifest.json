@@ -1,0 +1,69 @@
+{
+  "version": 1,
+  "models": {
+    "ARQ": {
+      "file": "CANIL.glb",
+      "source": "CANIL.ifc",
+      "sourceSHA256": "8051d7384c2772b4baa812927d84ad23ea7b68bafe0e1fa1c32a2f8686807be7",
+      "categories": {
+        "IFCWALLSTANDARDCASE": 35,
+        "IFCDOOR": 32,
+        "IFCSLAB": 12,
+        "IFCMEMBER": 1454,
+        "IFCFLOWTERMINAL": 14,
+        "IFCBUILDINGELEMENTPROXY": 87,
+        "IFCWINDOW": 2,
+        "IFCCOVERING": 2,
+        "IFCRAILING": 1
+      },
+      "elements": 1639,
+      "sizeBytes": 10433920
+    },
+    "EST": {
+      "file": "ESTRUTURAL.glb",
+      "source": "ESTRUTURAL.ifc",
+      "sourceSHA256": "68b1de4ea5bc802c0932e1ec0e537e77089f00741f2677061dd7e26aa65066c7",
+      "categories": {
+        "IFCBEAM": 108,
+        "IFCCOLUMN": 91,
+        "IFCFOOTING": 32,
+        "IFCSLAB": 1
+      },
+      "elements": 232,
+      "sizeBytes": 74928
+    },
+    "ELE": {
+      "file": "ELETRICO.glb",
+      "source": "ELETRICO.ifc",
+      "sourceSHA256": "3d39d5e889f1160bd198ee961ec8ed8e0127f7707ba5c3daead56921d7610037",
+      "categories": {
+        "IFCFLOWFITTING": 20,
+        "IFCFLOWSEGMENT": 40,
+        "IFCFLOWTERMINAL": 21
+      },
+      "elements": 81,
+      "sizeBytes": 1293028
+    },
+    "HID": {
+      "file": "HIDRAULICA.glb",
+      "source": "HIDRAULICA.ifc",
+      "sourceSHA256": "06100065307deee9d59026a42d3914b2f3fa2033d8949ad14e38d028ba523a65",
+      "categories": {
+        "IFCBUILDINGELEMENTPROXY": 60,
+        "IFCFLOWFITTING": 25,
+        "IFCFLOWSEGMENT": 139,
+        "IFCFLOWTERMINAL": 46,
+        "IFCFLOWCONTROLLER": 3,
+        "IFCFLOWSTORAGEDEVICE": 1
+      },
+      "elements": 274,
+      "sizeBytes": 2423916
+    }
+  },
+  "coordinates": "ifc-world-zup-to-gltf-yup",
+  "anchor": [
+    34.00202526756178,
+    -0.06999999999999952,
+    -3.303898628137757
+  ]
+}
