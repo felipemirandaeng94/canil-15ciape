@@ -11,29 +11,32 @@ Envie os arquivos para a raiz deste repositório, na branch `main`, com a capita
 | Arquitetura | `CANIL.ifc` |
 | Estrutural | `ESTRUTURAL.ifc` |
 | **Elétrico** | **`ELETRICO.ifc`** |
-| **Hidrossanitário (água fria e esgoto)** | **`HIDRAULICO.ifc`** |
+| **Hidrossanitário (água fria e esgoto)** | **`HIDRAULICA.ifc`** |
 
-O site busca os **quatro arquivos IFC** automaticamente (inclusive `ELETRICO.ifc`). O modelo `HIDRAULICO.ifc` já inclui as instalações de água fria **e** de esgoto. Não é necessário exportar ou publicar `ESGOTO.IFC` separadamente. Arquivos ainda não publicados não impedem o carregamento dos demais. Aguarde a conclusão da publicação do GitHub Pages após cada alteração e recarregue o site.
+Os **quatro arquivos IFC estão publicados na raiz da branch `main`**, incluindo `ELETRICO.ifc`. O visualizador está configurado para buscar os quatro modelos automaticamente. A presença do arquivo no repositório não garante, por si só, que todas as geometrias sejam renderizadas. O arquivo `HIDRAULICA.ifc` é a referência hidrossanitária do site; a apresentação de água fria, esgoto e pluvial depende dos sistemas e representações exportados no IFC. Aguarde a conclusão da publicação do GitHub Pages após cada alteração e recarregue o site.
 
 Exporte todos os modelos com a mesma origem, orientação e sistema de coordenadas. O visualizador conserva as posições relativas e aplica um deslocamento comum apenas para precisão e enquadramento. Não alinha modelos independentes por seus centros. A compatibilização disponível é visual; não há detecção automática de interferências.
 
 Cada disciplina tem visibilidade, isolamento, opacidade e categorias independentes. A navegação em primeira pessoa usa W/A/S/D ou setas, mouse arrastado para olhar, Q/E para altura e Esc para órbita. O botão de velocidade alterna 1×, 2× e 4×; Shift aplica aceleração temporária. A navegação é livre, sem colisões.
 
-## Publicar o projeto elétrico IFC
+## Projeto elétrico IFC — arquivo publicado
 
-1. Exporte o projeto elétrico em formato **IFC com elementos geométricos 3D**, preferencialmente utilizando a mesma versão de referência e o mesmo ponto de origem adotados na Arquitetura (`CANIL.ifc`) e na Estrutura (`ESTRUTURAL.ifc`). Não utilize recentralização ou rotação independente somente para a exportação elétrica.
-2. No GitHub, abra a **raiz** do repositório, selecione a branch `main` e envie o arquivo com o nome **exato `ELETRICO.ifc`** (maiúsculas/minúsculas importam no GitHub Pages). Não coloque o arquivo em `assets/` nem em `plantas/`.
-3. Aguarde a publicação do GitHub Pages. Reabra o site (ou faça `Ctrl + F5`). O visualizador tenta carregar `CANIL.ifc`, `ESTRUTURAL.ifc`, `ELETRICO.ifc` e `HIDRAULICO.ifc` em sequência.
-4. Na aba **Disciplinas**, confirme que o cartão **Elétrico** apresenta `ELETRICO.ifc · N elementos` (com N maior que zero). Teste mostrar/ocultar, **Isolar**, opacidade, categorias IFC e alinhamento com Arquitetura e Estrutura.
-5. Em caso de falha, confira o nome e o caminho do arquivo, a conclusão do deploy e se a exportação IFC realmente contém sólidos 3D. Um arquivo IFC apenas com informações textuais ou representações não suportadas pode abrir sem ter elementos renderizáveis. As outras disciplinas devem continuar disponíveis.
+O arquivo **[`ELETRICO.ifc`](ELETRICO.ifc)** já está disponível na raiz da branch `main`, e o `index.html` já o referencia na disciplina **Elétrico**. Não é necessário reenviar o modelo para que o visualizador tente carregá-lo.
 
-O leitor percorre os produtos IFC que possuem representação geométrica; classes como `IFCLIGHTFIXTURE`, `IFCOUTLET`, `IFCSWITCHINGDEVICE`, `IFCELECTRICDISTRIBUTIONBOARD` e `IFCCABLECARRIERSEGMENT` já são reconhecidas para organização por categoria. A exibição efetiva depende de a exportação incluir geometria interpretável pelo web-ifc.
+Para conferir a exibição:
 
-**Nota de validação:** o código reconhece e busca `ELETRICO.ifc`, mas a compatibilidade de um IFC específico somente pode ser confirmada após seu envio. Não se deve considerar validada a geometria elétrica enquanto o arquivo real não estiver publicado.
+1. Acesse o [visualizador publicado](https://felipemirandaeng94.github.io/canil-15ciape/) e atualize com `Ctrl + F5`, se necessário.
+2. Na seção **Disciplinas**, localize **Elétrico** e confira se há elementos renderizados.
+3. Teste visibilidade, isolamento, opacidade e alinhamento com os demais modelos.
+4. Se o modelo não aparecer, confirme se o GitHub Pages disponibiliza o arquivo e se a exportação IFC contém representações geométricas 3D interpretáveis pelo web-ifc.
+
+O código contém categorias para luminárias (`IFCLIGHTFIXTURE`), tomadas (`IFCOUTLET`), interruptores (`IFCSWITCHINGDEVICE`), quadros (`IFCELECTRICDISTRIBUTIONBOARD`) e eletrocalhas (`IFCCABLECARRIERSEGMENT`). A presença dessas categorias no código não comprova que todos os objetos do IFC real sejam renderizáveis.
+
+**Situação verificada em 12/11/2026:** arquivo `ELETRICO.ifc` presente na branch `main` (aproximadamente 4,4 MB); referência correspondente presente em `index.html`. **A renderização geométrica no navegador ainda não foi validada nesta verificação.**
 
 ## Modelo hidrossanitário unificado
 
-O projeto utiliza **um único arquivo IFC hidrossanitário**, `HIDRAULICO.ifc`, contendo tanto os componentes de **água fria** quanto os de **esgoto sanitário**. No visualizador 3D, os dois sistemas são apresentados em uma única disciplina: **Hidrossanitário (água fria + esgoto)**. O site não tenta carregar `ESGOTO.IFC` nem apresenta uma camada de esgoto independente.
+O site utiliza o arquivo **`HIDRAULICA.ifc`** como modelo hidrossanitário e o identifica como **Hidrossanitário (água fria + esgoto + pluvial)**. As redes efetivamente visíveis dependem das entidades e geometrias exportadas nesse arquivo; a simples existência do IFC não comprova que os três sistemas estão representados. O site não busca um arquivo `ESGOTO.IFC` independente.
 
 As pranchas permanecem organizadas na categoria **Hidrossanitário** do catálogo PDF (`plantas/manifest.json`), sem alteração dos arquivos ou da listagem. Se os sistemas precisarem ser diferenciados visualmente, utilize as categorias ou propriedades IFC exportadas dentro do modelo unificado, conforme estiverem disponíveis.
 
@@ -61,7 +64,7 @@ Terreno identificado como grama é verde. Coberturas identificadas pelo tipo/pre
 
 ## Verificação desta versão
 
-- O projeto usa modelos de arquitetura e estrutura presentes na raiz; os números de elementos exibidos dependem dos arquivos publicados.
+- Os quatro arquivos `CANIL.ifc`, `ESTRUTURAL.ifc`, `ELETRICO.ifc` e `HIDRAULICA.ifc` foram encontrados na raiz da branch `main` em 12/11/2026. Os números de elementos exibidos dependem da leitura geométrica efetiva.
 - A integração geométrica entre disciplinas depende dos arquivos IFC exportados com a mesma origem e orientação.
 - Envio PDF: criação, proteção contra sobrescrita, atualização com SHA, base64, erros de autorização, tamanho e assinatura PDF verificados com respostas simuladas; sem gravar arquivos de teste no GitHub.
-- A estrutura já está publicada; a compatibilidade de cada modelo deve ser validada com os arquivos IFC efetivamente publicados. A disciplina hidrossanitária utiliza um único arquivo, `HIDRAULICO.ifc`, que contém água fria e esgoto. O primeiro envio de PDF pelo painel requer uma credencial de escrita autorizada no GitHub.
+- O elétrico já está publicado; sua renderização precisa ser conferida no visualizador. A disciplina hidrossanitária aponta para `HIDRAULICA.ifc`; a existência de água fria, esgoto e pluvial renderizáveis deve ser verificada no conteúdo exportado. O primeiro envio de PDF pelo painel requer uma credencial de escrita autorizada no GitHub.
