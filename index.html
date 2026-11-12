@@ -97,7 +97,15 @@
     #info{left:10px;right:10px;bottom:64px;max-width:none}#hint{bottom:8px;right:8px;max-width:calc(100% - 16px);font-size:9px;line-height:1.55;padding:6px 9px}#hidden-alert{top:68px;left:10px;right:10px;max-width:none}#shortcut-toast{bottom:66px}#pdf-dialog{width:96vw;height:92dvh;padding:14px}.pdf-bar{flex-wrap:wrap}
   }
   #model-format{display:inline-flex;align-items:center;gap:7px;flex-shrink:0;margin-left:8px;padding:7px 11px;border-radius:99px;border:1px solid #53696b;background:#10272c;color:#d2e1e3;font-size:11px;font-weight:800;letter-spacing:.7px;white-space:nowrap}#model-format .model-format-dot{display:inline-block;width:9px;height:9px;flex-shrink:0;border-radius:50%;background:#889ba0;box-shadow:0 0 0 3px #889ba022}#model-format.ready{border-color:#36b878;color:#a9f7cb;background:#153d2c}#model-format.ready .model-format-dot{background:#45e58d;box-shadow:0 0 0 3px #45e58d25,0 0 10px #45e58d70}#model-format.error{border-color:#c2804f;color:#ffd4b1}#model-format.error .model-format-dot{background:#e5a266}@media(max-width:800px){#model-format{margin-left:0;padding:5px 7px;font-size:9px;gap:5px}#model-format .model-format-dot{width:7px;height:7px}#header .title h1{max-width:100%;font-size:9px}} 
-  .ifc-download{display:inline-flex;align-items:center;justify-content:center;text-decoration:none;min-height:32px;white-space:nowrap;border-color:#43856a;color:#b8f5d5;background:#17382e} .ifc-download:hover{background:#245643;color:white}\n  .model-controls{flex-wrap:wrap} .hydro-pdf-section{font-size:11px;letter-spacing:.3px;color:#9fe6c3;padding:10px 3px 4px;border-top:1px solid #355548;margin-top:7px}.hydro-pdf-row{display:flex;min-width:0}.hydro-pdf-row .pdf-link{flex:1;min-width:0;margin-top:0}\n</style>
+  .ifc-download{display:inline-flex;align-items:center;justify-content:center;text-decoration:none;min-height:32px;white-space:nowrap;border-color:#43856a;color:#b8f5d5;background:#17382e} .ifc-download:hover{background:#245643;color:white}\n  .model-controls{flex-wrap:wrap} .hydro-pdf-section{font-size:11px;letter-spacing:.3px;color:#9fe6c3;padding:10px 3px 4px;border-top:1px solid #355548;margin-top:7px}.hydro-pdf-row{display:flex;min-width:0}.hydro-pdf-row .pdf-link{flex:1;min-width:0;margin-top:0}\n
+  /* Troca rápida entre geometria otimizada e consulta BIM completa. */
+  .format-switcher{display:flex;align-items:center;gap:5px;margin-left:auto;flex-shrink:0}
+  .format-switcher #model-format{margin-left:0}
+  .format-switch{display:inline-flex;align-items:center;justify-content:center;min-height:34px;padding:7px 11px;border:1px solid #427360;border-radius:7px;background:#123028;color:#cae7d7;font-size:11px;font-weight:700;text-decoration:none;white-space:nowrap}
+  .format-switch:hover,.format-switch:focus-visible{background:#20523b;border-color:#80e7ad;color:#fff}
+  .format-switch.active{background:#286b4b;border-color:#63dd9a;color:#fff;pointer-events:none}
+  @media(max-width:800px){.format-switcher{gap:3px}.format-switch{min-height:28px;padding:4px 5px;font-size:9px}.format-switcher #model-format{padding:4px 5px}}
+</style>
 <link rel="stylesheet" href="./assets/interface.css?v=quick-systems-20261112">
 <link rel="stylesheet" href="./assets/pdf-workspace.css">
 </head>
@@ -115,7 +123,11 @@
     <div class="badge">COORDENAÇÃO BIM</div>
     <button class="action" id="btn-admin">Gerenciar PDFs</button>
   </div>
-  <div id="model-format" class="model-format loading" role="status" aria-live="polite" title="Formato efetivamente carregado no visualizador"><span class="model-format-dot"></span><span id="model-format-label">CARREGANDO</span></div>
+  <div class="format-switcher" aria-label="Modo de visualização 3D">
+    <div id="model-format" class="model-format loading" role="status" aria-live="polite" title="Formato efetivamente carregado no visualizador"><span class="model-format-dot"></span><span id="model-format-label">CARREGANDO</span></div>
+    <a id="switch-glb" class="format-switch" href="./" title="Visualização GLB leve, cores representativas e maior fluidez">GLB · Rápido</a>
+    <a id="switch-ifc" class="format-switch" href="?modelo=ifc" title="Abrir IFC original com qualidade detalhada e seleção de elementos BIM">IFC · Detalhado</a>
+  </div>
 </div>
 
 <div id="main">
@@ -980,6 +992,11 @@ function updateModelFormat(format){
   badge.classList.add(format==="GLB"||format==="IFC"?"ready":format==="ERRO"?"error":"loading");
   label.textContent=format==="GLB"||format==="IFC"?format:format==="ERRO"?"ERRO":"CARREGANDO";
   badge.title=format==="GLB"?"Modelos GLB otimizados carregados":format==="IFC"?"Modelos IFC originais carregados":"Aguardando carregamento";
+  for(const [id,mode] of [["switch-glb","GLB"],["switch-ifc","IFC"]]){
+    const link=document.getElementById(id);
+    link.classList.toggle("active",format===mode);
+    if(format===mode)link.setAttribute("aria-current","page");else link.removeAttribute("aria-current");
+  }
 }
 async function tryOptimizedModels(){
   if(new URLSearchParams(location.search).get('modelo')==='ifc')return false;
