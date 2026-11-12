@@ -1031,6 +1031,15 @@ async function tryOptimizedModels(){
         if(!geometry.getAttribute('normal'))geometry.computeVertexNormals();
         const useVertexColors=manifest.paletteVersion===2&&!!geometry.getAttribute('color');
         if(!useVertexColors)geometry.deleteAttribute('color');
+        else {
+          // A paleta do conversor usa bytes sRGB; o shader espera cores lineares.
+          const colors=geometry.getAttribute('color'),linear=new THREE.Color();
+          for(let v=0;v<colors.count;v++){
+            linear.setRGB(colors.getX(v),colors.getY(v),colors.getZ(v),THREE.SRGBColorSpace);
+            colors.setXYZ(v,linear.r,linear.g,linear.b);
+          }
+          colors.needsUpdate=true;
+        }
         // Atribuir uma paleta suave e legivel ao GLB, por disciplina e categoria IFC.
         const baseMaterial=Array.isArray(node.material)?node.material[0]:node.material;
         const opacity=type==='IFCWINDOW'?.55:(baseMaterial?.opacity??1);
@@ -1047,7 +1056,7 @@ async function tryOptimizedModels(){
         const material=new THREE.MeshStandardMaterial({
           color:useVertexColors?0xffffff:(categoryColors[def.id]?.[type]??COLORS[type]??0x9ba8ad),
           vertexColors:useVertexColors,
-          roughness:.82,metalness:.06,opacity,
+          roughness:.82,metalness:.06,envMapIntensity:.35,opacity,
           transparent:opacity<1,depthWrite:opacity>=1,side:THREE.DoubleSide
         });
         const mesh=new THREE.Mesh(geometry,material);
