@@ -621,3 +621,104 @@ button,a,summary{ -webkit-tap-highlight-color:transparent}button:disabled{opacit
 @media(max-width:1100px){.pd-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.pd-schedule{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:800px){#project-dashboard{padding:20px 12px 80px}.pd-section{padding:13px}.pd-budget-list,.pd-discipline-grid{grid-template-columns:1fr}
 .pd-header{flex-direction:column}.pd-close{align-self:flex-end}}
+
+/* Cabeçalho responsivo: nome da operação sempre legível no celular.
+   Duas linhas independentes impedem que GLB/IFC comprimam o título. */
+@media (max-width:800px){
+  #header{
+    display:grid;
+    grid-template-columns:38px minmax(0,1fr);
+    grid-template-rows:minmax(51px,auto) 37px;
+    column-gap:9px;
+    row-gap:5px;
+    height:auto;
+    min-height:107px;
+    padding:8px 10px 9px;
+    align-content:center;
+    align-items:center;
+  }
+  #header>.institution-mark.ime{
+    grid-column:1;grid-row:1;
+    width:38px;height:46px;
+    flex-shrink:0;
+  }
+  #header>.institution-mark.ime img{height:45px;max-height:45px}
+  #header .project-identity{
+    grid-column:2;grid-row:1;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:8px;
+    width:100%;
+    min-width:0;
+    overflow:visible;
+  }
+  #header .project-identity .title{
+    flex:1 1 auto;
+    width:auto;
+    min-width:0;
+    overflow:visible;
+  }
+  #header .project-identity h1{
+    display:block;
+    overflow:visible;
+    white-space:normal;
+    text-overflow:clip;
+    line-height:1.2;
+  }
+  #header .project-identity h1 strong{
+    display:block;
+    font-size:clamp(14px,4vw,17px);
+    line-height:1.18;
+    letter-spacing:.25px;
+    white-space:nowrap;
+  }
+  #header .project-identity h1 span{
+    display:block;
+    margin-top:4px;
+    font-size:clamp(9px,2.6vw,11px);
+    line-height:1.28;
+    letter-spacing:0;
+    overflow-wrap:normal;
+  }
+  #header .project-identity .institution-mark.cia{
+    flex:0 0 35px;
+    width:35px;height:45px;
+    display:flex;
+  }
+  #header .project-identity .institution-mark.cia img{height:43px;max-height:43px}
+  #header .header-actions{
+    grid-row:2;grid-column:1 / 3;
+    justify-self:start;
+    margin:0;
+    display:flex;
+    align-items:center;
+    min-width:0;
+  }
+  #header .header-actions #btn-admin{
+    font-size:0;
+    padding:8px 10px;
+    min-height:34px;
+  }
+  #header .header-actions #btn-admin::after{content:'PDFs';font-size:11px}
+  #header .format-switcher{
+    grid-row:2;grid-column:1 / 3;
+    justify-self:end;
+    margin:0;
+    gap:4px;
+    min-width:0;
+  }
+  #header .format-switcher #model-format{padding:5px 6px}
+  #header .format-switcher .format-switch{
+    min-height:34px;
+    padding:6px 7px;
+    font-size:10px;
+  }
+}
+@media (max-width:360px){
+  #header{grid-template-columns:30px minmax(0,1fr);column-gap:6px;padding-inline:6px}
+  #header>.institution-mark.ime{width:30px}
+  #header .project-identity .institution-mark.cia{flex-basis:28px;width:28px}
+  #header .format-switcher{gap:2px}
+  #header .format-switcher .format-switch{padding-inline:4px;font-size:9px}
+}
