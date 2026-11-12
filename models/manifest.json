@@ -5,12 +5,12 @@
     "ARQ": {
       "file": "CANIL.glb",
       "source": "CANIL.ifc",
-      "sourceSHA256": "79f77355b6b25870c30b31f11d18a7e20cfad39e1b6507d9d1d384ce23e9c34c",
-      "glbSHA256": "6d1581d7950da1bb4e96a49aef1d5ca62e8b7023a4053bcb47a00d41bf139083",
+      "sourceSHA256": "a0959779ac56b6cd7b64241053332c3a23611f357886bc9b1767b31872c84958",
+      "glbSHA256": "5ae612f1056406adb7d54157a25b3de258f67dbab0f8cce5f8af02d849898cd3",
       "categories": {
         "IFCWALL": 35,
         "IFCDOOR": 32,
-        "IFCSLAB": 12,
+        "IFCSLAB": 11,
         "IFCMEMBER": 1310,
         "IFCFLOWTERMINAL": 14,
         "IFCBUILDINGELEMENTPROXY": 87,
@@ -18,14 +18,14 @@
         "IFCCOVERING": 2,
         "IFCRAILING": 1
       },
-      "elements": 1495,
-      "sizeBytes": 15319120
+      "elements": 1494,
+      "sizeBytes": 15670160
     }
   },
   "coordinates": "ifc-world-zup-to-gltf-yup",
   "anchor": [
-    29.102025267561775,
+    29.102025267561764,
     -0.06999999999999952,
-    -3.303898628137773
+    -3.3338986281377734
   ]
 }
