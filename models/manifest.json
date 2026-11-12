@@ -5,10 +5,10 @@
     "ARQ": {
       "file": "CANIL.glb",
       "source": "CANIL.ifc",
-      "sourceSHA256": "8051d7384c2772b4baa812927d84ad23ea7b68bafe0e1fa1c32a2f8686807be7",
-      "glbSHA256": "b5de2b9e512f82bb413f1e2c84b346d4fa41ca8989e34d25b37eb2fd3bb4ab32",
+      "sourceSHA256": "79f77355b6b25870c30b31f11d18a7e20cfad39e1b6507d9d1d384ce23e9c34c",
+      "glbSHA256": "6d1581d7950da1bb4e96a49aef1d5ca62e8b7023a4053bcb47a00d41bf139083",
       "categories": {
-        "IFCWALLSTANDARDCASE": 35,
+        "IFCWALL": 35,
         "IFCDOOR": 32,
         "IFCSLAB": 12,
         "IFCMEMBER": 1310,
@@ -19,7 +19,7 @@
         "IFCRAILING": 1
       },
       "elements": 1495,
-      "sizeBytes": 15319144
+      "sizeBytes": 15319120
     }
   },
   "coordinates": "ifc-world-zup-to-gltf-yup",
