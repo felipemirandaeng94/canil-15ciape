@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-11-11",
+  "updatedAt": "2026-11-12T03:22:45.625Z",
   "categories": {
     "arquitetonico": [
       {
@@ -70,7 +70,12 @@
         "size": 64841
       }
     ],
-    "eletrico": [],
+    "eletrico": [
+      {
+        "name": "Térreo - Fiação - Elétrica.pdf",
+        "size": 264970
+      }
+    ],
     "hidrossanitario": [
       {
         "name": "PRANCHA 01 TERREO.pdf",
