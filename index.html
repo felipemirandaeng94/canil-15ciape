@@ -96,6 +96,7 @@
     #sidebar{position:absolute;top:0;right:0;bottom:0;z-index:40;width:min(330px,88vw);max-width:none;transform:translateX(100%);transition:transform .22s ease;box-shadow:-16px 0 45px #0009}#sidebar.mobile-open{transform:translateX(0)}#sidebar.mobile-open .mobile-panel-close{display:flex;width:100%;position:sticky;top:0;z-index:2}
     #info{left:10px;right:10px;bottom:64px;max-width:none}#hint{bottom:8px;right:8px;max-width:calc(100% - 16px);font-size:9px;line-height:1.55;padding:6px 9px}#hidden-alert{top:68px;left:10px;right:10px;max-width:none}#shortcut-toast{bottom:66px}#pdf-dialog{width:96vw;height:92dvh;padding:14px}.pdf-bar{flex-wrap:wrap}
   }
+  #model-format{display:inline-flex;align-items:center;gap:7px;flex-shrink:0;margin-left:8px;padding:7px 11px;border-radius:99px;border:1px solid #53696b;background:#10272c;color:#d2e1e3;font-size:11px;font-weight:800;letter-spacing:.7px;white-space:nowrap}#model-format .model-format-dot{display:inline-block;width:9px;height:9px;flex-shrink:0;border-radius:50%;background:#889ba0;box-shadow:0 0 0 3px #889ba022}#model-format.ready{border-color:#36b878;color:#a9f7cb;background:#153d2c}#model-format.ready .model-format-dot{background:#45e58d;box-shadow:0 0 0 3px #45e58d25,0 0 10px #45e58d70}#model-format.error{border-color:#c2804f;color:#ffd4b1}#model-format.error .model-format-dot{background:#e5a266}@media(max-width:800px){#model-format{margin-left:0;padding:5px 7px;font-size:9px;gap:5px}#model-format .model-format-dot{width:7px;height:7px}#header .title h1{max-width:100%;font-size:9px}} 
   .ifc-download{display:inline-flex;align-items:center;justify-content:center;text-decoration:none;min-height:32px;white-space:nowrap;border-color:#43856a;color:#b8f5d5;background:#17382e} .ifc-download:hover{background:#245643;color:white}\n  .model-controls{flex-wrap:wrap} .hydro-pdf-section{font-size:11px;letter-spacing:.3px;color:#9fe6c3;padding:10px 3px 4px;border-top:1px solid #355548;margin-top:7px}.hydro-pdf-row{display:flex;min-width:0}.hydro-pdf-row .pdf-link{flex:1;min-width:0;margin-top:0}\n</style>
 <link rel="stylesheet" href="./assets/interface.css?v=quick-systems-20261112">
 <link rel="stylesheet" href="./assets/pdf-workspace.css">
@@ -106,7 +107,7 @@
   <div class="institution-mark ime"><img src="./assets/brasao-ime.png" alt="Brasão do Instituto Militar de Engenharia"></div>
   <div class="project-identity">
     <div class="title">
-      <h1>OP RICARDO FRANCO — EXTENSÃO DO CANIL DA 15ª CIA PE</h1>
+      <h1>OP RICARDO FRANCO — CONSTRUÇÃO / AMPLIAÇÃO DO CANIL DA 15ª CIA PE</h1>
     </div>
     <div class="institution-mark cia"><img src="./assets/brasao-15cia-pe.png" alt="Brasão da 15ª Companhia de Polícia do Exército"></div>
   </div>
@@ -114,6 +115,7 @@
     <div class="badge">COORDENAÇÃO BIM</div>
     <button class="action" id="btn-admin">Gerenciar PDFs</button>
   </div>
+  <div id="model-format" class="model-format loading" role="status" aria-live="polite" title="Formato efetivamente carregado no visualizador"><span class="model-format-dot"></span><span id="model-format-label">CARREGANDO</span></div>
 </div>
 
 <div id="main">
@@ -971,6 +973,14 @@ function tick(){ return new Promise(r=>setTimeout(r,0)); }
 // ── FETCH REMOTO ──────────────────────────────────────────────────────────────
 // Visualizacao leve: GLB preconvertido no GitHub Actions. Um link ?modelo=ifc
 // mantem o leitor IFC integral, com identificacao de elementos e propriedades.
+function updateModelFormat(format){
+  const badge=document.getElementById("model-format");
+  const label=document.getElementById("model-format-label");
+  badge.classList.remove("ready","loading","error");
+  badge.classList.add(format==="GLB"||format==="IFC"?"ready":format==="ERRO"?"error":"loading");
+  label.textContent=format==="GLB"||format==="IFC"?format:format==="ERRO"?"ERRO":"CARREGANDO";
+  badge.title=format==="GLB"?"Modelos GLB otimizados carregados":format==="IFC"?"Modelos IFC originais carregados":"Aguardando carregamento";
+}
 async function tryOptimizedModels(){
   if(new URLSearchParams(location.search).get('modelo')==='ifc')return false;
   let manifest;
@@ -978,7 +988,7 @@ async function tryOptimizedModels(){
     const response=await fetch(new URL('./models/manifest.json',location.href),{cache:'no-store',signal:AbortSignal.timeout(12000)});
     if(!response.ok)return false;
     manifest=await response.json();
-    if(manifest.version!==1||!modelDefs.every(d=>manifest.models?.[d.id]?.file===d.file.replace(/\\.ifc$/i,'.glb')))return false;
+    if(manifest.version!==1||!modelDefs.every(d=>manifest.models?.[d.id]?.file===d.file.replace(/\.ifc$/i,'.glb')))return false;
   }catch(error){console.info('GLB nao disponivel; usando IFC original.',error);return false;}
   try{
     setStatus('Abrindo modelos 3D otimizados...',10);
@@ -1016,6 +1026,7 @@ async function tryOptimizedModels(){
     }
     fitView();
     statusEl.style.display='none';
+    updateModelFormat('GLB');
     console.info('Visualizacao GLB otimizada carregada. Use ?modelo=ifc para selecao IFC por elemento.');
     return true;
   }catch(error){
@@ -1044,6 +1055,7 @@ async function tryFetch(){
     finally{clearTimeout(timer);}
   }
   statusEl.style.display='none';
+  updateModelFormat(meshMeta.size?'IFC':'ERRO');
   if(!meshMeta.size)window.showViewerError(new Error('Nenhum IFC disponível. Publique os modelos no GitHub com os nomes indicados no painel.'));
 }
 
