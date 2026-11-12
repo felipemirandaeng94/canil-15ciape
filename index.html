@@ -905,6 +905,18 @@ function applyCanilGeometryRules(def){
   if(excluded.size)console.info(`Biblioteca do canil: ${excluded.size} peças de cobertura órfãs fora do terreno foram ignoradas.`);
   return excluded;
 }
+// Centraliza o conjunto carregado (GLB ou IFC), posiciona o sol e enquadra a
+// vista isometrica inicial. Usado pelos dois modos para a vista inicial ser igual.
+function frameLoadedModels(){
+  const box=new THREE.Box3();for(const mesh of meshMeta.keys()){mesh.position.set(0,0,0);mesh.updateMatrixWorld(true);if(mesh.visible&&mesh.parent.visible)box.expandByObject(mesh);}
+  if(box.isEmpty())return;
+  const center=box.getCenter(new THREE.Vector3()),offset=new THREE.Vector3(-center.x,-box.min.y,-center.z);
+  for(const mesh of meshMeta.keys())mesh.position.copy(offset);
+  const modelSize=box.getSize(new THREE.Vector3()),shadowExtent=Math.max(modelSize.x,modelSize.z)*0.7+5;
+  sun.target.position.set(0,modelSize.y*0.25,0);sun.position.set(-shadowExtent*0.65,shadowExtent*1.2,shadowExtent*0.85);
+  Object.assign(sun.shadow.camera,{left:-shadowExtent,right:shadowExtent,top:shadowExtent,bottom:-shadowExtent,near:0.1,far:shadowExtent*5});sun.shadow.camera.updateProjectionMatrix();
+  fitView();
+}
 // Full IFC geometry is processed in a worker so boolean operations do not freeze navigation.
 let activeWorker=null, activeLoad=0;
 async function loadBuffer(buf,fileName='CANIL.ifc'){
@@ -966,13 +978,7 @@ async function loadBuffer(buf,fileName='CANIL.ifc'){
         );
         const excluded=applyCanilGeometryRules(def);
         if(excluded.size&&data.rendered.IFCMEMBER)data.rendered.IFCMEMBER=Math.max(0,data.rendered.IFCMEMBER-excluded.size);
-        const box=new THREE.Box3();for(const mesh of meshMeta.keys()){mesh.position.set(0,0,0);mesh.updateMatrixWorld(true);if(mesh.visible&&mesh.parent.visible)box.expandByObject(mesh);}
-        const center=box.getCenter(new THREE.Vector3()),offset=new THREE.Vector3(-center.x,-box.min.y,-center.z);
-        for(const mesh of meshMeta.keys())mesh.position.copy(offset);
-        const modelSize=box.getSize(new THREE.Vector3()),shadowExtent=Math.max(modelSize.x,modelSize.z)*0.7+5;
-        sun.target.position.set(0,modelSize.y*0.25,0);sun.position.set(-shadowExtent*0.65,shadowExtent*1.2,shadowExtent*0.85);
-        Object.assign(sun.shadow.camera,{left:-shadowExtent,right:shadowExtent,top:shadowExtent,bottom:-shadowExtent,near:0.1,far:shadowExtent*5});sun.shadow.camera.updateProjectionMatrix();
-        fitView();statusEl.style.display='none';
+        frameLoadedModels();statusEl.style.display='none';
         def.count=ownElementCount-excluded.size;def.status.textContent=fileName+' · '+def.count+(def.count===1?' elemento':' elementos')+(data.missing.length?' · '+data.missing.length+' sem malha':'');
         for(const [type,count] of Object.entries(data.rendered))layerMap.get(def.id+':'+type).count.textContent=count;
         updateModelVisibility(def);resolve();
@@ -1066,7 +1072,7 @@ async function tryOptimizedModels(){
       updateModelVisibility(def);
       loaded.add(def.id);
     }
-    fitView();
+    frameLoadedModels();
     console.info('GLB metrics '+JSON.stringify({loadMs:Math.round(performance.now()-loadStarted),meshes:meshMeta.size,triangles:[...meshMeta.keys()].reduce((n,m)=>n+(m.geometry.index?.count||m.geometry.attributes.position.count)/3,0)}));
     return loaded;
   }catch(error){
