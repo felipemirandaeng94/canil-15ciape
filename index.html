@@ -1102,6 +1102,8 @@ async function tryFetch(){
   }
   statusEl.style.display='none';
   updateModelFormat(!meshMeta.size?'ERRO':optimized.size?'GLB':'IFC');
+  // Vista inicial: modo Explorar em 3D na entrada do canil (no celular o modo andar fica oculto).
+  if(meshMeta.size&&!walking&&!mobileQuery.matches)toggleWalk();
   if(!meshMeta.size)window.showViewerError(new Error('Nenhum IFC disponível. Publique os modelos no GitHub com os nomes indicados no painel.'));
 }
 
