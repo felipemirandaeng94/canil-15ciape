@@ -797,3 +797,7 @@ button,a,summary{ -webkit-tap-highlight-color:transparent}button:disabled{opacit
 #project-dashboard .pd-document.pd-pdf-file:not(.unavailable):hover{border-color:#7ee4a0;background:#245e47}
 @media(max-width:700px){#project-dashboard .pd-docs{grid-template-columns:1fr}
   #project-dashboard .pd-document.pd-pdf-file{min-height:76px}}
+
+/* Limpeza da barra de vistas: ocultar legendas técnicas redundantes.
+   Mantém os atalhos de órbita (isométrica, superior, frontal e lateral). */
+#viewer-footer #workspace-status{display:none!important}
