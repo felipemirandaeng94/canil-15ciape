@@ -815,7 +815,9 @@ button,a,summary{ -webkit-tap-highlight-color:transparent}button:disabled{opacit
     right:15px;
     bottom:10px;
     z-index:36;
-    max-width:min(310px,calc(100vw - 40px));
+    width:max-content;
+    max-width:calc(100vw - 30px);
+    white-space:nowrap;
     padding:5px 9px;
     border-radius:5px;
     color:#a9c8bd;
