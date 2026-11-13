@@ -801,3 +801,7 @@ button,a,summary{ -webkit-tap-highlight-color:transparent}button:disabled{opacit
 /* Limpeza da barra de vistas: ocultar legendas técnicas redundantes.
    Mantém os atalhos de órbita (isométrica, superior, frontal e lateral). */
 #viewer-footer #workspace-status{display:none!important}
+
+/* Etiquetas técnicas redundantes não ocupam espaço do visualizador.
+   Alertas operacionais, indicadores de carga e botões permanecem visíveis. */
+#hint{display:none!important}
