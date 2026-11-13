@@ -782,3 +782,18 @@ button,a,summary{ -webkit-tap-highlight-color:transparent}button:disabled{opacit
   #btn-mobile-project{min-width:62px}
   #mobile-nav .mobile-toggle{padding-inline:6px;font-size:10px}
 }
+
+/* Cartões dos PDFs de orçamento e cronograma. */
+#project-dashboard .pd-docs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+#project-dashboard .pd-document.pd-pdf-file{display:flex;flex-direction:row;align-items:center;gap:13px;min-width:0;min-height:86px}
+#project-dashboard .pd-pdf-icon{
+  display:flex;align-items:flex-end;justify-content:center;flex:0 0 37px;width:37px;height:46px;
+  padding-bottom:9px;clip-path:polygon(0 0,72% 0,100% 23%,100% 100%,0 100%);
+  background:#ce3640;color:white;font-weight:900;letter-spacing:.2px;font-size:11px;
+}
+#project-dashboard .pd-pdf-details{display:flex;flex-direction:column;gap:7px;min-width:0}
+#project-dashboard .pd-pdf-details strong{font-size:13px;line-height:1.4}
+#project-dashboard .pd-pdf-details small{font-size:11px;line-height:1.4}
+#project-dashboard .pd-document.pd-pdf-file:not(.unavailable):hover{border-color:#7ee4a0;background:#245e47}
+@media(max-width:700px){#project-dashboard .pd-docs{grid-template-columns:1fr}
+  #project-dashboard .pd-document.pd-pdf-file{min-height:76px}}
