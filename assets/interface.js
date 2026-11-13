@@ -1,4 +1,4 @@
-import {mountProjectDashboard} from './project-dashboard.js?v=pdf-filenames-20261113';
+import {mountProjectDashboard} from './project-dashboard.js?v=pdf-icon-20261113';
 // Interface components; geometry, materials and navigation remain in index.html.
 export function initInterface(api){
   const $=id=>document.getElementById(id);
