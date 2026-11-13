@@ -8,6 +8,33 @@ export function initInterface(api){
   function note(text){const p=document.createElement('p');p.className='ui-note';p.textContent=text;return p;}
   const main=$('main'),side=$('sidebar'),wrap=$('canvas-wrap'),toolbar=$('toolbar');
   const nav=document.createElement('nav');nav.id='workspace-nav';nav.setAttribute('aria-label','Áreas do projeto');main.prepend(nav);
+  // Acesso ao mesmo menu de áreas do desktop também no celular.
+  const mobileProjectBtn=$('btn-mobile-project');
+  const menuBackdrop=document.createElement('div');
+  menuBackdrop.id='project-mobile-backdrop';
+  menuBackdrop.hidden=true;
+  main.append(menuBackdrop);
+  function closeProjectMenu(){
+    nav.classList.remove('mobile-menu-open');
+    menuBackdrop.hidden=true;
+    mobileProjectBtn?.setAttribute('aria-expanded','false');
+  }
+  function openProjectMenu(){
+    api.closeMobilePanels();
+    main.classList.remove('nav-collapsed');
+    nav.classList.add('mobile-menu-open');
+    menuBackdrop.hidden=false;
+    mobileProjectBtn?.setAttribute('aria-expanded','true');
+  }
+  mobileProjectBtn?.addEventListener('click',()=>{
+    if(nav.classList.contains('mobile-menu-open'))closeProjectMenu();
+    else openProjectMenu();
+  });
+  menuBackdrop.addEventListener('click',closeProjectMenu);
+  window.addEventListener('keydown',event=>{if(event.key==='Escape')closeProjectMenu();});
+  matchMedia('(max-width:800px)').addEventListener('change',closeProjectMenu);
+  const mobileClose=button('Fechar menu','menu',closeProjectMenu,'ui-button mobile-project-close');
+  nav.prepend(mobileClose);
   const collapse=button('Recolher menu','menu',()=>{main.classList.toggle('nav-collapsed');collapse.setAttribute('aria-expanded',String(!main.classList.contains('nav-collapsed')));});collapse.setAttribute('aria-expanded','true');nav.append(collapse);
   const panelHeader=document.createElement('div');panelHeader.className='panel-header';panelHeader.innerHTML='<span>ARQUIVOS E DISCIPLINAS</span>';
   // Reenquadrar somente após a grade flex ajustar o canvas, preservando os ângulos.
@@ -57,7 +84,7 @@ export function initInterface(api){
   side.replaceChildren(panelHeader,tabs,...Object.values(panels));
   const projectDashboard=mountProjectDashboard($('canvas-wrap'),main);
   const navItems=[['Modelo 3D','cube',()=>{projectDashboard.hide();api.closeMobilePanels();main.classList.add('panel-collapsed');reframeAfterLayout();}],['Plantas (PDF)','folder',()=>{projectDashboard.hide();showPanel('pdf')}],['Disciplinas','layers',()=>{projectDashboard.hide();showPanel('disciplines')}],['Quantitativos','chart',()=>projectDashboard.show('quant')],['Custo e Prazo','chart',()=>projectDashboard.show('cost')],['Compatibilização','layers',()=>{projectDashboard.hide();showPanel('disciplines')}],['Documentos','folder',()=>{projectDashboard.hide();showPanel('pdf')}],['Dados do Projeto','info',()=>{projectDashboard.hide();showOverview('project')}]];
-  for(const [label,symbol,action] of navItems){const b=button(label,symbol,()=>{nav.querySelectorAll('.nav-item').forEach(x=>x.classList.remove('active'));b.classList.add('active');action();},'ui-button nav-item');nav.append(b);}
+  for(const [label,symbol,action] of navItems){const b=button(label,symbol,()=>{nav.querySelectorAll('.nav-item').forEach(x=>x.classList.remove('active'));b.classList.add('active');closeProjectMenu();action();},'ui-button nav-item');nav.append(b);}
   nav.querySelector('.nav-item').classList.add('active');
   const overview=document.createElement('dialog');overview.className='overview-dialog';document.body.append(overview);
   function uniqueElements(){return [...new Map([...api.meshMeta.values()].map(m=>[m.discipline+':'+m.id,m])).values()];}
