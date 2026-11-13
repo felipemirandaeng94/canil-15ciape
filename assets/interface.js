@@ -1,4 +1,4 @@
-import {mountProjectDashboard} from './project-dashboard.js?v=orcamento-707955-20261113';
+import {mountProjectDashboard} from './project-dashboard.js?v=cronograma-120d-20261113';
 // Interface components; geometry, materials and navigation remain in index.html.
 export function initInterface(api){
   const $=id=>document.getElementById(id);
