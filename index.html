@@ -167,14 +167,11 @@
     <div id="hidden-alert" role="status" aria-live="polite" hidden><div><strong id="hidden-alert-title">Elemento oculto</strong><span>Há componentes escondidos nesta visualização.</span></div><button id="hidden-alert-restore" type="button">Restaurar agora</button></div>
     <div id="shortcut-toast" role="status" aria-live="polite">Pressione <kbd>H</kbd> novamente para ocultar</div>
     <div id="info"></div>
-    <div id="hint">
-      Girar: arrastar &nbsp;|&nbsp; Aproximar: rolar a roda do mouse<br>
-      Deslocar: Shift + arrastar &nbsp;|&nbsp; Selecionar: clique &nbsp;|&nbsp; Ocultar: H H
-    </div>
+    <div id="hint" aria-hidden="true"></div>
   </div>
   <div id="sidebar">
     <button class="mobile-panel-close" id="close-mobile-sidebar">FECHAR <span>×</span></button>
-    <h2>PLANTAS · PDF</h2><div id="pdf-list">Consultando plantas...</div><button class="action" id="refresh-pdfs" style="margin:0 12px 20px">Atualizar plantas</button><h2>DISCIPLINAS</h2><p class="panel-note" id="glb-mode-hint">Arquitetura em GLB (rápido); estrutura, elétrica e hidráulica direto do IFC. <a href="?modelo=ifc" style="color:#a7efcb">Abrir IFC detalhado</a> para consultar elementos individualmente.</p><p class="panel-note">Sobreponha os modelos, isole disciplinas e ajuste a transparência para inspeção visual.</p><div id="layers"></div><p class="panel-note">Exporte todos os IFCs com as mesmas coordenadas. A sobreposição visual não substitui uma análise automática de interferências.</p>
+    <h2>PLANTAS · PDF</h2><div id="pdf-list">Consultando plantas...</div><button class="action" id="refresh-pdfs" style="margin:0 12px 20px">Atualizar plantas</button><h2>DISCIPLINAS</h2><div id="layers"></div>
   </div>
   <div id="mobile-backdrop" aria-hidden="true"></div>
 </div>
@@ -273,7 +270,7 @@ self.onmessage=async ({data})=>{
 <script type="module">
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
 import { RoomEnvironment } from 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/environments/RoomEnvironment.js';
-import { initInterface } from './assets/interface.js?v=mobile-null-listener-fix-20261113';
+import { initInterface } from './assets/interface.js?v=clean-legends-20261113';
 import { mountViewCube } from './assets/view-cube.js?v=20261108-cube-2';
 import { initPdfWorkspace } from './assets/pdf-workspace.js?v=20261108-resizefix';
 
@@ -470,7 +467,7 @@ const walkSpeeds=[1,2,4],speedButton=document.getElementById('btn-speed');
 speedButton.addEventListener('click',()=>{walkSpeedIndex=(walkSpeedIndex+1)%walkSpeeds.length;const label='Velocidade '+walkSpeeds[walkSpeedIndex]+'×';speedButton.querySelector('.tb-label').textContent=label;speedButton.setAttribute('aria-label','Velocidade de caminhada '+walkSpeeds[walkSpeedIndex]+'×');});
 const movementKeys=new Set();
 const navigationHint=document.getElementById('hint');
-const desktopOrbitHint=navigationHint.innerHTML,mobileOrbitHint='1 dedo: girar e selecionar<br>2 dedos: aproximar e deslocar';
+const desktopOrbitHint='',mobileOrbitHint='';
 let orbitHint=mobileQuery.matches?mobileOrbitHint:desktopOrbitHint;navigationHint.innerHTML=orbitHint;
 const walkButton=document.getElementById('btn-walk');
 function walkLook(){
@@ -873,7 +870,7 @@ for(const d of modelDefs){
  d.visible=true;d.opacity=1;d.count=0;
  const card=document.createElement('section');card.className='model-card';
  const head=document.createElement('label');head.className='model-head';const check=document.createElement('input');check.type='checkbox';check.checked=true;check.setAttribute('aria-label','Exibir '+d.label);head.append(check,document.createTextNode(d.label));head.style.borderLeft='3px solid '+d.color;
- const status=document.createElement('p');status.className='model-status';status.textContent=d.file+' · Aguardando';d.status=status;
+ const status=document.createElement('p');status.className='model-status';status.textContent='Aguardando carregamento';d.status=status;
  const controls=document.createElement('div');controls.className='model-controls';const downloadIfc=document.createElement('a');downloadIfc.className='action ifc-download';downloadIfc.href=new URL('./'+encodeURIComponent(d.file),location.href).href;downloadIfc.download=d.file;downloadIfc.hidden=true;d.downloadIfc=downloadIfc;downloadIfc.textContent='Baixar IFC';downloadIfc.title='Baixar modelo '+d.label+' ('+d.file+')';downloadIfc.setAttribute('aria-label',downloadIfc.title);const isolate=document.createElement('button');isolate.className='action';isolate.textContent='Isolar';
  isolate.onclick=()=>{const alone=modelDefs.every(o=>o===d||!o.visible);for(const o of modelDefs){o.visible=alone||o===d;o.check.checked=o.visible;updateModelVisibility(o);}};
  const opacity=document.createElement('input');opacity.type='range';opacity.min='10';opacity.max='100';opacity.value='100';opacity.title='Opacidade de '+d.label;opacity.setAttribute('aria-label',opacity.title);opacity.oninput=()=>{d.opacity=Number(opacity.value)/100;updateModelVisibility(d);};
@@ -922,7 +919,7 @@ let activeWorker=null, activeLoad=0;
 async function loadBuffer(buf,fileName='CANIL.ifc'){
   const def=modelDefs.find(d=>d.file===fileName);
   return new Promise((resolve,reject)=>{
-  def.status.textContent=fileName+' · Carregando...';
+  def.status.textContent='Carregando...';
   const header=new TextDecoder('utf-8').decode(new Uint8Array(buf,0,Math.min(buf.byteLength,80)));
   if(!header.startsWith('ISO-10303'))throw new Error('O arquivo não é um IFC válido (ISO-10303 ausente).');
   const generation=++activeLoad;
@@ -940,7 +937,7 @@ async function loadBuffer(buf,fileName='CANIL.ifc'){
     activeWorker=null;def.count=0;
     for(const [mesh,meta] of meshMeta)if(meta.discipline===def.id){hiddenMeshes.delete(mesh);mesh.geometry.dispose();mesh.material.dispose();meshMeta.delete(mesh);}updateHiddenButton();
     for(const [key,l] of layerMap)if(l.model===def.id){scene.remove(l.group);layerMap.delete(key);}
-    def.rows.replaceChildren();def.status.textContent=fileName+' · '+error.message;statusEl.style.display='none';reject(error);
+    def.rows.replaceChildren();def.status.textContent='Falha: '+error.message;statusEl.style.display='none';reject(error);
   }};
   timer=setTimeout(()=>fail(new Error('A leitura excedeu 3 minutos. Tente novamente ou verifique a conexão.')),180000);
   worker.onerror=e=>fail(new Error(e.message||'Falha ao iniciar o leitor IFC.'));
@@ -979,7 +976,7 @@ async function loadBuffer(buf,fileName='CANIL.ifc'){
         const excluded=applyCanilGeometryRules(def);
         if(excluded.size&&data.rendered.IFCMEMBER)data.rendered.IFCMEMBER=Math.max(0,data.rendered.IFCMEMBER-excluded.size);
         frameLoadedModels();statusEl.style.display='none';
-        def.count=ownElementCount-excluded.size;def.status.textContent=fileName+' · '+def.count+(def.count===1?' elemento':' elementos')+(data.missing.length?' · '+data.missing.length+' sem malha':'');
+        def.count=ownElementCount-excluded.size;def.status.textContent=data.missing.length?'Disponível · Geometria parcial':'Disponível';
         for(const [type,count] of Object.entries(data.rendered))layerMap.get(def.id+':'+type).count.textContent=count;
         updateModelVisibility(def);resolve();
         console.info('IFC carregado',data.rendered);
@@ -1065,7 +1062,7 @@ async function tryOptimizedModels(){
       });
       if(!meshes)throw new Error('GLB sem malhas: '+entry.file);
       def.count=entry.elements||meshes;
-      def.status.textContent=def.file+' · '+def.count+' elementos (visualizacao otimizada)';
+      def.status.textContent='Disponível';
       for(const [type,count] of Object.entries(entry.categories||{})){
         const layer=layerMap.get(def.id+':'+type);
         if(layer)layer.count.textContent=count;
@@ -1082,7 +1079,7 @@ async function tryOptimizedModels(){
     for(const [mesh] of meshMeta){mesh.parent?.remove(mesh);mesh.geometry.dispose();mesh.material.dispose();}
     meshMeta.clear();sharedAnchor=null;
     for(const [key,layer] of layerMap){scene.remove(layer.group);layerMap.delete(key);}
-    for(const def of modelDefs){def.rows.replaceChildren();def.count=0;def.status.textContent=def.file+' · Aguardando';def.downloadIfc.hidden=true;}
+    for(const def of modelDefs){def.rows.replaceChildren();def.count=0;def.status.textContent='Aguardando carregamento';def.downloadIfc.hidden=true;}
     return new Set();
   }
 }
@@ -1095,11 +1092,11 @@ async function tryFetch(){
     try{
       setStatus('Buscando '+def.file+'...',2);
       const response=await fetch(new URL('./'+def.file,location.href),{cache:'no-store',signal:controller.signal});
-      if(response.status===404){def.status.textContent=def.file+' · Ainda não publicado';continue;}
+      if(response.status===404){def.status.textContent='Não publicado';continue;}
       if(!response.ok)throw new Error('HTTP '+response.status);
       const buf=await response.arrayBuffer();clearTimeout(timer);
       await enqueueLoad(buf,def.file);if(def.downloadIfc)def.downloadIfc.hidden=false;
-    }catch(error){def.status.textContent=def.file+' · Falha: '+error.message;console.warn(def.file,error.message);}
+    }catch(error){def.status.textContent='Falha: '+error.message;console.warn(def.file,error.message);}
     finally{clearTimeout(timer);}
   }
   statusEl.style.display='none';
