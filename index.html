@@ -121,7 +121,6 @@
   </div>
   <div class="header-actions">
     <div class="badge">COORDENAÇÃO BIM</div>
-    <button class="action" id="btn-admin">Gerenciar PDFs</button>
   </div>
   <div class="format-switcher" aria-label="Modo de visualização 3D">
     <div id="model-format" class="model-format loading" role="status" aria-live="polite" title="Formato efetivamente carregado no visualizador"><span class="model-format-dot"></span><span id="model-format-label">CARREGANDO</span></div>
@@ -180,7 +179,6 @@
   <div id="mobile-backdrop" aria-hidden="true"></div>
 </div>
 
-<dialog id="admin-dialog"><h2>Publicar plantas</h2><p>Escolha a disciplina e envie as pranchas em PDF. Os arquivos ficarão públicos dentro da pasta correspondente.</p><form id="pin-form"><label>Senha do painel<input id="admin-pin" type="password" inputmode="numeric" autocomplete="off" required></label><button class="action primary">Abrir painel</button></form><form id="upload-form" hidden><p>A senha abre este painel; a autorização de gravação é feita pelo GitHub. Use uma chave de acesso restrita a este repositório com permissão <b>Conteúdo: leitura e gravação</b>. A chave será apagada do campo ao enviar e não será salva.</p><label>Chave de acesso do GitHub<input id="github-token" type="password" autocomplete="off" required></label><label>Disciplina<select id="pdf-category" required><option value="arquitetonico">Arquitetônico</option><option value="estrutural">Estrutural</option><option value="eletrico">Elétrico</option><option value="hidrossanitario">Hidrossanitário</option></select></label><label>Pranchas PDF (até 20 MB cada)<input id="pdf-files" type="file" accept=".pdf,application/pdf" multiple required></label><label><input id="replace-pdfs" type="checkbox"> Substituir PDFs existentes com o mesmo nome</label><div class="dialog-actions"><button class="action primary" id="send-pdfs">Enviar ao GitHub</button></div></form><div id="upload-result" role="status" aria-live="polite"></div><div class="dialog-actions"><button class="action" id="close-admin">Fechar</button></div></dialog>
 <dialog id="pdf-dialog"><div class="pdf-bar"><strong id="pdf-title">Planta</strong><a class="action" id="pdf-download" download>Baixar PDF</a><button class="action" id="close-pdf">Fechar</button></div><iframe id="pdf-frame" title="Visualização da planta PDF"></iframe></dialog>
 <script type="importmap">
 {"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"}}
@@ -1124,78 +1122,13 @@ let lastRenderAt=0;
  renderer.render(scene,camera);
 })();
 
-const REPO_API='https://api.github.com/repos/felipemirandaeng94/canil-15ciape/contents/';
 const PDF_CATEGORIES=[
   {slug:'arquitetonico',label:'Arquitetônico',subtitle:'Plantas, fachadas e vistas'},
   {slug:'estrutural',label:'Estrutural',subtitle:'Formas e armações'},
   {slug:'eletrico',label:'Elétrico',subtitle:'Instalações e distribuição'},
   {slug:'hidrossanitario',label:'Hidrossanitário',subtitle:'Pranchas de água fria, esgoto sanitário e pluvial'}
 ];
-const admin=document.getElementById('admin-dialog'),pinForm=document.getElementById('pin-form'),uploadForm=document.getElementById('upload-form'),uploadResult=document.getElementById('upload-result');
-let uploadBusy=false,pdfObjectURL=null;
-document.getElementById('btn-admin').onclick=()=>{leaveWalk();admin.showModal();document.getElementById('admin-pin').focus();};
-pinForm.onsubmit=e=>{e.preventDefault();const pin=document.getElementById('admin-pin');if(pin.value==='8246'){pinForm.hidden=true;uploadForm.hidden=false;uploadResult.textContent='';document.getElementById('github-token').focus();}else uploadResult.textContent='Senha incorreta.';pin.value='';};
-function closeAdmin(){if(uploadBusy)return;admin.close();}
-document.getElementById('close-admin').onclick=closeAdmin;
-admin.addEventListener('cancel',e=>{if(uploadBusy)e.preventDefault();});
-admin.addEventListener('close',()=>{pinForm.reset();uploadForm.reset();pinForm.hidden=false;uploadForm.hidden=true;uploadResult.textContent='';});
-async function publishPdf(file,token,replace,category,request=fetch){
-  if(!/\.pdf$/i.test(file.name)||file.size>20*1024*1024)throw new Error('Escolha um PDF de até 20 MB: '+file.name);
-  if(!PDF_CATEGORIES.some(item=>item.slug===category))throw new Error('Disciplina de destino inválida.');
-  const bytes=new Uint8Array(await file.arrayBuffer());
-  if(new TextDecoder().decode(bytes.slice(0,5))!=='%PDF-')throw new Error('Conteúdo inválido: '+file.name);
-  const name=file.name.normalize('NFC').replace(/[^\p{L}\p{N}._ -]/gu,'_');
-  const url=REPO_API+'plantas/'+encodeURIComponent(category)+'/'+encodeURIComponent(name);
-  const headers={Accept:'application/vnd.github+json',Authorization:'Bearer '+token,'X-GitHub-Api-Version':'2022-11-28'};
-  const current=await request(url+'?ref=main',{headers,cache:'no-store',signal:AbortSignal.timeout(30000)});
-  let sha;
-  if(current.ok){if(!replace)throw new Error(name+' já existe. Marque a opção de substituição para atualizar.');sha=(await current.json()).sha;}
-  else if(current.status!==404)throw new Error('GitHub HTTP '+current.status+'. Confira a chave de acesso e a permissão Conteúdo: leitura e gravação.');
-  let binary='';for(let i=0;i<bytes.length;i+=32768)binary+=String.fromCharCode(...bytes.subarray(i,i+32768));
-  const response=await request(url,{method:'PUT',headers:{...headers,'Content-Type':'application/json'},signal:AbortSignal.timeout(90000),body:JSON.stringify({message:(sha?'Atualiza':'Adiciona')+' planta '+name,content:btoa(binary),branch:'main',...(sha?{sha}:{})})});
-  if(!response.ok)throw new Error('Envio não concluído: GitHub HTTP '+response.status+(response.status===409?'. O arquivo mudou; atualize e tente novamente.':'. Confira as permissões da chave de acesso.'));
-  return name;
-}
-async function updatePdfManifest(token,category,completed,files){
-  if(!completed.length)return;
-  const url=REPO_API+'plantas/manifest.json';
-  const headers={Accept:'application/vnd.github+json',Authorization:'Bearer '+token,'X-GitHub-Api-Version':'2022-11-28'};
-  const current=await fetch(url+'?ref=main',{headers,cache:'no-store',signal:AbortSignal.timeout(30000)});
-  if(!current.ok)throw new Error('Pranchas enviadas, mas o catálogo não pôde ser atualizado (HTTP '+current.status+').');
-  const content=await current.json();
-  const bytes=Uint8Array.from(atob(String(content.content||'').replace(/\s/g,'')),char=>char.charCodeAt(0));
-  const manifest=JSON.parse(new TextDecoder().decode(bytes));
-  if(!manifest.categories)manifest.categories={};
-  const currentCategory=Array.isArray(manifest.categories[category])?manifest.categories[category]:[];
-  const entries=new Map(currentCategory.map(item=>[item.name,item]));
-  for(const name of completed){
-    const localFile=files.find(file=>file.name.normalize('NFC').replace(/[^\p{L}\p{N}._ -]/gu,'_')===name);
-    entries.set(name,{name,size:localFile?.size||entries.get(name)?.size||0});
-  }
-  manifest.categories[category]=[...entries.values()].sort((a,b)=>a.name.localeCompare(b.name,'pt-BR',{numeric:true}));
-  manifest.version=1;manifest.updatedAt=new Date().toISOString();
-  const encoded=new TextEncoder().encode(JSON.stringify(manifest,null,2)+'\n');
-  let binary='';for(let i=0;i<encoded.length;i+=32768)binary+=String.fromCharCode(...encoded.subarray(i,i+32768));
-  const result=await fetch(url,{method:'PUT',headers:{...headers,'Content-Type':'application/json'},signal:AbortSignal.timeout(90000),body:JSON.stringify({
-    message:'Atualiza catálogo de PDFs: '+category,content:btoa(binary),sha:content.sha,branch:'main'
-  })});
-  if(!result.ok)throw new Error('Pranchas enviadas, mas catálogo não atualizado (HTTP '+result.status+').');
-}
-uploadForm.onsubmit=async e=>{
-  e.preventDefault();if(uploadBusy)return;
-  let token=document.getElementById('github-token').value.trim();document.getElementById('github-token').value='';
-  const files=Array.from(document.getElementById('pdf-files').files),replace=document.getElementById('replace-pdfs').checked,category=document.getElementById('pdf-category').value;
-  if(!token||!files.length){uploadResult.textContent='Informe a chave de acesso e selecione os PDFs.';return;}
-  uploadBusy=true;document.getElementById('send-pdfs').disabled=true;document.getElementById('close-admin').disabled=true;
-  let completed=[];
-  try{
-    for(const file of files){uploadResult.textContent=completed.map(n=>'Enviado: '+n).join('\n')+'\nEnviando '+file.name+'...';completed.push(await publishPdf(file,token,replace,category));}
-    await updatePdfManifest(token,category,completed,files);
-    uploadResult.textContent=completed.map(n=>'Enviado: '+n).join('\n')+'\nOs PDFs já estão no GitHub. A publicação no Pages pode levar alguns minutos.';
-    document.getElementById('pdf-files').value='';await listPdfs();
-  }catch(error){uploadResult.textContent=completed.map(n=>'Enviado: '+n).join('\n')+'\n'+error.message;}
-  finally{token='';uploadBusy=false;document.getElementById('send-pdfs').disabled=false;document.getElementById('close-admin').disabled=false;}
-};
+let pdfObjectURL=null;
 const pdfDialog=document.getElementById('pdf-dialog');
 const pdfCatalog=new Map();
 const pdfWorkspace=initPdfWorkspace({
