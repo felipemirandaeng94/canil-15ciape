@@ -106,7 +106,7 @@
   .format-switch.active{background:#286b4b;border-color:#63dd9a;color:#fff;pointer-events:none}
   @media(max-width:800px){.format-switcher{gap:3px}.format-switch{min-height:28px;padding:4px 5px;font-size:9px}.format-switcher #model-format{padding:4px 5px}}
 </style>
-<link rel="stylesheet" href="./assets/interface.css?v=header-mobile-fix-20261112">
+<link rel="stylesheet" href="./assets/interface.css?v=mobile-all-areas-20261113">
 <link rel="stylesheet" href="./assets/pdf-workspace.css">
 </head>
 <body>
@@ -134,6 +134,7 @@
   <div id="canvas-wrap">
     <canvas id="c"></canvas>
     <div id="mobile-nav" aria-label="Controles do modo mobile">
+      <button class="mobile-toggle" id="btn-mobile-project" aria-controls="workspace-nav" aria-expanded="false" type="button">☰ Menu</button>
       <button class="mobile-toggle" id="btn-mobile-tools" aria-controls="toolbar" aria-expanded="false">☰ Ferramentas</button>
       <div class="mobile-actions"><button class="mobile-toggle" id="btn-mobile-pdfs" aria-controls="sidebar" aria-expanded="false">PDFs</button><button class="mobile-toggle" id="btn-mobile-layers" aria-controls="sidebar" aria-expanded="false">Disciplinas</button></div>
     </div>
@@ -274,7 +275,7 @@ self.onmessage=async ({data})=>{
 <script type="module">
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
 import { RoomEnvironment } from 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/environments/RoomEnvironment.js';
-import { initInterface } from './assets/interface.js?v=pdf-filenames-20261113';
+import { initInterface } from './assets/interface.js?v=mobile-all-areas-20261113';
 import { mountViewCube } from './assets/view-cube.js?v=20261108-cube-2';
 import { initPdfWorkspace } from './assets/pdf-workspace.js?v=20261108-resizefix';
 
