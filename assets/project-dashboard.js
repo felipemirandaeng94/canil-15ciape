@@ -25,7 +25,7 @@ export function mountProjectDashboard(wrap, main){
   }
   function hide(){dashboard.hidden=true;main.classList.remove('dashboard-open');}
   function showQuant(){
-    shell('Quantitativos','Resumo por disciplina extraído das quatro planilhas de materiais. Não são contagens de malhas IFC.');
+    shell('Quantitativos','Resumo dos principais materiais e serviços do projeto.');
     section('<div class="pd-metrics">'+
       metric('34 un.','Esquadrias','Portas e janelas · arquitetura')+
       metric('385,31 m²','Pisos','Área por camadas modeladas')+
@@ -114,7 +114,7 @@ export function mountProjectDashboard(wrap, main){
       metric('19','Grupos de serviços','Conforme orçamento atualizado')+'</div>');
     const sum=budget.reduce((total,item)=>total+item[1],0);
     if(Math.abs(sum-budgetTotal)>0.02)console.warn('Grupos orçamentários não conferem com total informado',sum,budgetTotal);
-    section('<h3>Composição do orçamento por grupos</h3><div class="pd-budget-list">'+budget.map(([name,val])=>'<div class="pd-budget-item"><div class="pd-budget-top"><span>'+name+'</span><strong>'+money(val)+'</strong></div><div class="pd-progress"><span style="width:'+((val/budgetTotal)*100).toFixed(2)+'%"></span></div></div>').join('')+'</div><p class="pd-small">Os 19 grupos correspondem ao orçamento sintético atualizado. Valores incluem BDI.</p>');
+    section('<h3>Composição do orçamento por grupos</h3><div class="pd-budget-list">'+budget.map(([name,val])=>'<div class="pd-budget-item"><div class="pd-budget-top"><span>'+name+'</span><strong>'+money(val)+'</strong></div><div class="pd-progress"><span style="width:'+((val/budgetTotal)*100).toFixed(2)+'%"></span></div></div>').join('')+'</div><p class="pd-small">Valores com BDI, conforme orçamento atualizado.</p>');
     section('<h3>Cronograma físico-financeiro · 120 dias</h3>'+
       '<p class="pd-small">Parcelas financeiras e avanço planejado conforme cronograma revisado, não execução efetivamente medida.</p>'+
       '<div class="pd-schedule">'+milestones.map(m=>'<article class="pd-schedule-item">'+
@@ -124,7 +124,7 @@ export function mountProjectDashboard(wrap, main){
         '</article>').join('')+'</div>'+
       '<p class="pd-small" style="margin-top:12px">Conforme a planilha de origem, os valores individuais foram arredondados para centavos. A soma dos quatro custos de período difere em R$ 0,02 do total publicado; prevalece o total geral do orçamento e o valor acumulado final indicados no documento.</p>');
 
-    const downloads=section('<h3>Documentos para download</h3><p class="pd-small">PDFs oficiais do orçamento e do cronograma físico-financeiro.</p>');
+    const downloads=section('<h3>Documentos para download</h3>');
     addDocumentLinks(downloads);
   }
   return {show,hide};
