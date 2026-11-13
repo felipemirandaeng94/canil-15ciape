@@ -865,7 +865,7 @@ document.getElementById('btn-quick-systems').addEventListener('click',()=>{
  }
  syncQuickSystemsButton();
 });
-function updateModelVisibility(def){for(const [key,l] of layerMap)if(l.model===def.id){l.group.visible=def.visible&&l.visible;for(const mesh of l.group.children){mesh.material.opacity=mesh.userData.baseOpacity*def.opacity;mesh.material.transparent=mesh.material.opacity<1;mesh.material.depthWrite=mesh.material.opacity>=1;}}if(selected&&!selected.parent.visible){selected.material.emissive.set(0);selected=null;infoEl.style.display='none';}refreshViewPreview();syncQuickSystemsButton();}
+function updateModelVisibility(def){for(const [key,l] of layerMap)if(l.model===def.id){l.group.visible=def.visible&&l.visible;for(const mesh of l.group.children){const mat=mesh.material,transparent=mesh.userData.baseOpacity*def.opacity<1;mat.opacity=mesh.userData.baseOpacity*def.opacity;if(mat.transparent!==transparent){mat.transparent=transparent;mat.needsUpdate=true;}mat.depthWrite=!transparent;}}if(selected&&!selected.parent.visible){selected.material.emissive.set(0);selected=null;infoEl.style.display='none';}refreshViewPreview();syncQuickSystemsButton();}
 for(const d of modelDefs){
  d.visible=true;d.opacity=1;d.count=0;
  const card=document.createElement('section');card.className='model-card';
@@ -1043,7 +1043,8 @@ async function tryOptimizedModels(){
         if(!node.isMesh)return;
         // Nome do no: CATEGORIA|tipo de material|opacidade (ver scripts/build_glb.py).
         const [rawType,kind,rawOpacity]=String(node.name||node.parent?.name||'IFCBUILDINGELEMENTPROXY').split('|');
-        const type=rawType.toUpperCase(),opacity=Number.parseFloat(rawOpacity)||1;
+        // O GLTFLoader remove o ponto dos nomes ("1.00" vira "100"): normaliza para 0-1.
+        const type=rawType.toUpperCase();let opacity=Number.parseFloat(rawOpacity)||1;if(opacity>1)opacity/=100;opacity=Math.min(1,Math.max(.15,opacity));
         const geometry=node.geometry;
         geometry.applyMatrix4(node.matrixWorld);
         if(!geometry.getAttribute('normal'))geometry.computeVertexNormals();
