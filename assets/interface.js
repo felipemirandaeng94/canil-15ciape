@@ -1,4 +1,4 @@
-import {mountProjectDashboard} from './project-dashboard.js?v=pdfs-20261113b';
+import {mountProjectDashboard} from './project-dashboard.js?v=clean-legends-20261113';
 // Interface components; geometry, materials and navigation remain in index.html.
 export function initInterface(api){
   const $=id=>document.getElementById(id);
