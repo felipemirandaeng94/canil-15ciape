@@ -136,7 +136,7 @@
     <div id="mobile-nav" aria-label="Controles do modo mobile">
       <button class="mobile-toggle" id="btn-mobile-project" aria-controls="workspace-nav" aria-expanded="false" type="button">☰ Menu</button>
       <button class="mobile-toggle" id="btn-mobile-tools" aria-controls="toolbar" aria-expanded="false">☰ Ferramentas</button>
-      <div class="mobile-actions"><button class="mobile-toggle" id="btn-mobile-pdfs" aria-controls="sidebar" aria-expanded="false">PDFs</button><button class="mobile-toggle" id="btn-mobile-layers" aria-controls="sidebar" aria-expanded="false">Disciplinas</button></div>
+      <div class="mobile-actions"><button class="mobile-toggle" id="btn-mobile-layers" aria-controls="sidebar" aria-expanded="false">Disciplinas</button></div>
     </div>
     <div id="status">
       <div class="spinner"></div>
@@ -310,11 +310,11 @@ const sPct    = document.getElementById('status-pct');
 const errBox  = document.getElementById('err-box');
 const infoEl  = document.getElementById('info');
 const mainEl=document.getElementById('main'),toolbarEl=document.getElementById('toolbar'),sidebarEl=document.getElementById('sidebar');
-const mobileToolsButton=document.getElementById('btn-mobile-tools'),mobilePdfButton=document.getElementById('btn-mobile-pdfs'),mobileLayersButton=document.getElementById('btn-mobile-layers'),mobileBackdrop=document.getElementById('mobile-backdrop');
+const mobileToolsButton=document.getElementById('btn-mobile-tools'),mobileLayersButton=document.getElementById('btn-mobile-layers'),mobileBackdrop=document.getElementById('mobile-backdrop');
 const mobileQuery=matchMedia('(max-width:800px)');
 function closeMobilePanels(){
   toolbarEl.classList.remove('mobile-open');sidebarEl.classList.remove('mobile-open');mainEl.classList.remove('mobile-panel-open');
-  mobileToolsButton.setAttribute('aria-expanded','false');mobilePdfButton.setAttribute('aria-expanded','false');mobileLayersButton.setAttribute('aria-expanded','false');
+  mobileToolsButton.setAttribute('aria-expanded','false');mobileLayersButton.setAttribute('aria-expanded','false');
   if(mobileQuery.matches){toolbarEl.inert=true;sidebarEl.inert=true;}else{toolbarEl.inert=false;sidebarEl.inert=false;}
 }
 function toggleMobilePanel(panel,button){
@@ -326,7 +326,6 @@ mobileLayersButton.addEventListener('click',()=>toggleMobilePanel(sidebarEl,mobi
 mobileBackdrop.addEventListener('click',closeMobilePanels);
 document.getElementById('close-mobile-toolbar').addEventListener('click',closeMobilePanels);document.getElementById('close-mobile-sidebar').addEventListener('click',closeMobilePanels);
 toolbarEl.addEventListener('click',e=>{if(mobileQuery.matches&&e.target.closest('button'))closeMobilePanels();});
-mobilePdfButton.addEventListener('click',()=>{toggleMobilePanel(sidebarEl,mobilePdfButton);sidebarEl.scrollTop=0;});
 mobileQuery.addEventListener('change',closeMobilePanels);closeMobilePanels();
 
 const scene    = new THREE.Scene();
