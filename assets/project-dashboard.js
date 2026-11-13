@@ -83,17 +83,19 @@ export function mountProjectDashboard(wrap, main){
   async function addDocumentLinks(root){
     const holder=document.createElement('div');holder.className='pd-docs';
     for(const d of pdfs){
-      const a=document.createElement('a');a.className='pd-document';
+      const a=document.createElement('a');a.className='pd-document';a.classList.add('pd-pdf-file');
+      const pdfIcon=document.createElement('span');pdfIcon.className='pd-pdf-icon';pdfIcon.setAttribute('aria-hidden','true');pdfIcon.textContent='PDF';
       const name=document.createElement('strong');name.textContent=d.name;
       const status=document.createElement('small');status.textContent='Verificando disponibilidade...';
-      a.append(name,status);holder.append(a);
+      const details=document.createElement('span');details.className='pd-pdf-details';
+      details.append(name,status);a.append(pdfIcon,details);holder.append(a);
       const url=new URL('./'+d.path,location.href).href;
       try{
         const response=await fetch(url,{method:'HEAD',cache:'no-store',signal:AbortSignal.timeout(12000)});
         if(!response.ok)throw new Error('Ainda não publicado');
         a.href=url;a.download=d.path.split('/').pop();
         a.setAttribute('aria-label','Baixar '+d.name+' em PDF');
-        status.textContent='PDF · '+d.size+' · Baixar documento';
+        status.textContent=d.size+' · Baixar PDF';
       }catch(error){
         a.classList.add('unavailable');
         a.removeAttribute('href');a.removeAttribute('download');
