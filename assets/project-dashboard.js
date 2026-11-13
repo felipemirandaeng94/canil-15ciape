@@ -44,22 +44,34 @@ export function mountProjectDashboard(wrap, main){
       [['Arquitetura','Esquadrias, pisos, forros, paredes e cobertura.'],['Estrutural','Concreto, fôrmas e armaduras, conforme resumo de materiais.'],['Elétrica','Eletrodutos, cabos, iluminação, caixas e dispositivos.'],['Hidrossanitário','Água fria, esgoto, drenagem pluvial e reservação.']].
       map(a=>'<div><strong>'+a[0]+'</strong><p>'+a[1]+'</p></div>').join('')+'</div>');
   }
+  // Fonte: ORÇAMENTO SINTÉTICO CANIL - FINAL(2).pdf, 13/11/2026.
+  // PDF e planilha conferidos: 19 grupos; R$ 707.955,41 com BDI.
+  const budgetTotal=707955.41, budgetWithoutBdi=544629.71, budgetBdi=163325.70;
   const budget=[
-    ['Administração e serviços auxiliares',206434.64],
-    ['Fundações e estruturas',201255.43],
-    ['Revestimentos',101053.99],
-    ['Pisos',64972.99],['Paredes',63165.18],
-    ['Esquadrias',50228.76],['Canteiro de obras',47791.10],['Cobertura',33832.54],
-    ['Pintura',22924.16],['Demais grupos',107817.67]
+    ['Fundações e estruturas',171823.06],
+    ['Revestimentos e tratamentos superficiais',101053.99],
+    ['Pisos, soleiras e rodapés',64972.99],
+    ['Paredes e painéis',63165.18],
+    ['Esquadrias, ferragens e vidros',50228.76],
+    ['Canteiro de obras',47791.10],
+    ['Serviços auxiliares e administrativos',44345.96],
+    ['Cobertura',33832.54],
+    ['Pinturas',22924.16],
+    ['Instalações hidrossanitárias',19657.42],
+    ['Urbanização',19205.61],
+    ['Instalações elétricas',18209.82],
+    ['Impermeabilização e proteções',15470.61],
+    ['Serviços preliminares',9200.94],
+    ['Movimento de terra',8778.87],
+    ['Serviços técnicos (locação)',7104.18],
+    ['Serviços diversos',6565.94],
+    ['Instalações especiais',3060.68],
+    ['Serviços técnico-profissionais',563.60]
   ];
-  const milestones=[
-    {day:30,part:194028.09,cum:194028.09,pct:21.57},
-    {day:60,part:211359.65,cum:405387.74,pct:45.07},
-    {day:90,part:298116.78,cum:703504.52,pct:78.21},
-    {day:120,part:195971.91,cum:899476.46,pct:100}
-  ];
+  // Prazo informado: 120 dias. Sem cronograma novo não há parcelas por mês
+  // válidas para o orçamento atualizado. Não reutilizar percentuais anteriores.
   const pdfs=[
-    {name:'Orçamento sintético (14 páginas)',path:'documentos/ORCAMENTO-SINTETICO-CANIL.pdf'},
+    {name:'Orçamento sintético atualizado (14 páginas)',path:'documentos/ORCAMENTO-SINTETICO-CANIL.pdf'},
     {name:'Cronograma físico-financeiro (1 página)',path:'documentos/CRONOGRAMA-FISICO-FINANCEIRO-CANIL.pdf'}
   ];
   async function addDocumentLinks(root){
@@ -76,17 +88,24 @@ export function mountProjectDashboard(wrap, main){
     }
   }
   function showCost(){
-    shell('Custo e Prazo','Orçamento sintético e cronograma físico-financeiro da obra · valores planejados, não medição executada.');
-    section('<div class="pd-total"><span>VALOR GLOBAL PREVISTO DA OBRA</span><strong>'+money(899476.46)+'</strong><small>SINAPI 09/2026 · SEDOP 03/2026 · Pará · não desonerado</small></div>');
+    shell('Custo e Prazo','Orçamento sintético atualizado · SINAPI 09/2026, SEDOP 03/2026, Pará · valores previstos.');
+    section('<div class="pd-total"><span>VALOR GLOBAL DO ORÇAMENTO · COM BDI</span><strong>'+money(budgetTotal)+'</strong><small>Fonte: Orçamento Sintético Canil – Final (PDF e Excel). Regime não desonerado · BDI de 30%.</small></div>');
     section('<div class="pd-metrics">'+
-      metric(money(691952.93),'Custo sem BDI')+
-      metric(money(207523.53),'Parcela de BDI','Taxa aplicada: 30%')+
-      metric('120 dias','Prazo total','4 períodos de 30 dias')+
-      metric('19','Grupos orçamentários','Orçamento sintético')+'</div>');
-    section('<h3>Distribuição do orçamento</h3><div class="pd-budget-list">'+budget.map(([name,val])=>'<div class="pd-budget-item"><div class="pd-budget-top"><span>'+name+'</span><strong>'+money(val)+'</strong></div><div class="pd-progress"><span style="width:'+((val/899476.46)*100).toFixed(2)+'%"></span></div></div>').join('')+'</div><p class="pd-small">Grupos agrupados para visualização. Para composições e preços unitários, consultar o orçamento sintético integral.</p>');
-    section('<h3>Cronograma físico-financeiro · 120 dias</h3><p class="pd-small">Distribuição por períodos, conforme documento original. Percentuais representam o previsto acumulado, não avanço medido.</p>'+
-      '<div class="pd-schedule">'+milestones.map((m,i)=>'<article class="pd-schedule-item"><div class="pd-period"><strong>'+m.day+' dias</strong><span>'+money(m.part)+' no período</span></div><div class="pd-progress pd-schedule-bar"><span style="width:'+m.pct+'%"></span></div><div class="pd-schedule-foot"><strong>'+num(m.pct,2)+'% acumulado</strong><span>'+money(m.cum)+'</span></div></article>').join('')+'</div>');
-    const doc=section('<p class="pd-small">Arquivos de referência recebidos: ORÇAMENTO SINTÉTICO CANIL - FINAL(1).pdf e CRONOGRAMA FISICO-FINANCEIRO - CANIL(1).pdf.</p>');
+      metric(money(budgetWithoutBdi),'Custo sem BDI')+
+      metric(money(budgetBdi),'BDI total','Taxa: 30%')+
+      metric('120 dias','Prazo informado','Cronograma financeiro aguardando revisão')+
+      metric('19','Grupos de serviços','Conforme orçamento atualizado')+'</div>');
+    const sum=budget.reduce((total,item)=>total+item[1],0);
+    if(Math.abs(sum-budgetTotal)>0.02)console.warn('Grupos orçamentários não conferem com total informado',sum,budgetTotal);
+    section('<h3>Composição do orçamento por grupos</h3><div class="pd-budget-list">'+budget.map(([name,val])=>'<div class="pd-budget-item"><div class="pd-budget-top"><span>'+name+'</span><strong>'+money(val)+'</strong></div><div class="pd-progress"><span style="width:'+((val/budgetTotal)*100).toFixed(2)+'%"></span></div></div>').join('')+'</div><p class="pd-small">Os 19 grupos correspondem ao orçamento sintético atualizado. Valores incluem BDI.</p>');
+    section('<h3>Prazo e cronograma físico-financeiro</h3>'+
+      '<div class="pd-metrics">'+
+      metric('30 dias','1º período','Previsão financeira a atualizar')+
+      metric('60 dias','2º período','Previsão financeira a atualizar')+
+      metric('90 dias','3º período','Previsão financeira a atualizar')+
+      metric('120 dias','4º período','Prazo total previsto')+
+      '</div><p class="pd-small" style="margin-top:14px">O documento de cronograma físico-financeiro revisado não foi fornecido com este orçamento. Os valores por etapa e percentuais acumulados do orçamento anterior foram retirados para evitar informações inconsistentes.</p>');
+    const doc=section('<p class="pd-small">Orçamento de referência: ORÇAMENTO SINTÉTICO CANIL - FINAL(2).pdf, 14 páginas, e ORÇAMENTO SINTÉTICO CANIL - FINAL.xlsx. Aguarda-se a publicação dos documentos originais no repositório.</p>');
     addDocumentLinks(doc);
   }
   return {show,hide};
