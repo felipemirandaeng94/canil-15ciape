@@ -112,8 +112,7 @@ export function mountProjectDashboard(wrap, main){
         '<div class="pd-schedule-foot"><strong>'+num(m.pct,2)+'% acumulado</strong><span>'+money(m.cum)+' acumulados</span></div>'+
         '</article>').join('')+'</div>'+
       '<p class="pd-small" style="margin-top:12px">Conforme a planilha de origem, os valores individuais foram arredondados para centavos. A soma dos quatro custos de período difere em R$ 0,02 do total publicado; prevalece o total geral do orçamento e o valor acumulado final indicados no documento.</p>');
-    const doc=section('<p class="pd-small">Orçamento de referência: ORÇAMENTO SINTÉTICO CANIL - FINAL(2).pdf, 14 páginas, e ORÇAMENTO SINTÉTICO CANIL - FINAL.xlsx. Cronograma financeiro: CRONOGRAMA FISICO-FINANCEIRO - CANIL(2).pdf (1 página).</p>');
-    addDocumentLinks(doc);
+
   }
   return {show,hide};
 }
