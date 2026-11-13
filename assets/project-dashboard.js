@@ -77,8 +77,8 @@ export function mountProjectDashboard(wrap, main){
     {day:120,part:155449.74,cum:707955.41,pct:100.00}
   ];
   const pdfs=[
-    {name:'Orçamento sintético',path:'documentos/ORCAMENTO-SINTETICO-CANIL.pdf',size:'14 páginas'},
-    {name:'Cronograma físico-financeiro',path:'documentos/CRONOGRAMA-FISICO-FINANCEIRO-CANIL.pdf',size:'1 página'}
+    {name:'Orçamento sintético',path:'documentos/ORÇAMENTO SINTÉTICO CANIL - FINAL(2).pdf',size:'14 páginas'},
+    {name:'Cronograma físico-financeiro',path:'documentos/CRONOGRAMA FISICO-FINANCEIRO - CANIL(2).pdf',size:'1 página'}
   ];
   async function addDocumentLinks(root){
     const holder=document.createElement('div');holder.className='pd-docs';
