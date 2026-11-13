@@ -77,21 +77,30 @@ export function mountProjectDashboard(wrap, main){
     {day:120,part:155449.74,cum:707955.41,pct:100.00}
   ];
   const pdfs=[
-    {name:'Orçamento sintético atualizado (14 páginas)',path:'documentos/ORCAMENTO-SINTETICO-CANIL.pdf'},
-    {name:'Cronograma físico-financeiro (1 página)',path:'documentos/CRONOGRAMA-FISICO-FINANCEIRO-CANIL.pdf'}
+    {name:'Orçamento sintético',path:'documentos/ORCAMENTO-SINTETICO-CANIL.pdf',size:'14 páginas'},
+    {name:'Cronograma físico-financeiro',path:'documentos/CRONOGRAMA-FISICO-FINANCEIRO-CANIL.pdf',size:'1 página'}
   ];
   async function addDocumentLinks(root){
     const holder=document.createElement('div');holder.className='pd-docs';
-    const title=document.createElement('h3');title.textContent='Documentos originais';root.append(title,holder);
     for(const d of pdfs){
-      const a=document.createElement('a');a.className='pd-document';a.textContent=d.name;a.href=new URL('./'+d.path,location.href).href;a.target='_blank';a.rel='noopener';
-      const state=document.createElement('small');state.textContent='Verificando PDF...';a.append(state);holder.append(a);
+      const a=document.createElement('a');a.className='pd-document';
+      const name=document.createElement('strong');name.textContent=d.name;
+      const status=document.createElement('small');status.textContent='Verificando disponibilidade...';
+      a.append(name,status);holder.append(a);
+      const url=new URL('./'+d.path,location.href).href;
       try{
-        const resp=await fetch(a.href,{method:'HEAD',signal:AbortSignal.timeout(5000)});
-        if(!resp.ok)throw new Error('não encontrado');
-        state.textContent='Abrir PDF';
-      }catch(e){a.removeAttribute('href');a.removeAttribute('target');a.classList.add('unavailable');state.textContent='Arquivo original ainda não publicado no repositório';}
+        const response=await fetch(url,{method:'HEAD',cache:'no-store',signal:AbortSignal.timeout(12000)});
+        if(!response.ok)throw new Error('Ainda não publicado');
+        a.href=url;a.download=d.path.split('/').pop();
+        a.setAttribute('aria-label','Baixar '+d.name+' em PDF');
+        status.textContent='PDF · '+d.size+' · Baixar documento';
+      }catch(error){
+        a.classList.add('unavailable');
+        a.removeAttribute('href');a.removeAttribute('download');
+        status.textContent='Aguardando publicação do PDF';
+      }
     }
+    root.append(holder);
   }
   function showCost(){
     shell('Custo e Prazo','Orçamento sintético atualizado · SINAPI 09/2026, SEDOP 03/2026, Pará · valores previstos.');
@@ -113,6 +122,8 @@ export function mountProjectDashboard(wrap, main){
         '</article>').join('')+'</div>'+
       '<p class="pd-small" style="margin-top:12px">Conforme a planilha de origem, os valores individuais foram arredondados para centavos. A soma dos quatro custos de período difere em R$ 0,02 do total publicado; prevalece o total geral do orçamento e o valor acumulado final indicados no documento.</p>');
 
+    const downloads=section('<h3>Documentos para download</h3><p class="pd-small">PDFs oficiais do orçamento e do cronograma físico-financeiro.</p>');
+    addDocumentLinks(downloads);
   }
   return {show,hide};
 }
