@@ -149,7 +149,6 @@ export function initInterface(api){
     p.append(button('Ocultar elemento · H H','eye',api.hideSelectedElement));
   }
   $('c').addEventListener('click',()=>{updateSelection();if(api.getSelected())showPanel('properties');});
-  $('btn-mobile-pdfs').addEventListener('click',()=>showPanel('pdf'));
   $('btn-mobile-layers').addEventListener('click',()=>showPanel('disciplines'));
   // Extend each existing PDF entry without replacing its viewer or admin flow.
   new MutationObserver(()=>{for(const b of pdf.querySelectorAll('.pdf-link:not([data-actions])')){b.dataset.actions='true';const folder=b.closest('.pdf-folder'),index=[...pdf.children].indexOf(folder),slug=['arquitetonico','estrutural','eletrico','hidrossanitario'][index];if(!slug)continue;const name=b.textContent,url=new URL(b.dataset.pdfUrl||('./plantas/'+slug+'/'+encodeURIComponent(name+'.pdf')),location.href);const row=document.createElement('div');row.className='pdf-entry';b.replaceWith(row);row.append(b);for(const [label,symbol,download] of [['Abrir em nova aba','external',false],['Baixar PDF','download',true]]){const a=document.createElement('a');a.className='pdf-action';a.title=label+' — '+name;a.setAttribute('aria-label',a.title);a.innerHTML=icon(symbol);a.href=url.href;if(download)a.download=name;else{a.target='_blank';a.rel='noopener';}row.append(a);}}}).observe(pdf,{childList:true,subtree:true});
