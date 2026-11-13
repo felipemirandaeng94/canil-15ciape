@@ -66,8 +66,8 @@ export function initInterface(api){
   }
   const pdf=$('pdf-list'),refresh=$('refresh-pdfs'),layers=$('layers');
   for(const [key,label] of [['disciplines','Disciplinas'],['pdf','Plantas PDF'],['properties','Propriedades']]){const p=document.createElement('section');p.id='panel-'+key;p.className='workspace-panel';p.setAttribute('role','tabpanel');p.setAttribute('aria-labelledby','tab-'+key);panels[key]=p;const b=button(label,'folder',()=>showPanel(key));b.id='tab-'+key;b.setAttribute('role','tab');b.setAttribute('aria-controls',p.id);b.addEventListener('keydown',e=>{if(!['ArrowLeft','ArrowRight','Home','End'].includes(e.key))return;e.preventDefault();const keys=Object.keys(tabButtons),i=keys.indexOf(key);const next=keys[e.key==='Home'?0:e.key==='End'?keys.length-1:(i+(e.key==='ArrowRight'?1:-1)+keys.length)%keys.length];showPanel(next);tabButtons[next].focus();});tabButtons[key]=b;tabs.append(b);}
-  panels.pdf.append(note('Escolha uma disciplina para consultar suas pranchas.'),pdf,refresh);
-  panels.disciplines.append(note('Sobreponha os modelos e ajuste a visibilidade e a transparência.'),layers,note('Compatibilização visual. Exporte os IFCs com a mesma origem e orientação.'));
+  panels.pdf.append(pdf,refresh);
+  panels.disciplines.append(layers,note('A sobreposição visual não substitui a verificação de interferências.'));
   const hydro=document.createElement('section');hydro.className='hydro-group';hydro.innerHTML='<h3>Hidrossanitário</h3>';for(const def of api.modelDefs.filter(d=>['HID','ESG'].includes(d.id)))hydro.append(def.check.closest('.model-card'));layers.append(hydro);
   // Each discipline offers a direct path back to the interactive 3D viewer.
   for(const def of api.modelDefs){
@@ -88,13 +88,11 @@ export function initInterface(api){
   nav.querySelector('.nav-item').classList.add('active');
   const overview=document.createElement('dialog');overview.className='overview-dialog';document.body.append(overview);
   function uniqueElements(){return [...new Map([...api.meshMeta.values()].map(m=>[m.discipline+':'+m.id,m])).values()];}
-  function showOverview(kind){overview.replaceChildren();const title=document.createElement('h2');title.textContent=kind==='counts'?'Quantitativos do modelo':'Dados do projeto';overview.append(title);if(kind==='counts'){overview.append(note('Contagem de elementos com geometria, por classe IFC. Quantidades fornecidas pelo autor, quando existentes, aparecem nas propriedades de cada elemento.'));const counts=new Map();for(const m of uniqueElements()){const key=m.disciplineLabel+' · '+api.categoryLabel(m.type)+' · '+m.type;counts.set(key,(counts.get(key)||0)+(m.elementCount||1));}for(const [name,count] of counts){const row=document.createElement('p');row.className='count-row';row.textContent=name+' — '+count;overview.append(row);}}else{overview.append(note('OP RICARDO FRANCO — CONSTRUÇÃO / AMPLIAÇÃO DO CANIL DA 15ª CIA PE'));for(const d of api.modelDefs)overview.append(note(d.status.textContent));}overview.append(button('Fechar','reset',()=>overview.close()));api.leaveWalk();overview.showModal();}
-  const summary=document.createElement('div');summary.className='model-summary';nav.append(summary);
+  function showOverview(kind){overview.replaceChildren();const title=document.createElement('h2');title.textContent=kind==='counts'?'Quantitativos do modelo':'Dados do projeto';overview.append(title);if(kind==='counts'){const counts=new Map();for(const m of uniqueElements()){const key=m.disciplineLabel+' · '+api.categoryLabel(m.type)+' · '+m.type;counts.set(key,(counts.get(key)||0)+(m.elementCount||1));}for(const [name,count] of counts){const row=document.createElement('p');row.className='count-row';row.textContent=name+' — '+count;overview.append(row);}}else{overview.append(note('Canil da 15ª Cia PE · 14 boxes e depósito.'));}overview.append(button('Fechar','reset',()=>overview.close()));api.leaveWalk();overview.showModal();}
   const badge=document.querySelector('#header .badge');const coordination=button('Coordenação BIM','layers',()=>showPanel('disciplines'));coordination.classList.add('coordination');badge.replaceWith(coordination);
   const title=$('header').querySelector('h1');title.innerHTML='<strong>OP RICARDO FRANCO</strong><span>CONSTRUÇÃO / AMPLIAÇÃO DO CANIL DA 15ª CIA PE</span>';
   // Keep the original controls and event handlers, changing only their placement.
   const views=document.createElement('div');views.id='preset-views';views.setAttribute('aria-label','Vistas predefinidas');
-  const viewsHeading=document.createElement('span');viewsHeading.className='view-strip-heading';viewsHeading.textContent='VISTAS PREDEFINIDAS';views.append(viewsHeading);
   const viewControls=[['iso','Isométrica','cube'],['top','Superior','layers'],['front','Frontal','cube'],['side','Lateral','cube']];
   const viewCards=new Map();
   let previewTimer=0;
@@ -133,7 +131,7 @@ export function initInterface(api){
   const select=button('Selecionar','arrow',()=>{api.leaveWalk();showPanel('properties');},'tb');select.classList.add('on');toolbar.prepend(select);
   const hide=button('Ocultar','eye',api.hideSelectedElement,'tb'),isolate=button('Isolar elemento','layers',()=>{const m=api.meshMeta.get(api.getSelected());if(!m)return;for(const [mesh,meta] of api.meshMeta)if(mesh.visible&&mesh.parent.visible&&(meta.id!==m.id||meta.discipline!==m.discipline)){mesh.visible=false;api.hiddenMeshes.add(mesh);}api.updateHiddenButton();refreshViewThumbnails();},'tb');toolbar.append(hide,isolate,button('Disciplinas','layers',()=>showPanel('disciplines'),'tb'));
   const restore=button('Restaurar câmera','reset',api.fitView,'tb');toolbar.append(restore);
-  const footer=document.createElement('div');footer.id='viewer-footer';const status=document.createElement('div');status.id='workspace-status';footer.append(status,views);wrap.append(footer);
+  const footer=document.createElement('div');footer.id='viewer-footer';footer.append(views);wrap.append(footer);
   const reopen=button('Abrir painel','folder',()=>showPanel('pdf'));
   reopen.id='reopen-panel';reopen.setAttribute('aria-controls','sidebar');
   reopen.setAttribute('aria-label','Exibir painel de arquivos e disciplinas');
@@ -152,8 +150,16 @@ export function initInterface(api){
   $('btn-mobile-layers').addEventListener('click',()=>showPanel('disciplines'));
   // Extend each existing PDF entry without replacing its viewer or admin flow.
   new MutationObserver(()=>{for(const b of pdf.querySelectorAll('.pdf-link:not([data-actions])')){b.dataset.actions='true';const folder=b.closest('.pdf-folder'),index=[...pdf.children].indexOf(folder),slug=['arquitetonico','estrutural','eletrico','hidrossanitario'][index];if(!slug)continue;const name=b.textContent,url=new URL(b.dataset.pdfUrl||('./plantas/'+slug+'/'+encodeURIComponent(name+'.pdf')),location.href);const row=document.createElement('div');row.className='pdf-entry';b.replaceWith(row);row.append(b);for(const [label,symbol,download] of [['Abrir em nova aba','external',false],['Baixar PDF','download',true]]){const a=document.createElement('a');a.className='pdf-action';a.title=label+' — '+name;a.setAttribute('aria-label',a.title);a.innerHTML=icon(symbol);a.href=url.href;if(download)a.download=name;else{a.target='_blank';a.rel='noopener';}row.append(a);}}}).observe(pdf,{childList:true,subtree:true});
-  function refreshSummary(){const elems=uniqueElements(),loaded=api.modelDefs.filter(d=>d.count>0),elementCount=elems.reduce((sum,m)=>sum+(m.elementCount||1),0);summary.textContent='RESUMO DO MODELO\n'+elementCount.toLocaleString('pt-BR')+' elementos\n'+new Set(elems.map(m=>m.type)).size+' classes IFC\n'+loaded.length+' modelos carregados';const m=api.meshMeta.get(api.getSelected());status.textContent=(m?m.disciplineLabel+' · '+api.modelDefs.find(d=>d.id===m.discipline)?.file:loaded.map(d=>d.file).join(' + ')||'Aguardando modelos')+' · '+elementCount.toLocaleString('pt-BR')+' elementos · '+($('status').style.display==='none'?'Pronto':$('status-text').textContent);for(const d of api.modelDefs){const card=d.check.closest('.model-card');card.classList.toggle('unavailable',!d.count);card.querySelectorAll('input,button').forEach(c=>c.disabled=!d.count);}updateSelection();}
-  setInterval(refreshSummary,800);refreshSummary();showPanel('pdf');api.closeMobilePanels();
+  // Manter os controles de disciplinas sincronizados sem exibir contagens redundantes.
+  function refreshModelControls(){
+    for(const d of api.modelDefs){
+      const card=d.check.closest('.model-card');
+      card.classList.toggle('unavailable',!d.count);
+      card.querySelectorAll('input,button').forEach(control=>control.disabled=!d.count);
+    }
+    updateSelection();
+  }
+  setInterval(refreshModelControls,800);refreshModelControls();showPanel('pdf');api.closeMobilePanels();
   return {refreshViewThumbnails};
 }
 
